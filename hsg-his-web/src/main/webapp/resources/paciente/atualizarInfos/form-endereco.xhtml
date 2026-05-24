@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:cc="http://java.sun.com/jsf/composite"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+<cc:interface>
+    <cc:attribute name="bean" required="true"/>
+</cc:interface>
+
+<cc:implementation>
+    <h:panelGroup id="panelEndereco" layout="block" styleClass="panel" style="margin-bottom:20px;">
+        <h:panelGroup layout="block" styleClass="panel-title">
+            <h:outputText value="Solicitar Atualização de Endereço"/>
+        </h:panelGroup>
+        <h:panelGroup layout="block" styleClass="panel-body">
+
+            <h:panelGroup layout="block" styleClass="kv">
+
+                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Logradouro"/></h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <p:inputText id="logradouro"
+                                 value="#{cc.attrs.bean.formEndereco.logradouro}"
+                                 maxlength="200" styleClass="input-field" style="width:100%;"
+                                 placeholder="Ex: Rua das Flores">
+                        <p:ajax event="change" process="@this" update="btnEndereco"/>
+                    </p:inputText>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Número"/></h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <p:inputText id="numero"
+                                 value="#{cc.attrs.bean.formEndereco.numero}"
+                                 maxlength="10" styleClass="input-field mono" style="width:120px;">
+                        <p:ajax event="change" process="@this" update="btnEndereco"/>
+                    </p:inputText>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Complemento"/></h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <p:inputText id="complemento"
+                                 value="#{cc.attrs.bean.formEndereco.complemento}"
+                                 maxlength="100" styleClass="input-field" style="width:100%;"
+                                 placeholder="Apto, sala, bloco...">
+                        <p:ajax event="change" process="@this" update="btnEndereco"/>
+                    </p:inputText>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Bairro"/></h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <p:inputText id="bairro"
+                                 value="#{cc.attrs.bean.formEndereco.bairro}"
+                                 maxlength="100" styleClass="input-field" style="width:100%;">
+                        <p:ajax event="change" process="@this" update="btnEndereco"/>
+                    </p:inputText>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Cidade"/></h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <p:inputText id="cidade"
+                                 value="#{cc.attrs.bean.formEndereco.cidade}"
+                                 maxlength="100" styleClass="input-field" style="width:100%;">
+                        <p:ajax event="change" process="@this" update="btnEndereco"/>
+                    </p:inputText>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Estado (UF)"/></h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <p:selectOneMenu id="estado"
+                                     value="#{cc.attrs.bean.formEndereco.estado}"
+                                     styleClass="input-field" style="width:200px;">
+                        <p:ajax event="change" process="@this" update="btnEndereco"/>
+                        <f:selectItem itemLabel="Selecione..." itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItems value="#{cc.attrs.bean.estados}"
+                                       var="e"
+                                       itemLabel="#{e.sigla} — #{e.nome}"
+                                       itemValue="#{e}"/>
+                    </p:selectOneMenu>
+                    <p:message for="estado" styleClass="field-error"/>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k"><h:outputText value="CEP"/></h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <p:inputText id="cep"
+                                 value="#{cc.attrs.bean.formEndereco.cep}"
+                                 validatorMessage="CEP deve conter exatamente 8 dígitos numéricos."
+                                 maxlength="8" styleClass="input-field mono" style="width:140px;"
+                                 placeholder="Somente dígitos">
+                        <f:validateRegex pattern="\d{8}"/>
+                        <p:ajax event="change" process="@this" update="btnEndereco"/>
+                    </p:inputText>
+                    <p:message for="cep" styleClass="field-error"/>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k">
+                    <h:outputText value="Motivo"/>
+                    <h:outputText value=" (opcional)" styleClass="muted"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <p:inputTextarea id="motivoEnd"
+                                     value="#{cc.attrs.bean.formEndereco.motivo}"
+                                     maxlength="500" rows="3" styleClass="input-field"
+                                     style="width:100%; resize:vertical;"/>
+                </h:panelGroup>
+
+            </h:panelGroup>
+
+            <h:panelGroup layout="block"
+                          style="margin-top:20px; padding-top:14px; border-top:1px solid #e4e4e4; display:flex; gap:8px; align-items:center;">
+                <p:commandButton id="btnEndereco"
+                                 value="Solicitar Atualização de Endereço"
+                                 action="#{cc.attrs.bean.solicitarAtualizacaoEndereco}"
+                                 process="panelEndereco"
+                                 update=":mainForm:msgs @form"
+                                 disabled="#{not cc.attrs.bean.formEnderecoAlterado}"
+                                 styleClass="btn primary btn-big"
+                                 icon="fa fa-map-marker-alt"/>
+            </h:panelGroup>
+
+        </h:panelGroup>
+    </h:panelGroup>
+</cc:implementation>
+</html>

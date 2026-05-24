@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:p="http://primefaces.org/ui">
+
+    <p:dialog id="dlgAprovarAlergia"
+              widgetVar="wDlgAprovarAlergia"
+              header="Aprovar Alergia"
+              modal="true"
+              resizable="false"
+              closeOnEscape="true"
+              width="520"
+              styleClass="hsg-dialog">
+
+        <h:panelGroup id="dlgBodyAprovarAlergia" layout="block">
+
+            <h:panelGroup layout="block"
+                          rendered="#{aprovacaoAlergiaBean.alergiaSelecionada == null}">
+                <h:panelGroup layout="block" styleClass="note" style="padding:16px 12px;">
+                    <h:outputText value="Nenhuma alergia selecionada."/>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block"
+                          rendered="#{aprovacaoAlergiaBean.alergiaSelecionada != null}">
+
+                <h:panelGroup layout="block" styleClass="note"
+                              style="margin-bottom:12px; background:#e8f7ec; border-color:#b6e2bf;">
+                    <i class="fa fa-check-circle" style="color:#2e7d32;"/>
+                    <h:outputText value=" Confirme a aprovação da alergia "/>
+                    <b><h:outputText value="#{aprovacaoAlergiaBean.alergiaSelecionada.nomeAlergia}"/></b>
+                    <h:outputText value=" do paciente "/>
+                    <b><h:outputText value="#{aprovacaoAlergiaBean.alergiaSelecionada.nomePaciente}"/></b>
+                    <h:outputText value=". A alergia passará a constar no prontuário."/>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="kv" style="margin:0 0 12px;">
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Gravidade"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <h:outputText
+                            styleClass="chip #{aprovacaoAlergiaBean.alergiaSelecionada.gravidadeCssClass}"
+                            value="#{aprovacaoAlergiaBean.alergiaSelecionada.gravidadeDescricao}"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Tipo"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <h:outputText value="#{aprovacaoAlergiaBean.alergiaSelecionada.tipoDescricao}"/>
+                    </h:panelGroup>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Observação do profissional"/>
+                        <div style="font-size:11px; color:#888;">(opcional)</div>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <p:inputTextarea id="obsAprovar"
+                                         value="#{aprovacaoAlergiaBean.observacaoAprovador}"
+                                         rows="3"
+                                         maxlength="500"
+                                         styleClass="input-field"
+                                         style="width:100%;"/>
+                    </h:panelGroup>
+                </h:panelGroup>
+
+            </h:panelGroup>
+
+            <h:panelGroup layout="block"
+                          style="display:flex; justify-content:flex-end; gap:8px; padding-top:14px; border-top:1px solid #e5e7eb; margin-top:14px;">
+                <p:commandButton value="Confirmar Aprovação"
+                                 icon="fa fa-check"
+                                 styleClass="btn primary"
+                                 action="#{aprovacaoAlergiaBean.confirmarAprovacao}"
+                                 process=":formAlergiasLista:dlgBodyAprovarAlergia"
+                                 update=":formAlergiasLista:dlgBodyAprovarAlergia :formAlergiasLista:msgs :formAlergiasLista:tabelaAlergias :formAlergiasLista:painelTituloPendentes :formHistoricoAlergias:tabelaHistorico"
+                                 oncomplete="if(!args.validationFailed) PF('wDlgAprovarAlergia').hide();"/>
+                <p:commandButton value="Cancelar"
+                                 icon="fa fa-times"
+                                 type="button"
+                                 onclick="PF('wDlgAprovarAlergia').hide(); return false;"
+                                 styleClass="btn secondary"/>
+            </h:panelGroup>
+
+        </h:panelGroup>
+
+    </p:dialog>
+
+</ui:composition>

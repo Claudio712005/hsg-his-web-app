@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:cc="http://java.sun.com/jsf/composite"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+<cc:interface>
+    <cc:attribute name="bean" required="true"/>
+</cc:interface>
+
+<cc:implementation>
+    <p:dialog id="dialog"
+              widgetVar="dlgAlergiaDetalhe"
+              header="Detalhes da Alergia"
+              modal="true"
+              resizable="false"
+              width="620"
+              closeOnEscape="true">
+
+        <h:panelGroup id="body" layout="block">
+            <h:panelGroup layout="block"
+                          rendered="#{cc.attrs.bean.alergiaVisualizacao != null}"
+                          style="padding:4px 0 8px;">
+
+                <h:panelGroup layout="block" styleClass="kv" style="margin-bottom:16px;">
+                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Nome"/></h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.alergiaVisualizacao.nome}"/></h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Tipo"/></h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.alergiaVisualizacao.tipoDescricao}"/></h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Gravidade"/></h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.alergiaVisualizacao.gravidadeDescricao}"/></h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Status"/></h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <h:outputText value="#{cc.attrs.bean.alergiaVisualizacao.statusDescricao}"
+                                      styleClass="chip #{cc.attrs.bean.alergiaVisualizacao.statusCssClass}"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k"
+                                  rendered="#{not empty cc.attrs.bean.alergiaVisualizacao.descricao}">
+                        <h:outputText value="Descrição"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v"
+                                  rendered="#{not empty cc.attrs.bean.alergiaVisualizacao.descricao}">
+                        <h:outputText value="#{cc.attrs.bean.alergiaVisualizacao.descricao}"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k"
+                                  rendered="#{not empty cc.attrs.bean.alergiaVisualizacao.reacao}">
+                        <h:outputText value="Reação"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v"
+                                  rendered="#{not empty cc.attrs.bean.alergiaVisualizacao.reacao}">
+                        <h:outputText value="#{cc.attrs.bean.alergiaVisualizacao.reacao}"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k"
+                                  rendered="#{not empty cc.attrs.bean.alergiaVisualizacao.observacao}">
+                        <h:outputText value="Observação"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v"
+                                  rendered="#{not empty cc.attrs.bean.alergiaVisualizacao.observacao}">
+                        <h:outputText value="#{cc.attrs.bean.alergiaVisualizacao.observacao}"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k"
+                                  rendered="#{not empty cc.attrs.bean.alergiaVisualizacao.dataUltimaReacao}">
+                        <h:outputText value="Última reação"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v"
+                                  rendered="#{not empty cc.attrs.bean.alergiaVisualizacao.dataUltimaReacao}">
+                        <h:outputText value="#{cc.attrs.bean.alergiaVisualizacao.dataUltimaReacao}"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Cadastrada em"/></h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.alergiaVisualizacao.dataCadastro}"/></h:panelGroup>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block"
+                              rendered="#{not empty cc.attrs.bean.alergiaVisualizacao.historico}"
+                              styleClass="panel" style="margin-top:12px;">
+                    <h:panelGroup layout="block" styleClass="panel-title">
+                        <h:outputText value="Histórico de Alterações"/>
+                    </h:panelGroup>
+                    <p:dataTable var="h"
+                                 value="#{cc.attrs.bean.alergiaVisualizacao.historico}"
+                                 styleClass="data"
+                                 emptyMessage="Sem histórico.">
+                        <p:column headerText="Data/Hora" style="width:140px;">
+                            <h:outputText value="#{h.dataAcao}"/>
+                        </p:column>
+                        <p:column headerText="Ação" style="width:90px;">
+                            <h:outputText value="#{h.acaoDescricao}"/>
+                        </p:column>
+                        <p:column headerText="Nome">
+                            <h:outputText value="#{h.nomeSnap}"/>
+                        </p:column>
+                        <p:column headerText="Tipo" style="width:100px;">
+                            <h:outputText value="#{h.tipoSnap}"/>
+                        </p:column>
+                        <p:column headerText="Gravidade" style="width:100px;">
+                            <h:outputText value="#{h.gravidadeSnap}"/>
+                        </p:column>
+                        <p:column headerText="Status" style="width:90px;">
+                            <h:outputText value="#{h.statusSnap}"/>
+                        </p:column>
+                    </p:dataTable>
+                </h:panelGroup>
+
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <f:facet name="footer">
+            <p:commandButton value="Fechar"
+                             icon="fa fa-times"
+                             type="button"
+                             onclick="PF('dlgAlergiaDetalhe').hide();"
+                             styleClass="btn secondary"/>
+        </f:facet>
+    </p:dialog>
+</cc:implementation>
+</html>

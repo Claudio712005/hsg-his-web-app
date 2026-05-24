@@ -1,0 +1,33 @@
+embed-server --std-out=echo
+
+/system-property=APP_ENV:add(value=${env.APP_ENV:PROD})
+
+module add \
+  --name=org.postgresql \
+  --resources=/opt/postgresql.jar \
+  --dependencies=javax.api,sun.jdk
+
+/subsystem=datasources/jdbc-driver=postgresql:add( \
+  driver-name=postgresql, \
+  driver-module-name=org.postgresql, \
+  driver-class-name=org.postgresql.Driver \
+)
+
+data-source add \
+  --name=HsgDS \
+  --jndi-name=java:jboss/datasources/HsgDS \
+  --driver-name=postgresql \
+  --connection-url=jdbc:postgresql://${env.APP_DB_HOST:postgres}:${env.APP_DB_PORT:5432}/${env.APP_DB_NAME:hsg}?currentSchema=hsg \
+  --user-name=${env.APP_DB_USER:postgres} \
+  --password=${env.APP_DB_PASSWORD:postgres} \
+  --min-pool-size=5 \
+  --max-pool-size=20 \
+  --use-java-context=true \
+  --enabled=true
+
+/socket-binding-group=standard-sockets/remote-destination-outbound-socket-binding=mail-smtp:write-attribute(name=host, value="${env.MAIL_SMTP_HOST:localhost}")
+/socket-binding-group=standard-sockets/remote-destination-outbound-socket-binding=mail-smtp:write-attribute(name=port, value="${env.MAIL_SMTP_PORT:1025}")
+
+/subsystem=mail/mail-session=default/server=smtp:write-attribute(name=tls, value="${env.MAIL_SMTP_STARTTLS:false}")
+
+stop-embedded-server

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <h:form id="formMedicos">
+
+        <div class="prof-section-header">
+            <i class="fa fa-user-md prof-section-icon"/>
+            <span>Médicos</span>
+        </div>
+
+        <h:panelGroup layout="block" styleClass="filter-bar">
+            <div class="filter-group">
+                <label class="filter-label" for="filtroNomeMed">Nome do médico</label>
+                <h:inputText id="filtroNomeMed"
+                             value="#{adminBean.filtroNomeMedico}"
+                             styleClass="filter-input"
+                             placeholder="Ex.: João Silva"/>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="filtroStatusMed">Status</label>
+                <h:selectOneMenu id="filtroStatusMed"
+                                 value="#{adminBean.filtroStatusMedico}"
+                                 styleClass="filter-select">
+                    <f:selectItem itemLabel="Todos" itemValue=""/>
+                    <f:selectItem itemLabel="Ativo"    itemValue="A"/>
+                    <f:selectItem itemLabel="Inativo"  itemValue="I"/>
+                    <f:selectItem itemLabel="Pendente" itemValue="P"/>
+                </h:selectOneMenu>
+            </div>
+            <div class="filter-actions">
+                <p:commandButton value="Filtrar"
+                                 styleClass="btn primary"
+                                 actionListener="#{adminBean.aplicarFiltrosMedico}"
+                                 update="tabelaMedicos"
+                                 process="filtroNomeMed filtroStatusMed @this"
+                                 icon="fa fa-search"/>
+                <p:commandButton value="Limpar"
+                                 styleClass="btn secondary"
+                                 actionListener="#{adminBean.limparFiltrosMedico}"
+                                 update="filtroNomeMed filtroStatusMed tabelaMedicos"
+                                 process="@this"
+                                 icon="fa fa-times"/>
+            </div>
+        </h:panelGroup>
+
+        <p:dataTable id="tabelaMedicos"
+                     value="#{adminBean.medicoModel}"
+                     var="m"
+                     lazy="true"
+                     rows="5"
+                     paginator="true"
+                     paginatorPosition="bottom"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                     rowsPerPageTemplate="5,10,25"
+                     currentPageReportTemplate="{startRecord}–{endRecord} de {totalRecords}"
+                     emptyMessage="Nenhum médico encontrado."
+                     styleClass="lazy-table"
+                     tableStyle="width:100%; table-layout:fixed;">
+
+            <p:column headerText="Nome" sortBy="#{m.nomeCompleto}" sortField="nome"
+                      style="width:35%;">
+                <h:outputText value="#{m.nomeCompleto}"/>
+            </p:column>
+
+            <p:column headerText="CRM" sortBy="#{m.crm.numero}" sortField="crm.numero"
+                      style="width:130px;">
+                <h:outputText value="#{m.crm != null ? m.crm.formatado : '—'}" styleClass="mono"/>
+            </p:column>
+
+            <p:column headerText="Especialidade" sortBy="#{m.especialidade.nome}" sortField="especialidade.nome"
+                      style="width:20%;">
+                <h:outputText value="#{m.especialidade != null ? m.especialidade.nome : '—'}"/>
+            </p:column>
+
+            <p:column headerText="Status" sortBy="#{m.status}" sortField="status"
+                      style="width:80px;" styleClass="center-align">
+                <h:outputText styleClass="chip #{m.status.valor eq 'A' ? 'ativo' : (m.status.valor eq 'I' ? 'inativo' : 'pendente')}"
+                              value="#{m.status.descricao}"/>
+            </p:column>
+
+            <p:column headerText="Cadastrado em" sortBy="#{m.dataCadastro}" sortField="dataCadastro"
+                      style="width:115px;">
+                <h:outputText value="#{adminBean.formatarData(m.dataCadastro)}"/>
+            </p:column>
+
+            <p:column headerText="Ações" style="width:60px;" styleClass="center-align">
+                <p:commandButton icon="fa fa-eye"
+                                 styleClass="btn icon-btn info"
+                                 title="Ver detalhes"
+                                 update=":tabViewClinica:formMedicos:dlgBodyMedico"
+                                 oncomplete="PF('wDlgMedico').show()"
+                                 process="@this">
+                    <f:setPropertyActionListener target="#{adminBean.medicoSelecionado}" value="#{m}"/>
+                </p:commandButton>
+            </p:column>
+
+        </p:dataTable>
+
+        <ui:include src="dialog-medico.xhtml"/>
+
+    </h:form>
+
+</ui:composition>

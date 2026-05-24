@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/WEB-INF/templates/error/layout.xhtml">
+
+    <ui:define name="title">HSG - Erro Interno</ui:define>
+
+    <ui:define name="content">
+        <ui:include src="/error/fragments/erro-corpo.xhtml">
+            <ui:param name="codHttp"   value="500"/>
+            <ui:param name="icone"     value="fa-exclamation-triangle"/>
+            <ui:param name="corCodigo" value="#e4b0b0"/>
+            <ui:param name="titulo"    value="Erro interno do servidor"/>
+            <ui:param name="mensagem"  value="Ocorreu um erro inesperado. Por favor, tente novamente em instantes ou entre em contato com o suporte técnico."/>
+        </ui:include>
+    </ui:define>
+
+</ui:composition>

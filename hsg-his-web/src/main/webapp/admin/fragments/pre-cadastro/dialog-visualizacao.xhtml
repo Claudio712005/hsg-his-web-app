@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <style type="text/css">
+        .hsg-dialog .ui-dialog-titlebar {
+            background: linear-gradient(#f8f8f8, #e4e4e4);
+            border-bottom: 1px solid #c8c8c8;
+            color: #1f3a68;
+            font-weight: bold;
+        }
+        .hsg-dialog .ui-dialog-content {
+            padding: 0;
+            background: #fff;
+        }
+        .dlg-section {
+            border-bottom: 1px solid #e4e4e4;
+        }
+        .dlg-section-title {
+            padding: 6px 12px;
+            background: linear-gradient(#f8f8f8, #ececec);
+            border-bottom: 1px solid #e4e4e4;
+            font-weight: bold;
+            font-size: 11px;
+            color: #1f3a68;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .dlg-hist-row {
+            display: grid;
+            grid-template-columns: 130px 1fr 90px 110px;
+            gap: 0;
+            border-bottom: 1px solid #eee;
+            font-size: 11px;
+            align-items: center;
+        }
+        .dlg-hist-row:last-child { border-bottom: 0; }
+        .dlg-hist-head {
+            background: linear-gradient(#f0f0f0, #dcdcdc);
+            font-weight: bold;
+            color: #333;
+            font-size: 10.5px;
+        }
+        .dlg-hist-row > div { padding: 5px 10px; border-right: 1px solid #eee; }
+        .dlg-hist-row > div:last-child { border-right: 0; }
+        .dlg-hist-row .err-msg {
+            grid-column: 1 / -1;
+            padding: 4px 10px;
+            background: #fff5f5;
+            color: #c62828;
+            font-size: 10.5px;
+            border-top: 1px dashed #ffb3b3;
+        }
+        .email-corp-badge {
+            display: inline-block;
+            background: #e8f4fd;
+            border: 1px solid #b3d9f5;
+            border-radius: 3px;
+            padding: 2px 8px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #1a6b8a;
+        }
+    </style>
+
+    <p:dialog id="dlgPreCadastro"
+              widgetVar="wDlgPreCadastro"
+              header="Detalhes do Pré-cadastro"
+              modal="true"
+              resizable="false"
+              closeOnEscape="true"
+              width="720"
+              styleClass="hsg-dialog">
+
+        <h:panelGroup id="dlgBody" layout="block">
+
+            <h:panelGroup layout="block" rendered="#{preCadastroBean.selecionado == null}">
+                <h:panelGroup layout="block" styleClass="note" style="padding:16px 12px;">
+                    <h:outputText value="Nenhum pré-cadastro selecionado."/>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" rendered="#{preCadastroBean.selecionado != null}">
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-id-card"/>
+                        Dados Gerais
+                    </div>
+                    <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Nome"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText value="#{preCadastroBean.selecionado.nome}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Tipo"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText value="#{preCadastroBean.selecionado.tipoProfissional.descricao}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="E-mail pessoal"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{preCadastroBean.selecionado.emailPessoal}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="E-mail corporativo"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:panelGroup rendered="#{not empty preCadastroBean.selecionado.emailCorporativo}">
+                                <span class="email-corp-badge">
+                                    <h:outputText value="#{preCadastroBean.selecionado.emailCorporativo}"/>
+                                </span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{empty preCadastroBean.selecionado.emailCorporativo}">
+                                <h:outputText value="—" style="color:#888;"/>
+                            </h:panelGroup>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="CPF"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{preCadastroBean.selecionado.cpf}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Status"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:panelGroup rendered="#{preCadastroBean.selecionado.status.name() == 'PENDENTE'}">
+                                <span class="chip pendente">Pendente</span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{preCadastroBean.selecionado.status.name() == 'CONCLUIDO'}">
+                                <span class="chip ativo">Concluído</span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{preCadastroBean.selecionado.status.name() == 'EXPIRADO'}">
+                                <span class="chip inativo">Expirado</span>
+                            </h:panelGroup>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Criado em"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{preCadastroBean.selecionado.dataCriacaoFormatada}"/>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </div>
+
+                <div class="dlg-section" style="#{preCadastroBean.selecionado.medico ? '' : 'display:none;'}">
+                    <h:panelGroup layout="block" rendered="#{preCadastroBean.selecionado.medico}">
+                        <div class="dlg-section-title">
+                            <i class="fa fa-user-md"/>
+                            Dados do Médico
+                        </div>
+                        <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="CRM"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v mono">
+                                <h:outputText value="#{preCadastroBean.selecionado.crmFormatado}"/>
+                            </h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Especialidade"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <h:outputText value="#{empty preCadastroBean.selecionado.especialidade ? 'Não informada' : preCadastroBean.selecionado.especialidade}"/>
+                            </h:panelGroup>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </div>
+
+                <h:panelGroup layout="block" styleClass="dlg-section"
+                              rendered="#{preCadastroBean.selecionado.enfermeiro}">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-procedures"/>
+                        Dados do Enfermeiro
+                    </div>
+                    <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="COREN"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{preCadastroBean.selecionado.corenFormatado}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Categoria"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText value="#{preCadastroBean.selecionado.categoriaCoren != null ? preCadastroBean.selecionado.categoriaCoren.descricao : '—'}"/>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </h:panelGroup>
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-envelope"/>
+                        Situação do Convite
+                    </div>
+                    <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Convite enviado"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText value="Sim — #{preCadastroBean.selecionado.dataEnvioEmailFormatada}"
+                                          rendered="#{preCadastroBean.selecionado.emailEnviado}"/>
+                            <h:outputText value="Não"
+                                          rendered="#{not preCadastroBean.selecionado.emailEnviado}"
+                                          style="color:#888;"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Expira em"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:panelGroup rendered="#{preCadastroBean.selecionado.emailEnviado and not preCadastroBean.selecionado.conviteExpirado}">
+                                <span style="color:#2e7d32;">
+                                    <i class="fa fa-clock"/>
+                                    <h:outputText value=" #{preCadastroBean.selecionado.dataExpiracaoConviteFormatada} (válido)"/>
+                                </span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{preCadastroBean.selecionado.emailEnviado and preCadastroBean.selecionado.conviteExpirado}">
+                                <span style="color:#c62828;">
+                                    <i class="fa fa-exclamation-circle"/>
+                                    <h:outputText value=" #{preCadastroBean.selecionado.dataExpiracaoConviteFormatada} (expirado)"/>
+                                </span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{not preCadastroBean.selecionado.emailEnviado}">
+                                <h:outputText value="—" style="color:#888;"/>
+                            </h:panelGroup>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Total de envios"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText value="#{preCadastroBean.selecionado.quantidadeEnvios}"/>
+                            <h:outputText value=" envio(s)" style="color:#888; margin-left:4px;"/>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </div>
+
+                <div class="dlg-section" style="border-bottom:0;">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-history"/>
+                        Histórico de Envios
+                    </div>
+
+                    <h:panelGroup layout="block" rendered="#{empty preCadastroBean.historico}"
+                                  styleClass="note">
+                        <i class="fa fa-info-circle"/>
+                        <h:outputText value=" Nenhum envio registrado ainda."/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" rendered="#{not empty preCadastroBean.historico}"
+                                  style="padding:0 0 4px;">
+
+                        <div class="dlg-hist-row dlg-hist-head">
+                            <div>Enviado em</div>
+                            <div>Administrador</div>
+                            <div style="text-align:center;">Status</div>
+                            <div>Expira em</div>
+                        </div>
+
+                        <ui:repeat value="#{preCadastroBean.historico}" var="h">
+                            <div class="dlg-hist-row">
+                                <div class="mono">
+                                    <h:outputText value="#{h.dataEnvioFormatada}"/>
+                                </div>
+                                <div>
+                                    <h:outputText value="#{h.nomeAdminRemetente}"/>
+                                </div>
+                                <div style="text-align:center;">
+                                    <span class="chip #{h.statusCssClass}">
+                                        <h:outputText value="#{h.status.descricao}"/>
+                                    </span>
+                                </div>
+                                <div class="mono">
+                                    <h:outputText value="#{h.dataExpiracaoFormatada}"/>
+                                </div>
+                            </div>
+                            <h:panelGroup layout="block"
+                                          rendered="#{not empty h.mensagemErro}">
+                                <div class="dlg-hist-row">
+                                    <div class="err-msg" style="grid-column:1/-1; padding:4px 10px; background:#fff5f5; color:#c62828; font-size:10.5px;">
+                                        <i class="fa fa-exclamation-triangle"/>
+                                        <h:outputText value=" #{h.mensagemErro}"/>
+                                    </div>
+                                </div>
+                            </h:panelGroup>
+                        </ui:repeat>
+
+                    </h:panelGroup>
+                </div>
+
+            </h:panelGroup>
+
+        </h:panelGroup>
+
+        <f:facet name="footer">
+            <p:commandButton value="Fechar"
+                             icon="fa fa-times"
+                             type="button"
+                             onclick="PF('wDlgPreCadastro').hide();"
+                             styleClass="btn secondary"/>
+        </f:facet>
+
+    </p:dialog>
+
+</ui:composition>

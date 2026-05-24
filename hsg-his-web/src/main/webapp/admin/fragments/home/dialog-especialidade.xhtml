@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:p="http://primefaces.org/ui">
+
+    <p:dialog id="dlgEspecialidade"
+              widgetVar="wDlgEspecialidade"
+              header="Detalhes da Especialidade"
+              modal="true"
+              width="560"
+              styleClass="hsg-dialog"
+              closable="true"
+              closeOnEscape="true">
+
+        <h:panelGroup id="dlgBodyEspecialidade" layout="block">
+            <ui:fragment rendered="#{adminBean.especialidadeSelecionada != null}">
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">Identificação</div>
+                    <div class="dlg-row">
+                        <span class="dlg-label">Nome</span>
+                        <span class="dlg-value">#{adminBean.especialidadeSelecionada.nome}</span>
+                    </div>
+                    <div class="dlg-row">
+                        <span class="dlg-label">Área</span>
+                        <span class="dlg-value">#{adminBean.formatarArea(adminBean.especialidadeSelecionada.area)}</span>
+                    </div>
+                    <div class="dlg-row">
+                        <span class="dlg-label">Status</span>
+                        <span class="dlg-value">
+                            <h:outputText styleClass="chip #{adminBean.especialidadeSelecionada.status.valor eq 'A' ? 'ativo' : 'inativo'}"
+                                          value="#{adminBean.especialidadeSelecionada.status.descricao}"/>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">Descrição</div>
+                    <div class="dlg-row">
+                        <span class="dlg-value">#{adminBean.especialidadeSelecionada.descricao != null ? adminBean.especialidadeSelecionada.descricao : '—'}</span>
+                    </div>
+                </div>
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">Registro</div>
+                    <div class="dlg-row">
+                        <span class="dlg-label">Data de Cadastro</span>
+                        <span class="dlg-value">#{adminBean.formatarData(adminBean.especialidadeSelecionada.dataCadastro)}</span>
+                    </div>
+                </div>
+
+            </ui:fragment>
+        </h:panelGroup>
+
+    </p:dialog>
+
+</ui:composition>

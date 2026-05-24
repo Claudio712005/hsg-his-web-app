@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <p:dialog id="dlgFormRegra"
+              widgetVar="wDlgFormRegra"
+              header="#{convenioBean.formRegraId == null ? 'Cadastrar Regra de Cobertura' : 'Editar Regra de Cobertura'}"
+              modal="true"
+              resizable="false"
+              closeOnEscape="true"
+              width="700"
+              styleClass="hsg-dialog">
+
+        <h:panelGroup layout="block">
+
+            <h:panelGroup layout="block" styleClass="note" style="margin-bottom:16px;">
+                <h:outputText value="Defina as regras de cobertura de um procedimento dentro de um plano. Carência é o prazo em dias antes da liberação. Copagamento é o percentual pago pelo paciente; 0 significa cobertura total."/>
+            </h:panelGroup>
+
+            <div class="dlg-section">
+                <div class="dlg-section-title">
+                    <i class="fa fa-link"/>
+                    Vínculo
+                </div>
+                <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Plano"/>
+                        <h:outputText value=" *" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <h:selectOneMenu id="formRegPlano"
+                                         value="#{convenioBean.formRegraPlanoId}"
+                                         styleClass="input-field"
+                                         style="width:100%;"
+                                         disabled="#{convenioBean.formRegraId != null}">
+                            <f:selectItem itemLabel="Selecione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{convenioBean.planosAtivosTodos}"
+                                           var="pl"
+                                           itemValue="#{pl.id}"
+                                           itemLabel="#{convenioBean.descreverPlano(pl)}"/>
+                        </h:selectOneMenu>
+                    </h:panelGroup>
+                </h:panelGroup>
+            </div>
+
+            <div class="dlg-section">
+                <div class="dlg-section-title">
+                    <i class="fa fa-list-check"/>
+                    Procedimento
+                </div>
+                <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Descrição"/>
+                        <h:outputText value=" *" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <h:inputText id="formRegProc"
+                                     value="#{convenioBean.formRegraProcedimento}"
+                                     styleClass="input-field"
+                                     style="width:100%;"
+                                     maxlength="200"
+                                     placeholder="Ex.: Consulta médica eletiva"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Categoria"/>
+                        <h:outputText value=" (opcional)" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <h:inputText id="formRegCat"
+                                     value="#{convenioBean.formRegraCategoria}"
+                                     styleClass="input-field"
+                                     style="width:260px;"
+                                     maxlength="80"
+                                     placeholder="Ex.: Consultas, Exames, Cirurgia"/>
+                    </h:panelGroup>
+                </h:panelGroup>
+            </div>
+
+            <div class="dlg-section">
+                <div class="dlg-section-title">
+                    <i class="fa fa-shield-halved"/>
+                    Cobertura
+                </div>
+                <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="O plano cobre?"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <h:selectBooleanCheckbox id="formRegCob"
+                                                 value="#{convenioBean.formRegraCobertura}"/>
+                        <h:outputText value=" Procedimento incluso no plano" styleClass="muted"
+                                      style="margin-left:8px;"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Carência (dias)"/>
+                        <h:outputText value=" *" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <p:inputNumber id="formRegCar"
+                                       value="#{convenioBean.formRegraCarenciaDias}"
+                                       styleClass="input-field mono"
+                                       style="width:140px;"
+                                       decimalPlaces="0"
+                                       thousandSeparator=""
+                                       minValue="0"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Copagamento (%)"/>
+                        <h:outputText value=" *" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <p:inputNumber id="formRegCop"
+                                       value="#{convenioBean.formRegraPercentualCopag}"
+                                       styleClass="input-field mono"
+                                       style="width:140px;"
+                                       decimalSeparator=","
+                                       thousandSeparator=""
+                                       decimalPlaces="2"
+                                       minValue="0"
+                                       maxValue="100"/>
+                        <h:outputText value=" % do valor pago pelo paciente" styleClass="muted"
+                                      style="margin-left:8px;"/>
+                    </h:panelGroup>
+                </h:panelGroup>
+            </div>
+
+            <div class="dlg-section">
+                <div class="dlg-section-title">
+                    <i class="fa fa-comment"/>
+                    Observação
+                </div>
+                <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Notas"/>
+                        <h:outputText value=" (opcional)" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <p:inputTextarea id="formRegObs"
+                                         value="#{convenioBean.formRegraObservacao}"
+                                         styleClass="input-field"
+                                         style="width:100%; resize:vertical;"
+                                         rows="3"
+                                         maxlength="500"
+                                         placeholder="Restrições, limites de utilização ou particularidades"/>
+                    </h:panelGroup>
+                </h:panelGroup>
+            </div>
+
+        </h:panelGroup>
+
+        <f:facet name="footer">
+            <p:commandButton value="Cancelar"
+                             icon="fa fa-times"
+                             type="button"
+                             onclick="PF('wDlgFormRegra').hide();"
+                             styleClass="btn secondary"/>
+            <p:commandButton value="Salvar"
+                             icon="fa fa-save"
+                             styleClass="btn primary"
+                             actionListener="#{convenioBean.salvarRegra}"
+                             update=":msgs :tabViewConvenios:formRegras:tabelaRegras :tabViewConvenios:formRegras:dlgFormRegra"
+                             oncomplete="if (!args.validationFailed &amp;&amp; !args.errorMessage) PF('wDlgFormRegra').hide();"
+                             process="@form"/>
+        </f:facet>
+
+    </p:dialog>
+
+</ui:composition>

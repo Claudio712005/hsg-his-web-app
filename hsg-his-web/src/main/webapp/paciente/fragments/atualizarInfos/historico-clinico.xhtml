@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <h:panelGroup layout="block" styleClass="panel">
+        <h:panelGroup layout="block" styleClass="panel-title">
+            <h:outputText value="Histórico — Dados Clínicos"/>
+        </h:panelGroup>
+        <p:dataTable id="tabelaHistoricoClinico"
+                     var="s"
+                     value="#{atualizarDadosPacienteBean.historicoClinicoModel}"
+                     lazy="true"
+                     styleClass="data"
+                     emptyMessage="Nenhuma solicitação clínica registrada até o momento."
+                     paginator="true"
+                     rows="5"
+                     paginatorAlwaysVisible="false"
+                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                     rowsPerPageTemplate="5,10,20">
+            <p:column headerText="Data / Hora" style="width:140px;">
+                <h:outputText value="#{s.dataCadastro}"/>
+            </p:column>
+            <p:column headerText="Resumo">
+                <h:outputText value="#{s.resumo}"/>
+            </p:column>
+            <p:column headerText="Tipo Sanguíneo" style="width:130px;" styleClass="center-align">
+                <h:outputText value="#{s.tipoSanguineoProposto}"/>
+            </p:column>
+            <p:column headerText="Status" style="width:100px;" styleClass="center-align">
+                <h:outputText value="#{s.statusDescricao}" styleClass="chip #{s.statusCssClass}"/>
+            </p:column>
+            <p:column headerText="Motivo">
+                <h:outputText value="#{s.motivo}"/>
+            </p:column>
+            <p:column headerText="Enfermeiro" style="width:150px;">
+                <h:outputText value="#{s.enfermeiro}"/>
+            </p:column>
+            <p:column headerText="Ações" style="width:80px;" styleClass="center-align">
+                <p:commandButton icon="fa fa-eye"
+                                 title="Visualizar detalhes"
+                                 styleClass="btn icon-btn info"
+                                 process="@this"
+                                 update=":mainForm:dlgVisu:body"
+                                 action="#{atualizarDadosPacienteBean.selecionarSolicitacao(s)}"
+                                 oncomplete="if (!args.validationFailed) PF('dlgVisualizacao').show();" />
+
+                <p:commandButton icon="fa fa-ban"
+                                 title="Cancelar solicitação"
+                                 rendered="#{s.cancelavel}"
+                                 styleClass="btn icon-btn danger"
+                                 process="@this"
+                                 action="#{atualizarDadosPacienteBean.prepararCancelamento(s.id, 1)}"
+                                 update=":mainForm:dlgCancel:formCancelamento:body"
+                                 oncomplete="PF('dlgCancelamento').show();" />
+            </p:column>
+        </p:dataTable>
+        <h:panelGroup layout="block" styleClass="note">
+            <h:outputText value="Solicitações aprovadas refletem nos dados clínicos após processamento pela equipe de enfermagem."/>
+        </h:panelGroup>
+    </h:panelGroup>
+
+</ui:composition>

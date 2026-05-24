@@ -1,0 +1,57 @@
+# =============================================================================
+# configure-mail-prod.cli
+#
+# Script jboss-cli para configurar a mail-session JNDI (java:jboss/mail/Default)
+# em instâncias WildFly de staging ou produção onde a autenticação SMTP é
+# necessária (Gmail Relay, SendGrid, AWS SES, Brevo, etc.).
+#
+# Uso:
+#   /opt/jboss/wildfly/bin/jboss-cli.sh \
+#       --connect --controller=localhost:9990 \
+#       --user=<admin> --password=<senha> \
+#       --file=configure-mail-prod.cli
+#
+# Variáveis — substitua pelos valores reais antes de executar,
+# ou exporte-as no shell e use a forma ${env.VAR} abaixo.
+#
+# Exemplo de substituição via shell antes de chamar o script:
+#   export SMTP_HOST=smtp.sendgrid.net
+#   export SMTP_PORT=587
+#   export SMTP_USER=apikey
+#   export SMTP_PASS=SG.xxxxxxx
+#   export SMTP_FROM=noreply@seu-dominio.com.br
+# =============================================================================
+
+# ── 1. Atualizar o socket binding SMTP ─────────────────────────────────────────
+# Substitua os literais pelos valores do seu provedor SMTP.
+# Exemplos de hosts:
+#   Gmail Workspace:  smtp.gmail.com       porta 587 (STARTTLS)
+#   SendGrid:         smtp.sendgrid.net    porta 587
+#   AWS SES (sa-east-1): email-smtp.sa-east-1.amazonaws.com  porta 587
+#   Brevo (Sendinblue): smtp-relay.brevo.com  porta 587
+
+/socket-binding-group=standard-sockets/remote-destination-outbound-socket-binding=mail-smtp:write-attribute(name=host, value="smtp.sendgrid.net")
+/socket-binding-group=standard-sockets/remote-destination-outbound-socket-binding=mail-smtp:write-attribute(name=port, value=587)
+
+# ── 2. Habilitar STARTTLS na mail-session ──────────────────────────────────────
+/subsystem=mail/mail-session=default/server=smtp:write-attribute(name=tls, value=true)
+
+# ── 3. Configurar credenciais SMTP ────────────────────────────────────────────
+# Para SendGrid: username=apikey, password=sua_api_key
+# Para AWS SES:  username e password gerados no IAM (SMTP credentials)
+/subsystem=mail/mail-session=default/server=smtp:write-attribute(name=username, value="SEU_USUARIO_SMTP")
+/subsystem=mail/mail-session=default/server=smtp:write-attribute(name=password, value="SUA_SENHA_SMTP")
+
+# ── 4. Recarregar a configuração sem reiniciar o servidor ─────────────────────
+:reload
+
+# ── Verificação ───────────────────────────────────────────────────────────────
+# Após o reload, confirme a configuração com:
+#
+#   /socket-binding-group=standard-sockets/remote-destination-outbound-socket-binding=mail-smtp:read-resource
+#   /subsystem=mail/mail-session=default/server=smtp:read-resource(include-runtime=true)
+#
+# Variáveis de ambiente que o MailService ainda lê (independentes do JNDI):
+#   MAIL_SMTP_FROM       → endereço remetente (noreply@seu-dominio.com.br)
+#   HSG_BASE_URL         → URL base para links no corpo do e-mail
+#   HSG_EMAIL_DOMINIO    → domínio do e-mail corporativo gerado

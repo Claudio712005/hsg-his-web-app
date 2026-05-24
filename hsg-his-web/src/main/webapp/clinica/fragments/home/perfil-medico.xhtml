@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html">
+
+    <h:panelGroup layout="block" styleClass="welcome">
+        <h:panelGroup layout="block" styleClass="icon">
+            <i class="fas fa-user-md"/>
+        </h:panelGroup>
+        <h:panelGroup layout="block">
+            <h:outputText value="Olá, Dr(a). "/>
+            <b><h:outputText value="#{beanSessao.usuarioClinica.nomeCompleto}"/></b>
+            <h:outputText value=". Você está logado como "/>
+            <h:outputText value="Médico"
+                          styleClass="chip ativo"
+                          style="vertical-align:middle;"/>
+            <h:outputText value=" no sistema HSG."/>
+        </h:panelGroup>
+    </h:panelGroup>
+
+    <h:panelGroup layout="block" styleClass="panel">
+
+        <h:panelGroup layout="block" styleClass="panel-title">
+            <i class="fa fa-id-card panel-icon"/>
+            <h:outputText value="Dados do Profissional"/>
+        </h:panelGroup>
+
+        <h:panelGroup layout="block" styleClass="panel-body">
+            <h:panelGroup layout="block" styleClass="kv">
+
+                <h:panelGroup layout="block" styleClass="k">
+                    <h:outputText value="Nome completo"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <b><h:outputText value="#{beanSessao.usuarioClinica.nomeCompleto}"/></b>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k">
+                    <h:outputText value="CRM"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v mono">
+                    <h:outputText value="#{not empty beanSessao.usuarioClinica.registro ? beanSessao.usuarioClinica.registro : '—'}"/>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k">
+                    <h:outputText value="Especialidade"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <h:outputText value="#{not empty beanSessao.usuarioClinica.especialidade ? beanSessao.usuarioClinica.especialidade : '—'}"/>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k">
+                    <h:outputText value="E-mail corporativo"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v mono">
+                    <h:outputText value="#{not empty beanSessao.usuarioClinica.email ? beanSessao.usuarioClinica.email : '—'}"/>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k">
+                    <h:outputText value="Usuário do sistema"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v mono">
+                    <h:outputText value="#{beanSessao.usuarioClinica.username}"/>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k">
+                    <h:outputText value="Perfil de acesso"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <h:outputText value="Médico" styleClass="chip ativo"/>
+                </h:panelGroup>
+
+            </h:panelGroup>
+        </h:panelGroup>
+
+    </h:panelGroup>
+
+    <h:panelGroup layout="block" styleClass="note" style="margin-top:12px;">
+        <i class="fa fa-info-circle"/>
+        <h:outputText value=" Use o menu superior para acessar prontuários, prescrições e demais funcionalidades clínicas."/>
+    </h:panelGroup>
+
+</ui:composition>

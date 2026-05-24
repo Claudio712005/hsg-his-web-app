@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/templates/admin/layout.xhtml">
+
+    <ui:define name="title">HSG - Convênios</ui:define>
+
+    <ui:define name="breadcrumbItems">
+        <span class="sep">&#187;</span>
+        <span>Convênios</span>
+    </ui:define>
+
+    <ui:define name="content">
+
+        <h:panelGroup layout="block" styleClass="page-title">
+            <h:panelGroup layout="block">
+                <h1>Gestão de Convênios</h1>
+                <h:panelGroup layout="block" styleClass="sub">
+                    <h:outputText value="Cadastro de operadoras, planos e regras de cobertura"/>
+                </h:panelGroup>
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <div class="stat-cards">
+            <div class="stat-card">
+                <div class="sc-ic"><i class="fa fa-id-card"></i></div>
+                <div class="sc-body">
+                    <div class="sc-num">#{convenioBean.totalConveniosAtivos}</div>
+                    <div class="sc-lbl">Convênios ativos</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="sc-ic"><i class="fa fa-layer-group"></i></div>
+                <div class="sc-body">
+                    <div class="sc-num">#{convenioBean.totalPlanosAtivos}</div>
+                    <div class="sc-lbl">Planos ativos</div>
+                </div>
+            </div>
+        </div>
+
+        <h:panelGroup layout="block" styleClass="panel" style="width:100%; margin-bottom:18px;">
+            <h:panelGroup layout="block" styleClass="panel-title">
+                <i class="fa fa-circle-info panel-icon"/>
+                <h:outputText value="Como gerenciar convênios"/>
+            </h:panelGroup>
+            <h:panelGroup layout="block" styleClass="panel-body">
+                <p style="margin:0 0 10px 0;">
+                    A gestão é feita em três níveis encadeados — cadastre primeiro a operadora,
+                    depois os planos vinculados, e por fim as regras de cobertura de cada plano.
+                </p>
+                <ol style="margin:0 0 6px 18px; padding:0;">
+                    <li>
+                        <b>Convênios</b> — operadoras de saúde (Unimed, Amil, etc.). Informe
+                        nome, registro ANS, CNPJ e contato. Inativar um convênio só é permitido se
+                        não houver planos ativos vinculados.
+                    </li>
+                    <li>
+                        <b>Planos</b> — níveis ofertados por uma operadora (Básico, Pleno,
+                        Premium). Defina tipo de cobertura, mensalidade e se garante acomodação
+                        individual. Um plano só pode ser criado em convênio ativo.
+                    </li>
+                    <li>
+                        <b>Regras de Cobertura</b> — procedimentos cobertos por um plano. Para
+                        cada procedimento configure carência (em dias), copagamento (% pago pelo
+                        paciente) e se há cobertura. Adicione observações sobre restrições e
+                        limites.
+                    </li>
+                </ol>
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <p:tabView id="tabViewConvenios" styleClass="hsg-tabview" dynamic="true">
+
+            <p:tab title="Convênios">
+                <ui:include src="fragments/convenios/tabela-convenios.xhtml"/>
+            </p:tab>
+
+            <p:tab title="Planos">
+                <ui:include src="fragments/convenios/tabela-planos.xhtml"/>
+            </p:tab>
+
+            <p:tab title="Regras de Cobertura">
+                <ui:include src="fragments/convenios/tabela-regras.xhtml"/>
+            </p:tab>
+
+        </p:tabView>
+
+    </ui:define>
+
+</ui:composition>

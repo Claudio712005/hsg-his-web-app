@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:p="http://primefaces.org/ui">
+
+    <h:panelGroup layout="block" rendered="#{preCadastroBean.form.enfermeiro}">
+
+        <h:panelGroup layout="block"
+            style="padding:6px 10px; background:#f4f7fb; border-top:1px solid #c8c8c8; border-bottom:1px solid #e4e4e4; font-weight:bold; font-size:11px; color:#1f3a68; text-transform:uppercase; letter-spacing:0.4px;">
+            <i class="fa fa-procedures" style="margin-right:6px;" />
+            <h:outputText value="Dados do Enfermeiro" />
+        </h:panelGroup>
+
+        <h:panelGroup layout="block" styleClass="kv">
+
+            <h:panelGroup layout="block" styleClass="k">
+                <h:outputText value="Número do COREN" />
+                <h:outputText value=" *" style="color:#c00;" />
+            </h:panelGroup>
+            <h:panelGroup layout="block" styleClass="v">
+                <p:inputText id="coren" value="#{preCadastroBean.form.coren}" styleClass="input-field mono"
+                    style="width:160px;" maxlength="10" required="#{preCadastroBean.form.enfermeiro}"
+                    requiredMessage="COREN é obrigatório para enfermeiros." placeholder="Ex: 654321">
+                    <p:keyFilter mask="pint" />
+                </p:inputText>
+                <p:message for="coren" styleClass="field-error" />
+                <div style="font-size:11px; color:#888; margin-top:2px;">
+                    Apenas o número de registro, sem prefixo "COREN" ou UF
+                </div>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="k">
+                <h:outputText value="UF do COREN" />
+                <h:outputText value=" *" style="color:#c00;" />
+            </h:panelGroup>
+            <h:panelGroup layout="block" styleClass="v">
+                <p:selectOneMenu id="ufCoren" value="#{preCadastroBean.form.ufCoren}" styleClass="input-field"
+                    style="width:260px;" required="#{preCadastroBean.form.enfermeiro}"
+                    requiredMessage="UF do COREN é obrigatória.">
+                    <f:selectItem itemLabel="Selecione o estado..." itemValue="#{null}" noSelectionOption="true" />
+                    <f:selectItems value="#{preCadastroBean.estados}" var="e" itemValue="#{e}"
+                        itemLabel="#{e.sigla} — #{e.nome}" />
+                </p:selectOneMenu>
+                <p:message for="ufCoren" styleClass="field-error" />
+                <div style="font-size:11px; color:#888; margin-top:2px;">
+                    Estado onde o COREN foi emitido
+                </div>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="k">
+                <h:outputText value="Categoria" />
+                <h:outputText value=" *" style="color:#c00;" />
+            </h:panelGroup>
+            <h:panelGroup layout="block" styleClass="v">
+                <p:selectOneMenu id="categoriaCoren" value="#{preCadastroBean.form.categoriaCoren}"
+                    styleClass="input-field" style="width:280px;" required="#{preCadastroBean.form.enfermeiro}"
+                    requiredMessage="Categoria do COREN é obrigatória.">
+                    <f:selectItem itemLabel="Selecione a categoria..." itemValue="#{null}" noSelectionOption="true" />
+                    <f:selectItems value="#{preCadastroBean.categoriasCoren}" var="cat" itemValue="#{cat}"
+                        itemLabel="#{cat.descricao}" />
+                </p:selectOneMenu>
+                <p:message for="categoriaCoren" styleClass="field-error" />
+                <div style="font-size:11px; color:#888; margin-top:2px;">
+                    ENF = Enfermeiro · TEC = Técnico de Enfermagem · AUX = Auxiliar
+                </div>
+            </h:panelGroup>
+
+        </h:panelGroup>
+
+    </h:panelGroup>
+
+</ui:composition>

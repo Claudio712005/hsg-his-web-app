@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/WEB-INF/templates/error/layout.xhtml">
+
+    <ui:define name="title">HSG - Acesso Negado</ui:define>
+
+    <ui:define name="content">
+        <ui:include src="/error/fragments/erro-corpo.xhtml">
+            <ui:param name="codHttp"   value="403"/>
+            <ui:param name="icone"     value="fa-lock"/>
+            <ui:param name="corCodigo" value="#f0a030"/>
+            <ui:param name="titulo"    value="Acesso negado"/>
+            <ui:param name="mensagem"  value="Você não tem permissão para acessar este recurso. Se acredita que isso é um erro, entre em contato com o administrador do sistema."/>
+        </ui:include>
+    </ui:define>
+
+</ui:composition>

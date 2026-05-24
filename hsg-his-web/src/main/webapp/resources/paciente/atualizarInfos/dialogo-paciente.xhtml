@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:cc="http://java.sun.com/jsf/composite"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+<cc:interface>
+    <cc:attribute name="bean"   required="true"/>
+    <cc:attribute name="sessao" required="true"/>
+</cc:interface>
+
+<cc:implementation>
+    <style type="text/css">
+        .dialog-content { line-height:1.5; color:#333; }
+        .dialog-grid { display:grid; grid-template-columns:120px 1fr; gap:8px; margin-top:8px; }
+        .dialog-grid .k { font-weight:bold; color:#555; font-size:11px; }
+        .dialog-grid .v { font-size:12px; }
+        .dialog-actions { display:flex; gap:6px; justify-content:flex-end; margin-top:12px; }
+        .hsg-dialog .ui-dialog-titlebar { background:linear-gradient(#f8f8f8,#e4e4e4); border-bottom:1px solid #c8c8c8; color:#333; }
+        .hsg-dialog .ui-dialog-content { padding:12px; background:#fff; }
+    </style>
+
+    <p:dialog id="pacienteDialog"
+              header="Atualização de cadastro"
+              widgetVar="pacienteDialog"
+              modal="true"
+              resizable="false"
+              closable="true"
+              draggable="false"
+              responsive="true"
+              width="520"
+              styleClass="hsg-dialog">
+
+        <div class="dialog-content">
+            <div class="welcome" style="margin-bottom:8px;">
+                <div class="icon">i</div>
+                <div>Revise os dados antes de confirmar a solicitação.</div>
+            </div>
+            <div class="dialog-grid">
+                <div class="k">Paciente</div>
+                <div class="v">#{cc.attrs.bean.paciente != null ? cc.attrs.bean.paciente.nomeCompleto : cc.attrs.sessao.paciente.nomeCompleto}</div>
+
+                <div class="k">Prontuário</div>
+                <div class="v mono">#{cc.attrs.bean.prontuario}</div>
+
+                <div class="k">Status</div>
+                <div class="v">
+                    <span class="chip #{cc.attrs.bean.statusCssClass}">#{cc.attrs.bean.statusDescricao}</span>
+                </div>
+
+                <div class="k">Última atualização</div>
+                <div class="v">20/04/2026</div>
+            </div>
+            <div class="note" style="margin-top:10px; border:1px solid #e4e4e4;">
+                Este dialog é apenas um exemplo visual para acelerar a implementação da tela final.
+            </div>
+        </div>
+
+        <f:facet name="footer">
+            <div class="dialog-actions">
+                <p:commandButton value="Cancelar" type="button"
+                                 styleClass="btn"
+                                 onclick="PF('pacienteDialog').hide();"/>
+                <p:commandButton value="Confirmar" type="button"
+                                 styleClass="btn primary"
+                                 onclick="PF('pacienteDialog').hide();PF('dialogFeedback').show();"/>
+            </div>
+        </f:facet>
+    </p:dialog>
+</cc:implementation>
+</html>

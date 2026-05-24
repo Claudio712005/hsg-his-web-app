@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <p:dialog id="dlgFormPlano"
+              widgetVar="wDlgFormPlano"
+              header="#{convenioBean.formPlanoId == null ? 'Cadastrar Plano' : 'Editar Plano'}"
+              modal="true"
+              resizable="false"
+              closeOnEscape="true"
+              width="680"
+              styleClass="hsg-dialog">
+
+        <h:panelGroup layout="block">
+
+            <h:panelGroup layout="block" styleClass="note" style="margin-bottom:16px;">
+                <h:outputText value="Cadastre um nível de plano para a operadora. Selecione o convênio, defina o tipo de cobertura e a mensalidade. A acomodação individual indica se o plano garante quarto privativo."/>
+            </h:panelGroup>
+
+            <div class="dlg-section">
+                <div class="dlg-section-title">
+                    <i class="fa fa-layer-group"/>
+                    Identificação
+                </div>
+                <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Convênio"/>
+                        <h:outputText value=" *" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <h:selectOneMenu id="formPlConv"
+                                         value="#{convenioBean.formPlanoConvenioId}"
+                                         styleClass="input-field"
+                                         style="width:100%;"
+                                         disabled="#{convenioBean.formPlanoId != null}">
+                            <f:selectItem itemLabel="Selecione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{convenioBean.conveniosParaSelect}"
+                                           var="c"
+                                           itemValue="#{c.id}"
+                                           itemLabel="#{c.nome}"/>
+                        </h:selectOneMenu>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Nome do plano"/>
+                        <h:outputText value=" *" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <h:inputText id="formPlNome"
+                                     value="#{convenioBean.formPlanoNome}"
+                                     styleClass="input-field"
+                                     style="width:100%;"
+                                     maxlength="150"
+                                     placeholder="Ex.: Pleno, Premium, Master"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Código"/>
+                        <h:outputText value=" (opcional)" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <h:inputText id="formPlCodigo"
+                                     value="#{convenioBean.formPlanoCodigo}"
+                                     styleClass="input-field mono"
+                                     style="width:260px;"
+                                     maxlength="50"
+                                     placeholder="Ex.: UNI-PLE-001"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Descrição"/>
+                        <h:outputText value=" (opcional)" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <p:inputTextarea id="formPlDesc"
+                                         value="#{convenioBean.formPlanoDescricao}"
+                                         styleClass="input-field"
+                                         style="width:100%; resize:vertical;"
+                                         rows="3"
+                                         maxlength="500"
+                                         placeholder="Detalhes do plano"/>
+                    </h:panelGroup>
+                </h:panelGroup>
+            </div>
+
+            <div class="dlg-section">
+                <div class="dlg-section-title">
+                    <i class="fa fa-clipboard-list"/>
+                    Características
+                </div>
+                <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Tipo de cobertura"/>
+                        <h:outputText value=" *" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <h:selectOneMenu id="formPlCob"
+                                         value="#{convenioBean.formPlanoTipoCobertura}"
+                                         styleClass="input-field"
+                                         style="width:260px;">
+                            <f:selectItem itemLabel="Selecione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{convenioBean.tiposCobertura}"
+                                           var="tc"
+                                           itemValue="#{tc.valor}"
+                                           itemLabel="#{tc.descricao}"/>
+                        </h:selectOneMenu>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Mensalidade (R$)"/>
+                        <h:outputText value=" (opcional)" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <p:inputNumber id="formPlValor"
+                                       value="#{convenioBean.formPlanoValorMensalidade}"
+                                       styleClass="input-field mono"
+                                       style="width:200px;"
+                                       symbol="R$ "
+                                       symbolPosition="p"
+                                       decimalSeparator=","
+                                       thousandSeparator="."
+                                       decimalPlaces="2"
+                                       minValue="0"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Acomodação individual"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <h:selectBooleanCheckbox id="formPlAcomod"
+                                                 value="#{convenioBean.formPlanoAcomodacaoIndividual}"/>
+                        <h:outputText value=" Quarto privativo garantido" styleClass="muted"
+                                      style="margin-left:8px;"/>
+                    </h:panelGroup>
+                </h:panelGroup>
+            </div>
+
+        </h:panelGroup>
+
+        <f:facet name="footer">
+            <p:commandButton value="Cancelar"
+                             icon="fa fa-times"
+                             type="button"
+                             onclick="PF('wDlgFormPlano').hide();"
+                             styleClass="btn secondary"/>
+            <p:commandButton value="Salvar"
+                             icon="fa fa-save"
+                             styleClass="btn primary"
+                             actionListener="#{convenioBean.salvarPlano}"
+                             update=":msgs :tabViewConvenios:formPlanos:tabelaPlanos :tabViewConvenios:formPlanos:dlgFormPlano"
+                             oncomplete="if (!args.validationFailed &amp;&amp; !args.errorMessage) PF('wDlgFormPlano').hide();"
+                             process="@form"/>
+        </f:facet>
+
+    </p:dialog>
+
+</ui:composition>

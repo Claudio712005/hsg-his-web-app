@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:cc="http://java.sun.com/jsf/composite"
+      xmlns:h="http://xmlns.jcp.org/jsf/html">
+
+<cc:interface>
+    <cc:attribute name="bean"   required="true"/>
+    <cc:attribute name="sessao" required="true"/>
+</cc:interface>
+
+<cc:implementation>
+    <h:panelGroup layout="block" styleClass="panel">
+        <h:panelGroup layout="block" styleClass="panel-title">
+            <h:outputText value="Resumo do Paciente"/>
+            <h:panelGroup layout="block" styleClass="tools">
+                <h:panelGroup layout="block" styleClass="tool-btn" title="Minimizar">
+                    <h:outputText value="&#8722;"/>
+                </h:panelGroup>
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <h:panelGroup layout="block" styleClass="patient-head">
+            <h:panelGroup layout="block" styleClass="photo">
+                <h:outputText value="FOTO 3x4"/>
+            </h:panelGroup>
+            <h:panelGroup layout="block" styleClass="info">
+                <h2>
+                    <h:outputText value="#{cc.attrs.bean.paciente != null ? cc.attrs.bean.paciente.nomeCompleto : cc.attrs.sessao.paciente.nomeCompleto}"/>
+                </h2>
+                <h:panelGroup layout="block" styleClass="line">
+                    <b><h:outputText value="Prontuário:"/></b>
+                    <h:outputText value=" #{cc.attrs.bean.prontuario} &#183; "/>
+                    <b><h:outputText value="Idade:"/></b>
+                    <h:outputText value=" #{cc.attrs.bean.idade} anos"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="line">
+                    <b><h:outputText value="E-mail:"/></b>
+                    <h:outputText value=" #{cc.attrs.bean.paciente != null ? cc.attrs.bean.paciente.email : cc.attrs.sessao.paciente.email}"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="line" style="margin-top:4px;">
+                    <h:outputText value="#{cc.attrs.bean.statusDescricao}"
+                                  styleClass="chip #{cc.attrs.bean.statusCssClass}"/>
+                </h:panelGroup>
+            </h:panelGroup>
+            <h:panelGroup layout="block" styleClass="right">
+                <h:panelGroup layout="block" styleClass="big">
+                    <h:outputText value="#{cc.attrs.bean.prontuario}"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="small">
+                    <h:outputText value="Cartão do Paciente &#183; HSG"/>
+                </h:panelGroup>
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <h:panelGroup layout="block" styleClass="kv">
+            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Nome Completo"/></h:panelGroup>
+            <h:panelGroup layout="block" styleClass="v">
+                <h:outputText value="#{cc.attrs.bean.paciente != null ? cc.attrs.bean.paciente.nomeCompleto : cc.attrs.sessao.paciente.nomeCompleto}"/>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="k"><h:outputText value="CPF"/></h:panelGroup>
+            <h:panelGroup layout="block" styleClass="v mono">
+                <h:outputText value="***.***.***.** "/>
+                <h:outputText value="(protegido)" styleClass="muted"/>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Data de Nascimento"/></h:panelGroup>
+            <h:panelGroup layout="block" styleClass="v">
+                <h:outputText value="#{cc.attrs.bean.dataNascimentoFormatada}"/>
+                <h:outputText value=" (#{cc.attrs.bean.idade} anos)" styleClass="muted"/>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Telefone"/></h:panelGroup>
+            <h:panelGroup layout="block" styleClass="v mono">
+                <h:outputText value="#{cc.attrs.bean.paciente != null ? cc.attrs.bean.paciente.telefone : '-'}"/>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="k"><h:outputText value="E-mail"/></h:panelGroup>
+            <h:panelGroup layout="block" styleClass="v">
+                <h:outputText value="#{cc.attrs.bean.paciente != null ? cc.attrs.bean.paciente.email : cc.attrs.sessao.paciente.email}"/>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Status"/></h:panelGroup>
+            <h:panelGroup layout="block" styleClass="v">
+                <h:outputText value="#{cc.attrs.bean.statusDescricao}"
+                              styleClass="chip #{cc.attrs.bean.statusCssClass}"/>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Usuário do Sistema"/></h:panelGroup>
+            <h:panelGroup layout="block" styleClass="v mono">
+                <h:outputText value="#{cc.attrs.sessao.paciente.username}"/>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Cadastrado em"/></h:panelGroup>
+            <h:panelGroup layout="block" styleClass="v">
+                <h:outputText value="#{cc.attrs.bean.dataCadastroFormatada}"/>
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <h:panelGroup layout="block" styleClass="note">
+            <h:outputText value="Os dados pessoais são gerenciados pelo sistema HSG. CPF e documentos são armazenados de forma criptografada conforme a LGPD."/>
+        </h:panelGroup>
+    </h:panelGroup>
+</cc:implementation>
+</html>

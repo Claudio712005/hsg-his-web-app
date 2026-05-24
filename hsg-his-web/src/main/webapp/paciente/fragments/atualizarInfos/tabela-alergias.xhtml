@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <h:outputStylesheet type="text/css">
+        .dialog-nova-alergia .kv {
+            display: grid;
+            grid-template-columns: 170px minmax(0, 1fr);
+            border-top: 1px solid #e4e4e4;
+            border-left: 1px solid #e4e4e4;
+        }
+
+        .dialog-nova-alergia .kv .k,
+        .dialog-nova-alergia .kv .v {
+            box-sizing: border-box;
+            min-width: 0;
+        }
+
+        .dialog-nova-alergia .kv .v .ui-inputfield,
+        .dialog-nova-alergia .kv .v .ui-selectonemenu,
+        .dialog-nova-alergia .kv .v .ui-inputtextarea {
+            width: 100% !important;
+            box-sizing: border-box;
+        }
+
+        .dialog-nova-alergia .kv .v .ui-selectonemenu {
+            min-width: 0;
+        }
+    </h:outputStylesheet>
+
+    <h:panelGroup layout="block" styleClass="panel">
+        <h:panelGroup layout="block" styleClass="panel-title">
+            <h:outputText value="Alergias Registradas"/>
+            <h:panelGroup layout="block" styleClass="tools">
+                <p:commandButton icon="fa fa-plus"
+                                 title="Informar nova alergia"
+                                 styleClass="btn icon-btn"
+                                 type="button"
+                                 onclick="PF('dlgNovaAlergia').show();"/>
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <p:dataTable id="tabelaAlergias"
+                     var="alergia"
+                     value="#{alergiaBean.model}"
+                     lazy="true"
+                     styleClass="data"
+                     emptyMessage="Nenhuma alergia registrada."
+                     paginator="true"
+                     rows="5"
+                     paginatorAlwaysVisible="false"
+                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                     rowsPerPageTemplate="5,10,20">
+
+            <p:column headerText="Nome">
+                <h:outputText value="#{alergia.nome}"/>
+            </p:column>
+            <p:column headerText="Tipo" style="width:110px;">
+                <h:outputText value="#{alergia.tipoDescricao}"/>
+            </p:column>
+            <p:column headerText="Gravidade" style="width:110px;" styleClass="center-align">
+                <h:outputText value="#{alergia.gravidadeDescricao}"/>
+            </p:column>
+            <p:column headerText="Status" style="width:100px;" styleClass="center-align">
+                <h:outputText value="#{alergia.statusDescricao}"
+                              styleClass="chip #{alergia.statusCssClass}"/>
+            </p:column>
+            <p:column headerText="Cadastrada em" style="width:140px;">
+                <h:outputText value="#{alergia.dataCadastro}"/>
+            </p:column>
+            <p:column headerText="Ações" style="width:80px;" styleClass="center-align">
+                <p:commandButton icon="fa fa-eye"
+                                 title="Visualizar detalhes"
+                                 styleClass="btn icon-btn info"
+                                 process="@this"
+                                 action="#{alergiaBean.selecionarAlergia(alergia)}"
+                                 update=":mainForm:dlgAlergiaDetalhe:body"
+                                 oncomplete="if (!args.validationFailed) PF('dlgAlergiaDetalhe').show();"/>
+                <p:commandButton icon="fa fa-trash"
+                                 title="Excluir"
+                                 rendered="#{alergia.excluivel}"
+                                 styleClass="btn icon-btn danger"
+                                 process="@this"
+                                 action="#{alergiaBean.prepararExclusao(alergia.id)}"
+                                 update=":mainForm:dlgAlergiaExcluir:formExclusao:body"
+                                 oncomplete="PF('dlgAlergiaExcluir').show();"/>
+            </p:column>
+        </p:dataTable>
+
+        <h:panelGroup layout="block" styleClass="note">
+            <h:outputText value="Alergias com status Informada aguardam revisão da equipe de enfermagem."/>
+        </h:panelGroup>
+    </h:panelGroup>
+
+    <p:dialog id="dlgNovaAlergiaPanel"
+              widgetVar="dlgNovaAlergia"
+              header="Informar Nova Alergia"
+              modal="true"
+              resizable="false"
+              width="620"
+              closeOnEscape="true"
+              contentStyle="padding:16px;"
+              styleClass="dialog-nova-alergia">
+        <h:form id="formNovaAlergia">
+            <h:panelGroup id="bodyNovaAlergia" layout="block"
+                          style="display:flex; flex-direction:column; gap:14px;">
+
+                <h:panelGroup layout="block"
+                              style="color:#0f172a; background:#eff6ff; border:1px solid #bfdbfe; padding:12px 14px; border-radius:6px; line-height:1.45;">
+                    <h:outputText value="Preencha os dados da alergia com o máximo de detalhe possível. Após o registro, a solicitação seguirá para análise da equipe de enfermagem."/>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="kv">
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Nome"/>
+                        <h:outputText value=" *" style="color:#c00;"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <p:inputText id="nomeAlergia"
+                                     value="#{alergiaBean.nomeNovaAlergia}"
+                                     required="true"
+                                     requiredMessage="O nome é obrigatório."
+                                     maxlength="100"
+                                     styleClass="input-field"
+                                     style="width:100%;"/>
+                        <p:message for="nomeAlergia" styleClass="field-error"/>
+                    </h:panelGroup>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="kv">
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Tipo"/>
+                        <h:outputText value=" *" style="color:#c00;"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <p:selectOneMenu id="tipoAlergia"
+                                         value="#{alergiaBean.tipoNovaAlergia}"
+                                         required="true"
+                                         requiredMessage="O tipo é obrigatório."
+                                         styleClass="input-field"
+                                         style="width:100%;">
+                            <f:selectItem itemLabel="Selecione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{alergiaBean.tiposAlergia}"
+                                           var="t"
+                                           itemLabel="#{t.descricao}"
+                                           itemValue="#{t}"/>
+                        </p:selectOneMenu>
+                        <p:message for="tipoAlergia" styleClass="field-error"/>
+                    </h:panelGroup>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="kv">
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Gravidade"/>
+                        <h:outputText value=" *" style="color:#c00;"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <p:selectOneMenu id="gravidadeAlergia"
+                                         value="#{alergiaBean.gravidadeNovaAlergia}"
+                                         required="true"
+                                         requiredMessage="A gravidade é obrigatória."
+                                         styleClass="input-field"
+                                         style="width:100%;">
+                            <f:selectItem itemLabel="Selecione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{alergiaBean.gravidadesAlergia}"
+                                           var="g"
+                                           itemLabel="#{g.descricao}"
+                                           itemValue="#{g}"/>
+                        </p:selectOneMenu>
+                        <p:message for="gravidadeAlergia" styleClass="field-error"/>
+                    </h:panelGroup>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="kv">
+                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Descrição"/></h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <p:inputTextarea id="descricaoAlergia"
+                                         value="#{alergiaBean.descricaoNovaAlergia}"
+                                         maxlength="500"
+                                         rows="3"
+                                         autoResize="false"
+                                         styleClass="input-field"
+                                         style="width:100%; min-height:88px; resize:vertical;"/>
+                    </h:panelGroup>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="kv">
+                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Reação observada"/></h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <p:inputTextarea id="reacaoAlergia"
+                                         value="#{alergiaBean.reacaoNovaAlergia}"
+                                         maxlength="500"
+                                         rows="3"
+                                         autoResize="false"
+                                         styleClass="input-field"
+                                         style="width:100%; min-height:88px; resize:vertical;"/>
+                    </h:panelGroup>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="kv">
+                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Observação"/></h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <p:inputTextarea id="obsAlergia"
+                                         value="#{alergiaBean.observacaoNovaAlergia}"
+                                         maxlength="500"
+                                         rows="3"
+                                         autoResize="false"
+                                         styleClass="input-field"
+                                         style="width:100%; min-height:88px; resize:vertical;"/>
+                    </h:panelGroup>
+                </h:panelGroup>
+
+            </h:panelGroup>
+
+            <h:panelGroup layout="block"
+                          style="display:flex; justify-content:flex-end; gap:8px; padding-top:14px; border-top:1px solid #e5e7eb; margin-top:14px;">
+                <p:commandButton value="Registrar"
+                                 icon="fa fa-save"
+                                 action="#{alergiaBean.registrarAlergia}"
+                                 process="@form"
+                                 update=":mainForm:msgs :mainForm:tabs"
+                                 styleClass="btn"
+                                 oncomplete="if (!args.validationFailed) PF('dlgNovaAlergia').hide();"/>
+                <p:commandButton value="Cancelar"
+                                 icon="fa fa-times"
+                                 type="button"
+                                 onclick="PF('dlgNovaAlergia').hide();"
+                                 styleClass="btn secondary"/>
+            </h:panelGroup>
+        </h:form>
+    </p:dialog>
+
+</ui:composition>

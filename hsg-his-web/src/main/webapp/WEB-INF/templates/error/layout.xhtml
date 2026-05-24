@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<h:head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title><ui:insert name="title">HSG - Erro</ui:insert></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <style type="text/css">
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f0f4f9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .err-topbar {
+            background: linear-gradient(135deg, #1f3a68 0%, #2d5fa8 100%);
+            padding: 0 24px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .err-topbar .logo {
+            width: 30px; height: 30px;
+            background: rgba(255,255,255,0.18);
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 15px;
+        }
+
+        .err-topbar .sub {
+            font-size: 11px;
+            font-weight: 400;
+            opacity: 0.7;
+            margin-left: 4px;
+        }
+
+        .err-main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 16px;
+        }
+
+        .err-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 24px rgba(31,58,104,0.10);
+            padding: 52px 48px 44px;
+            max-width: 520px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .err-code {
+            font-size: 96px;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -4px;
+            margin-bottom: 16px;
+        }
+
+        .err-icon {
+            font-size: 38px;
+            margin-bottom: 14px;
+        }
+
+        .err-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f3a68;
+            margin-bottom: 10px;
+        }
+
+        .err-msg {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .err-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .err-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 10px 26px;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            border: none;
+            transition: opacity 0.15s;
+            min-width: 220px;
+            justify-content: center;
+        }
+
+        .err-btn:hover { opacity: 0.87; }
+
+        .err-btn.primary {
+            background: linear-gradient(135deg, #2d5fa8, #1f3a68);
+            color: #fff;
+        }
+
+        .err-btn.secondary {
+            background: #f1f5f9;
+            color: #1f3a68;
+            border: 1px solid #d1dae8;
+        }
+
+        .err-divider {
+            width: 40px;
+            height: 2px;
+            background: #e5e7eb;
+            margin: 4px auto;
+        }
+
+        .err-footer {
+            padding: 14px 24px;
+            text-align: center;
+            font-size: 11px;
+            color: #9ca3af;
+            border-top: 1px solid #e9ecf2;
+            background: #fff;
+        }
+    </style>
+</h:head>
+
+<h:body>
+
+    <div class="err-topbar">
+        <div class="logo">H</div>
+        HSG&#160;-&#160;Hospital Management System
+        <span class="sub">Sistema Hospitalar</span>
+    </div>
+
+    <div class="err-main">
+        <div class="err-card">
+            <ui:insert name="content"/>
+        </div>
+    </div>
+
+    <div class="err-footer">
+        &#169; 2012–2026 HSG Hospital Management System &#160;|&#160; Todos os direitos reservados
+    </div>
+
+</h:body>
+</html>

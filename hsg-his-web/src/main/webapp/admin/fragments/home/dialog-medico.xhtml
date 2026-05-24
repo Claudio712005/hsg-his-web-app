@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <p:dialog id="dlgMedico"
+              widgetVar="wDlgMedico"
+              header="Detalhes do Médico"
+              modal="true"
+              resizable="false"
+              closeOnEscape="true"
+              width="680"
+              styleClass="hsg-dialog">
+
+        <h:panelGroup id="dlgBodyMedico" layout="block">
+
+            <h:panelGroup layout="block" rendered="#{adminBean.medicoSelecionado == null}">
+                <h:panelGroup layout="block" styleClass="note" style="padding:16px 12px;">
+                    <h:outputText value="Nenhum médico selecionado."/>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" rendered="#{adminBean.medicoSelecionado != null}">
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-user-md"/>
+                        Identificação
+                    </div>
+                    <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Nome completo"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <b><h:outputText value="#{adminBean.medicoSelecionado.nomeCompleto}"/></b>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="CRM"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{adminBean.medicoSelecionado.crm != null ? adminBean.medicoSelecionado.crm.formatado : '—'}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Especialidade"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText value="#{adminBean.medicoSelecionado.especialidade != null ? adminBean.medicoSelecionado.especialidade.nome : '—'}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Status"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText styleClass="chip #{adminBean.medicoSelecionado.status.valor eq 'A' ? 'ativo' : (adminBean.medicoSelecionado.status.valor eq 'I' ? 'inativo' : 'pendente')}"
+                                          value="#{adminBean.medicoSelecionado.status.descricao}"/>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </div>
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-address-book"/>
+                        Contato
+                    </div>
+                    <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="E-mail"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{adminBean.medicoSelecionado.email != null ? adminBean.medicoSelecionado.email : '—'}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Telefone"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{adminBean.medicoSelecionado.telefone != null ? adminBean.medicoSelecionado.telefone : '—'}"/>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </div>
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-calendar-alt"/>
+                        Registro
+                    </div>
+                    <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Data de nascimento"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{adminBean.formatarDataNasc(adminBean.medicoSelecionado.dataNascimento)}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Cadastrado em"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{adminBean.formatarData(adminBean.medicoSelecionado.dataCadastro)}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Última atualização"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{adminBean.formatarData(adminBean.medicoSelecionado.dataUltimaAtualizacao)}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Usuário do sistema"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{adminBean.medicoSelecionado.contaUsuario != null ? adminBean.medicoSelecionado.contaUsuario.username : '—'}"/>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </div>
+
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <f:facet name="footer">
+            <p:commandButton value="Fechar"
+                             icon="fa fa-times"
+                             type="button"
+                             onclick="PF('wDlgMedico').hide();"
+                             styleClass="btn secondary"/>
+        </f:facet>
+
+    </p:dialog>
+
+</ui:composition>

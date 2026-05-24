@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <div class="topbar">
+        <div class="brand">
+            <div class="logo">H</div>
+            HSG&#160;-&#160;Hospital Management System
+            <span class="sub">Portal do Paciente&#160;|&#160;v#{infoApp.versaoExibicao}</span>
+        </div>
+        <div class="spacer"/>
+        <div class="topmenu">
+            <div class="item">Início</div>
+            <div class="item">Ajuda</div>
+            <div class="item">Acessibilidade</div>
+        </div>
+        <div class="user">
+            <div class="avatar">
+                #{beanSessao.paciente != null ? beanSessao.paciente.nomeCompleto.substring(0,1) : '?'}
+            </div>
+            <div class="meta">
+                <div class="label">Paciente</div>
+                <div class="name">#{beanSessao.paciente != null ? beanSessao.paciente.nomeCompleto : ''}</div>
+            </div>
+        </div>
+        <h:form id="logoutHeaderForm" styleClass="logout-form">
+            <h:commandButton value="Sair"
+                             action="#{painelPacienteBean.sair}"
+                             styleClass="logout"/>
+        </h:form>
+    </div>
+
+</ui:composition>

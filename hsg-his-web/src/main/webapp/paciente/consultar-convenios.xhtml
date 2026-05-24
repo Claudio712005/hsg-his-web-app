@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/templates/paciente/layout.xhtml">
+
+    <ui:define name="title">HSG - Consultar Convênios</ui:define>
+
+    <ui:define name="breadcrumbItems">
+        <h:outputText value="&#187;" styleClass="sep"/>
+        <h:outputText value="Consultar Convênios" style="font-weight:bold;"/>
+    </ui:define>
+
+    <ui:define name="content">
+        <h:form id="formConsultar">
+
+            <h:panelGroup layout="block" styleClass="page-title">
+                <h:panelGroup layout="block">
+                    <h1>
+                        <i class="fa fa-hospital" style="margin-right:8px;"/>
+                        Convênios Disponíveis
+                    </h1>
+                    <h:panelGroup layout="block" styleClass="sub">
+                        <h:outputText value="Conheça as operadoras parceiras do Hospital São Gabriel, seus planos, valores e coberturas. Para aderir, acesse a página Convênio no menu lateral."/>
+                    </h:panelGroup>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" rendered="#{empty consultarConveniosBean.convenios}" styleClass="note">
+                <h:outputText value="Nenhum convênio disponível no momento."/>
+            </h:panelGroup>
+
+            <style>
+                .conv-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:18px;align-items:stretch;}
+                .conv-card{border:1px solid #e3e8ee;border-radius:14px;background:#fff;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:box-shadow .2s,transform .2s;min-width:0;}
+                .conv-card:hover{box-shadow:0 8px 22px rgba(0,0,0,.12);transform:translateY(-3px);}
+                .conv-card-head{background:linear-gradient(135deg,#1565c0,#1e88e5);padding:16px;color:#fff;display:flex;gap:12px;align-items:center;min-width:0;}
+                .conv-card-head .ic{width:46px;height:46px;border-radius:10px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto;}
+                .conv-card-head .tt{font-size:16px;font-weight:700;line-height:1.2;word-break:break-word;}
+                .conv-card-head .st{font-size:12px;opacity:.9;margin-top:2px;}
+                .conv-card-body{padding:14px 16px;flex:1;min-width:0;}
+                .conv-card-desc{color:#555;font-size:13px;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+                .conv-info-row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed #eef0f3;font-size:13px;}
+                .conv-info-row:last-child{border-bottom:none;}
+                .conv-info-row .lbl{color:#7a8694;flex:0 0 auto;}
+                .conv-info-row .val{font-weight:600;text-align:right;word-break:break-word;overflow-wrap:anywhere;min-width:0;}
+                .conv-info-row .val a{color:#1565c0;text-decoration:none;}
+                .conv-info-row .val a:hover{text-decoration:underline;}
+                .conv-card-foot{padding:12px 16px;border-top:1px solid #eef0f3;}
+            </style>
+
+            <div class="conv-card-grid">
+
+                <ui:repeat value="#{consultarConveniosBean.convenios}" var="conv">
+                    <h:panelGroup layout="block" styleClass="conv-card">
+
+                        <h:panelGroup layout="block" styleClass="conv-card-head">
+                            <span class="ic"><i class="fa fa-hospital-user"/></span>
+                            <h:panelGroup layout="block" style="min-width:0;">
+                                <div class="tt"><h:outputText value="#{conv.nome}"/></div>
+                                <div class="st">
+                                    <h:outputText value="ANS #{conv.registroAns != null ? conv.registroAns : 'não informado'}"/>
+                                </div>
+                            </h:panelGroup>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="conv-card-body">
+
+                            <h:panelGroup layout="block" rendered="#{conv.descricao != null}" styleClass="conv-card-desc">
+                                <h:outputText value="#{conv.descricao}"/>
+                            </h:panelGroup>
+
+                            <div class="conv-info-row">
+                                <span class="lbl">Planos disponíveis</span>
+                                <span class="val">
+                                    <h:outputText styleClass="chip ativo" value="#{consultarConveniosBean.getQtdPlanos(conv.id)}"/>
+                                </span>
+                            </div>
+                            <div class="conv-info-row">
+                                <span class="lbl">Telefone</span>
+                                <span class="val mono"><h:outputText value="#{conv.telefone != null ? conv.telefone : '—'}"/></span>
+                            </div>
+                            <div class="conv-info-row">
+                                <span class="lbl">Site</span>
+                                <span class="val">
+                                    <h:outputLink value="#{conv.site}" target="_blank" rendered="#{conv.site != null}">
+                                        <h:outputText value="Acessar site"/>
+                                    </h:outputLink>
+                                    <h:outputText value="—" rendered="#{conv.site == null}"/>
+                                </span>
+                            </div>
+
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="conv-card-foot">
+                            <p:commandButton value="Ver planos e coberturas"
+                                             icon="fa fa-layer-group"
+                                             styleClass="btn primary"
+                                             style="width:100%;"
+                                             actionListener="#{consultarConveniosBean.selecionarConvenio(conv)}"
+                                             update=":formConsultar:dlgPlanos"
+                                             oncomplete="PF('wDlgPlanos').show()"
+                                             process="@this"/>
+                        </h:panelGroup>
+
+                    </h:panelGroup>
+                </ui:repeat>
+
+            </div>
+
+            <p:dialog id="dlgPlanos"
+                      widgetVar="wDlgPlanos"
+                      header="Planos do convênio"
+                      modal="true"
+                      resizable="false"
+                      closeOnEscape="true"
+                      width="760"
+                      styleClass="hsg-dialog">
+
+                <ui:fragment rendered="#{consultarConveniosBean.convenioSelecionado != null}">
+
+                    <h:panelGroup layout="block" styleClass="note" style="margin-bottom:14px;">
+                        <i class="fa fa-hospital-user" style="margin-right:6px;"/>
+                        <b><h:outputText value="#{consultarConveniosBean.convenioSelecionado.nome}"/></b>
+                        <h:outputText value=" — selecione um plano para ver as coberturas e carências."/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="filter-bar" style="margin-bottom:12px;">
+                        <div class="filter-group">
+                            <label class="filter-label" for="filtroCobConsulta">Cobertura</label>
+                            <h:selectOneMenu id="filtroCobConsulta"
+                                             value="#{consultarConveniosBean.filtroCobertura}"
+                                             styleClass="filter-select">
+                                <f:selectItem itemLabel="Todas" itemValue=""/>
+                                <f:selectItems value="#{consultarConveniosBean.tiposCobertura}"
+                                               var="tc" itemValue="#{tc.valor}" itemLabel="#{tc.descricao}"/>
+                                <p:ajax event="change" update="tabelaPlanosConsulta" process="@this"/>
+                            </h:selectOneMenu>
+                        </div>
+                    </h:panelGroup>
+
+                    <p:dataTable id="tabelaPlanosConsulta"
+                                 value="#{consultarConveniosBean.planosDoSelecionado}"
+                                 var="pl"
+                                 rows="5"
+                                 paginator="true"
+                                 paginatorPosition="bottom"
+                                 emptyMessage="Nenhum plano encontrado para este filtro."
+                                 styleClass="lazy-table"
+                                 tableStyle="width:100%; table-layout:fixed;">
+
+                        <p:column headerText="Plano" style="width:28%;">
+                            <h:outputText value="#{pl.nome}"/>
+                        </p:column>
+                        <p:column headerText="Cobertura" style="width:150px;">
+                            <h:outputText value="#{pl.tipoCobertura.descricao}"/>
+                        </p:column>
+                        <p:column headerText="Mensalidade" style="width:120px;" styleClass="center-align mono">
+                            <h:outputText value="#{pl.valorMensalidade != null ? pl.valorMensalidade : 0}">
+                                <f:convertNumber type="currency" currencySymbol="R$ "/>
+                            </h:outputText>
+                        </p:column>
+                        <p:column headerText="Acomodação" style="width:120px;" styleClass="center-align">
+                            <h:outputText styleClass="chip #{pl.acomodacaoIndividual ? 'ativo' : 'inativo'}"
+                                          value="#{pl.acomodacaoIndividual ? 'Individual' : 'Enfermaria'}"/>
+                        </p:column>
+                        <p:column headerText="Coberturas" style="width:130px;" styleClass="center-align">
+                            <p:commandButton value="Ver detalhes"
+                                             icon="fa fa-list-check"
+                                             styleClass="btn secondary"
+                                             actionListener="#{consultarConveniosBean.selecionarPlano(pl)}"
+                                             update=":formConsultar:dlgCoberturas"
+                                             oncomplete="PF('wDlgCoberturas').show()"
+                                             process="@this"/>
+                        </p:column>
+
+                    </p:dataTable>
+
+                    <f:facet name="footer">
+                        <p:commandButton value="Fechar" icon="fa fa-times" type="button"
+                                         onclick="PF('wDlgPlanos').hide();" styleClass="btn secondary"/>
+                    </f:facet>
+                </ui:fragment>
+            </p:dialog>
+
+            <p:dialog id="dlgCoberturas"
+                      widgetVar="wDlgCoberturas"
+                      header="Coberturas e carências"
+                      modal="true"
+                      resizable="false"
+                      closeOnEscape="true"
+                      width="720"
+                      styleClass="hsg-dialog">
+
+                <ui:fragment rendered="#{consultarConveniosBean.planoSelecionado != null}">
+
+                    <div class="dlg-section">
+                        <div class="dlg-section-title"><i class="fa fa-layer-group"/> Plano</div>
+                        <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Nome"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <b><h:outputText value="#{consultarConveniosBean.planoSelecionado.nome}"/></b>
+                            </h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Mensalidade"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v mono">
+                                <h:outputText value="#{consultarConveniosBean.planoSelecionado.valorMensalidade != null ? consultarConveniosBean.planoSelecionado.valorMensalidade : 0}">
+                                    <f:convertNumber type="currency" currencySymbol="R$ "/>
+                                </h:outputText>
+                                <h:outputText value=" / mês"/>
+                            </h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Tipo de cobertura"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <h:outputText value="#{consultarConveniosBean.planoSelecionado.tipoCobertura.descricao}"/>
+                            </h:panelGroup>
+                        </h:panelGroup>
+                    </div>
+
+                    <div class="dlg-section">
+                        <div class="dlg-section-title"><i class="fa fa-list-check"/> Procedimentos cobertos</div>
+                        <p:dataTable id="tabelaCobConsulta"
+                                     value="#{consultarConveniosBean.regrasDoPlanoSelecionado}"
+                                     var="reg"
+                                     rows="8"
+                                     paginator="true"
+                                     paginatorPosition="bottom"
+                                     emptyMessage="Nenhuma regra de cobertura cadastrada para este plano."
+                                     styleClass="lazy-table"
+                                     tableStyle="width:100%; table-layout:fixed;">
+                            <p:column headerText="Procedimento" style="width:34%;">
+                                <h:outputText value="#{reg.procedimento}"/>
+                            </p:column>
+                            <p:column headerText="Categoria" style="width:130px;">
+                                <h:outputText value="#{reg.categoria != null ? reg.categoria : '—'}"/>
+                            </p:column>
+                            <p:column headerText="Carência" style="width:100px;" styleClass="center-align mono">
+                                <h:outputText value="#{reg.carenciaDias} dias"/>
+                            </p:column>
+                            <p:column headerText="Copag." style="width:90px;" styleClass="center-align mono">
+                                <h:outputText value="#{reg.percentualCopagamento}">
+                                    <f:convertNumber type="number" maxFractionDigits="2" minFractionDigits="0"/>
+                                </h:outputText>
+                                <h:outputText value="%"/>
+                            </p:column>
+                            <p:column headerText="Cobertura" style="width:110px;" styleClass="center-align">
+                                <h:outputText styleClass="chip #{reg.coberto ? 'ativo' : 'inativo'}"
+                                              value="#{reg.coberto ? 'Coberto' : 'Não coberto'}"/>
+                            </p:column>
+                        </p:dataTable>
+                    </div>
+
+                    <f:facet name="footer">
+                        <p:commandButton value="Fechar" icon="fa fa-times" type="button"
+                                         onclick="PF('wDlgCoberturas').hide();" styleClass="btn secondary"/>
+                    </f:facet>
+                </ui:fragment>
+            </p:dialog>
+
+        </h:form>
+    </ui:define>
+
+</ui:composition>

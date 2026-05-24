@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <h:panelGroup id="panelFormPreCadastro" layout="block" styleClass="panel">
+        <h:panelGroup layout="block" styleClass="panel-title">
+            <i class="fa fa-user-plus panel-icon"/>
+            <h:outputText value="Novo Pré-cadastro de Profissional"/>
+        </h:panelGroup>
+
+        <h:panelGroup layout="block" styleClass="panel-body">
+
+            <h:panelGroup layout="block" styleClass="note" style="margin-bottom:12px;">
+                <i class="fa fa-info-circle"/>
+                <h:outputText value=" Registre os dados do profissional. Após salvar, use o botão de envio para encaminhar o convite por e-mail."/>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="kv">
+
+                <h:panelGroup layout="block" styleClass="k">
+                    <h:outputText value="Tipo de profissional"/>
+                    <h:outputText value=" *" style="color:#c00;"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <p:selectOneMenu id="tipoProfissional"
+                                     value="#{preCadastroBean.form.tipoProfissional}"
+                                     styleClass="input-field"
+                                     style="width:240px;"
+                                     required="true"
+                                     requiredMessage="Selecione o tipo de profissional.">
+                        <f:selectItem itemLabel="Selecione..." itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItems value="#{preCadastroBean.tiposProfissional}"
+                                       var="tp"
+                                       itemValue="#{tp}"
+                                       itemLabel="#{tp.descricao}"/>
+                        <p:ajax event="change" update="camposDinamicos" process="tipoProfissional"/>
+                    </p:selectOneMenu>
+                    <p:message for="tipoProfissional" styleClass="field-error"/>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k">
+                    <h:outputText value="Nome completo"/>
+                    <h:outputText value=" *" style="color:#c00;"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <p:inputText id="nome"
+                                 value="#{preCadastroBean.form.nome}"
+                                 styleClass="input-field"
+                                 style="width:100%;"
+                                 maxlength="255"
+                                 required="true"
+                                 requiredMessage="Nome é obrigatório."
+                                 placeholder="Ex: João da Silva"
+                                 autocomplete="name"/>
+                    <p:message for="nome" styleClass="field-error"/>
+                    <div style="font-size:11px; color:#888; margin-top:2px;">
+                        Será usado para gerar o e-mail corporativo (nome.sobrenome@dominio)
+                    </div>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k">
+                    <h:outputText value="E-mail pessoal"/>
+                    <h:outputText value=" *" style="color:#c00;"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <p:inputText id="emailPessoal"
+                                 value="#{preCadastroBean.form.emailPessoal}"
+                                 styleClass="input-field"
+                                 style="width:100%;"
+                                 maxlength="255"
+                                 required="true"
+                                 requiredMessage="E-mail pessoal é obrigatório."
+                                 placeholder="Ex: joao.silva@gmail.com"
+                                 autocomplete="email">
+                        <f:validateRegex pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
+                                         message="Informe um e-mail válido."/>
+                    </p:inputText>
+                    <p:message for="emailPessoal" styleClass="field-error"/>
+                    <div style="font-size:11px; color:#888; margin-top:2px;">
+                        Utilizado exclusivamente para o envio do convite de ativação
+                    </div>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k">
+                    <h:outputText value="CPF"/>
+                    <h:outputText value=" *" style="color:#c00;"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <p:inputMask id="cpf"
+                                 value="#{preCadastroBean.form.cpf}"
+                                 mask="999.999.999-99"
+                                 slotChar="_"
+                                 styleClass="input-field mono"
+                                 style="width:160px;"
+                                 required="true"
+                                 requiredMessage="CPF é obrigatório."/>
+                    <p:message for="cpf" styleClass="field-error"/>
+                    <div style="font-size:11px; color:#888; margin-top:2px;">
+                        Formato: 000.000.000-00
+                    </div>
+                </h:panelGroup>
+
+            </h:panelGroup>
+
+            <h:panelGroup id="camposDinamicos" layout="block">
+                <ui:include src="campos-medico.xhtml"/>
+                <ui:include src="campos-enfermeiro.xhtml"/>
+            </h:panelGroup>
+
+        </h:panelGroup>
+
+        <ui:include src="botoes.xhtml"/>
+
+    </h:panelGroup>
+
+</ui:composition>

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:p="http://primefaces.org/ui">
+
+    <p:dialog id="dlgVisualizarAlergia"
+              widgetVar="wDlgVisualizarAlergia"
+              header="Detalhes da Alergia Pendente"
+              modal="true"
+              resizable="false"
+              closeOnEscape="true"
+              width="640"
+              styleClass="hsg-dialog">
+
+        <h:panelGroup id="dlgBodyVisualizarAlergia" layout="block">
+
+            <h:panelGroup layout="block"
+                          rendered="#{aprovacaoAlergiaBean.alergiaSelecionada == null}">
+                <h:panelGroup layout="block" styleClass="note" style="padding:16px 12px;">
+                    <h:outputText value="Nenhuma alergia selecionada."/>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block"
+                          rendered="#{aprovacaoAlergiaBean.alergiaSelecionada != null}">
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-user"/>
+                        Paciente
+                    </div>
+                    <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                        <h:panelGroup layout="block" styleClass="k">
+                            <h:outputText value="Nome completo"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <b><h:outputText value="#{aprovacaoAlergiaBean.alergiaSelecionada.nomePaciente}"/></b>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </div>
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-allergies"/>
+                        Dados da Alergia
+                    </div>
+                    <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+
+                        <h:panelGroup layout="block" styleClass="k">
+                            <h:outputText value="Alergia"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <b><h:outputText value="#{aprovacaoAlergiaBean.alergiaSelecionada.nomeAlergia}"/></b>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k">
+                            <h:outputText value="Tipo"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText value="#{aprovacaoAlergiaBean.alergiaSelecionada.tipoDescricao}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k">
+                            <h:outputText value="Gravidade"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText
+                                styleClass="chip #{aprovacaoAlergiaBean.alergiaSelecionada.gravidadeCssClass}"
+                                value="#{aprovacaoAlergiaBean.alergiaSelecionada.gravidadeDescricao}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k">
+                            <h:outputText value="Descrição"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText value="#{not empty aprovacaoAlergiaBean.alergiaSelecionada.descricao ? aprovacaoAlergiaBean.alergiaSelecionada.descricao : '—'}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k">
+                            <h:outputText value="Reação relatada"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText value="#{not empty aprovacaoAlergiaBean.alergiaSelecionada.reacao ? aprovacaoAlergiaBean.alergiaSelecionada.reacao : '—'}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k">
+                            <h:outputText value="Última reação"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{not empty aprovacaoAlergiaBean.alergiaSelecionada.dataUltimaReacao ? aprovacaoAlergiaBean.alergiaSelecionada.dataUltimaReacao : '—'}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k">
+                            <h:outputText value="Observação do paciente"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText value="#{not empty aprovacaoAlergiaBean.alergiaSelecionada.observacao ? aprovacaoAlergiaBean.alergiaSelecionada.observacao : '—'}"/>
+                        </h:panelGroup>
+
+                    </h:panelGroup>
+                </div>
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-calendar-alt"/>
+                        Registro
+                    </div>
+                    <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+
+                        <h:panelGroup layout="block" styleClass="k">
+                            <h:outputText value="Informada em"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{aprovacaoAlergiaBean.alergiaSelecionada.dataCadastro}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k">
+                            <h:outputText value="Situação"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText value="Aguardando validação" styleClass="chip pendente"/>
+                        </h:panelGroup>
+
+                    </h:panelGroup>
+                </div>
+
+            </h:panelGroup>
+
+            <h:panelGroup layout="block"
+                          style="display:flex; justify-content:flex-end; gap:8px; padding-top:14px; border-top:1px solid #e5e7eb; margin-top:14px;">
+                <p:commandButton value="Fechar"
+                                 icon="fa fa-times"
+                                 type="button"
+                                 onclick="PF('wDlgVisualizarAlergia').hide(); return false;"
+                                 styleClass="btn secondary"/>
+            </h:panelGroup>
+
+        </h:panelGroup>
+
+    </p:dialog>
+
+</ui:composition>

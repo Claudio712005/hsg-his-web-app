@@ -1,0 +1,181 @@
+{
+  "id": "hsg-his",
+  "realm": "hsg-his",
+  "displayName": "HSG HIS",
+  "displayNameHtml": "<strong>HSG</strong> Hospital Information System",
+  "enabled": true,
+  "sslRequired": "external",
+
+  "loginTheme":         "hsg-theme",
+  "accountTheme":       "hsg-theme",
+  "adminTheme":         "keycloak",
+  "emailTheme":         "keycloak",
+
+  "internationalizationEnabled": true,
+  "supportedLocales": ["pt-BR", "en"],
+  "defaultLocale": "pt-BR",
+
+  "registrationAllowed":          false,
+  "registrationEmailAsUsername":  false,
+  "rememberMe":                   true,
+  "verifyEmail":                  false,
+  "loginWithEmailAllowed":        true,
+  "duplicateEmailsAllowed":       false,
+  "resetPasswordAllowed":         true,
+  "editUsernameAllowed":          false,
+
+  "bruteForceProtected": true,
+  "failureFactor":       5,
+  "waitIncrementSeconds": 60,
+  "maxFailureWaitSeconds": 900,
+
+  "accessTokenLifespan":              300,
+  "ssoSessionIdleTimeout":            1800,
+  "ssoSessionMaxLifespan":            36000,
+  "offlineSessionIdleTimeout":        2592000,
+  "accessCodeLifespan":               60,
+  "accessCodeLifespanUserAction":     300,
+
+  "smtpServer": {
+    "host":     "",
+    "port":     "587",
+    "from":     "noreply@hsg.com.br",
+    "fromDisplayName": "HSG HIS",
+    "starttls": "true",
+    "auth":     "true"
+  },
+
+  "roles": {
+    "realm": [
+      {
+        "name": "hsg-admin",
+        "description": "Administrador do sistema HSG"
+      },
+      {
+        "name": "hsg-medico",
+        "description": "Médico — acesso a prontuários e atendimentos"
+      },
+      {
+        "name": "hsg-enfermeiro",
+        "description": "Enfermeiro — acesso a leitos e sinais vitais"
+      },
+      {
+        "name": "hsg-atendente",
+        "description": "Atendente — agendamentos e cadastro de pacientes"
+      },
+      {
+        "name": "hsg-farmaceutico",
+        "description": "Farmacêutico — dispensação e estoque"
+      },
+      {
+        "name": "hsg-paciente",
+        "description": "Paciente — acesso ao portal do paciente"
+      }
+    ]
+  },
+
+  "clients": [
+    {
+      "clientId":                  "hsg-his-web",
+      "name":                      "HSG HIS Web",
+      "description":               "Aplicação web principal do HSG HIS",
+      "enabled":                   true,
+      "publicClient":              true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled":       true,
+      "implicitFlowEnabled":       false,
+      "serviceAccountsEnabled":    false,
+      "protocol":                  "openid-connect",
+      "rootUrl":                   "http://localhost:8180",
+      "baseUrl":                   "/hsg-his",
+      "redirectUris": [
+        "http://localhost:8180/*",
+        "http://localhost:8080/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8180",
+        "http://localhost:8080"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:8180/*"
+      }
+    }
+  ],
+
+  "users": [
+    {
+      "id":         "ad000000-0000-0000-0000-000000000001",
+      "username":   "admin.hsg",
+      "email":      "admin@hsg.com.br",
+      "firstName":  "Administrador",
+      "lastName":   "HSG",
+      "enabled":    true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type":      "password",
+          "value":     "Admin@123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["hsg-admin"]
+    },
+    {
+      "id":         "md000000-0000-0000-0000-000000000001",
+      "username":   "dr.joao",
+      "email":      "joao.silva@hsg.com.br",
+      "firstName":  "João",
+      "lastName":   "Silva",
+      "enabled":    true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type":      "password",
+          "value":     "Medico@HSG2026",
+          "temporary": true
+        }
+      ],
+      "realmRoles": ["hsg-medico"],
+      "attributes": {
+        "crm": ["CRM-SP 123456"]
+      }
+    },
+    {
+      "id":         "en000000-0000-0000-0000-000000000001",
+      "username":   "enf.maria",
+      "email":      "maria.santos@hsg.com.br",
+      "firstName":  "Maria",
+      "lastName":   "Santos",
+      "enabled":    true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type":      "password",
+          "value":     "Enf@HSG2026",
+          "temporary": true
+        }
+      ],
+      "realmRoles": ["hsg-enfermeiro"],
+      "attributes": {
+        "coren": ["COREN-SP 654321/ENF"]
+      }
+    },
+    {
+        "id":         "cf000000-0000-0000-0000-000000000001",
+        "username":   "claudio.filho",
+        "email":   "clausilvaaraujo11@gmail.com",
+        "firstName":  "Cláudio",
+        "lastName":   "Filho",
+        "enabled":    true,
+        "emailVerified": true,
+        "credentials": [
+          {
+            "type":      "password",
+            "value":     "Test3@HSG2026",
+            "temporary": true
+          }
+        ],
+        "realmRoles": ["hsg-paciente"]
+    }
+  ]
+}

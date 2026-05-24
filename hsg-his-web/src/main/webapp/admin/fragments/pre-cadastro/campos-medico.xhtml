@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <h:panelGroup layout="block" rendered="#{preCadastroBean.form.medico}">
+
+        <h:panelGroup layout="block"
+                      style="padding:6px 10px; background:#f4f7fb; border-top:1px solid #c8c8c8; border-bottom:1px solid #e4e4e4; font-weight:bold; font-size:11px; color:#1f3a68; text-transform:uppercase; letter-spacing:0.4px;">
+            <i class="fa fa-user-md" style="margin-right:6px;"/>
+            <h:outputText value="Dados do Médico"/>
+        </h:panelGroup>
+
+        <h:panelGroup layout="block" styleClass="kv">
+
+            <h:panelGroup layout="block" styleClass="k">
+                <h:outputText value="Número do CRM"/>
+                <h:outputText value=" *" style="color:#c00;"/>
+            </h:panelGroup>
+            <h:panelGroup layout="block" styleClass="v">
+                <p:inputText id="crm"
+                             value="#{preCadastroBean.form.crm}"
+                             styleClass="input-field mono"
+                             style="width:160px;"
+                             maxlength="10"
+                             required="#{preCadastroBean.form.medico}"
+                             requiredMessage="CRM é obrigatório para médicos."
+                             placeholder="Ex: 123456">
+                    <p:keyFilter mask="pint"/>
+                </p:inputText>
+                <p:message for="crm" styleClass="field-error"/>
+                <div style="font-size:11px; color:#888; margin-top:2px;">
+                    Apenas o número de registro, sem prefixo "CRM" ou UF
+                </div>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="k">
+                <h:outputText value="UF do CRM"/>
+                <h:outputText value=" *" style="color:#c00;"/>
+            </h:panelGroup>
+            <h:panelGroup layout="block" styleClass="v">
+                <p:selectOneMenu id="ufCrm"
+                                 value="#{preCadastroBean.form.ufCrm}"
+                                 styleClass="input-field"
+                                 style="width:260px;"
+                                 required="#{preCadastroBean.form.medico}"
+                                 requiredMessage="UF do CRM é obrigatória.">
+                    <f:selectItem itemLabel="Selecione o estado..." itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{preCadastroBean.estados}"
+                                   var="e"
+                                   itemValue="#{e}"
+                                   itemLabel="#{e.sigla} — #{e.nome}"/>
+                </p:selectOneMenu>
+                <p:message for="ufCrm" styleClass="field-error"/>
+                <div style="font-size:11px; color:#888; margin-top:2px;">
+                    Estado onde o CRM foi emitido
+                </div>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="k">
+                <h:outputText value="Especialidade"/>
+                <h:outputText value=" *" style="color:#c00;"/>
+            </h:panelGroup>
+            <h:panelGroup layout="block" styleClass="v">
+                <p:selectOneMenu id="especialidade"
+                                 value="#{preCadastroBean.form.especialidade}"
+                                 styleClass="input-field"
+                                 style="width:320px;"
+                                 required="#{preCadastroBean.form.medico}"
+                                 requiredMessage="Especialidade é obrigatória para médicos.">
+                    <f:selectItem itemLabel="Selecione a especialidade..." itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{preCadastroBean.especialidades}"
+                                   var="esp"
+                                   itemValue="#{esp}"
+                                   itemLabel="#{esp.descricao}"/>
+                </p:selectOneMenu>
+                <p:message for="especialidade" styleClass="field-error"/>
+                <div style="font-size:11px; color:#888; margin-top:2px;">
+                    Especialidade principal conforme título CFM
+                </div>
+            </h:panelGroup>
+
+        </h:panelGroup>
+
+    </h:panelGroup>
+
+</ui:composition>

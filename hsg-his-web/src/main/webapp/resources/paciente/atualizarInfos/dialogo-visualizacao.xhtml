@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:cc="http://java.sun.com/jsf/composite"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+<cc:interface>
+    <cc:attribute name="bean" required="true"/>
+</cc:interface>
+
+<cc:implementation>
+    <style type="text/css">
+        .dialogo-visualizacao-wrap {
+            overflow-x: hidden;
+        }
+
+        .dialogo-visualizacao-wrap .v {
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+    </style>
+
+    <p:dialog id="dialog"
+              widgetVar="dlgVisualizacao"
+              header="Detalhes da Solicitação"
+              modal="true"
+              resizable="false"
+              width="620"
+              closeOnEscape="true"
+              styleClass="dialogo-visualizacao-wrap">
+
+        <h:panelGroup id="body" layout="block">
+
+            <h:panelGroup layout="block"
+                          rendered="#{cc.attrs.bean.solicitacaoVisualizacao != null}"
+                          style="padding:4px 0 8px;">
+
+                <h:panelGroup layout="block" styleClass="kv" style="margin-bottom:16px;">
+                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Tipo"/></h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.tipoDescricao}"/></h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Data"/></h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.dataCadastro}"/></h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Status"/></h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.statusDescricao}"
+                                      styleClass="chip #{cc.attrs.bean.solicitacaoVisualizacao.statusCssClass}"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Motivo"/></h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.motivo}"/></h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Enfermeiro"/></h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.enfermeiro}"/></h:panelGroup>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block"
+                              rendered="#{cc.attrs.bean.solicitacaoVisualizacao.tipo == 'CADASTRAL'}"
+                              styleClass="panel" style="margin-bottom:12px;">
+                    <h:panelGroup layout="block" styleClass="panel-title"><h:outputText value="Dados Cadastrais — Atual vs. Proposto"/></h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="panel-body">
+                        <h:panelGroup layout="block" styleClass="kv">
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Nome atual"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.snapshotNome}"/></h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Nome proposto"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.nomePropostoCompleto}"/></h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="E-mail atual"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.snapshotEmail}"/></h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="E-mail proposto"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.emailProposto}"/></h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Telefone atual"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.snapshotTelefone}"/></h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Telefone proposto"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.telefoneProposto}"/></h:panelGroup>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block"
+                              rendered="#{cc.attrs.bean.solicitacaoVisualizacao.tipo == 'ENDERECO'}"
+                              styleClass="panel" style="margin-bottom:12px;">
+                    <h:panelGroup layout="block" styleClass="panel-title"><h:outputText value="Endereço — Atual vs. Proposto"/></h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="panel-body">
+                        <h:panelGroup layout="block" styleClass="kv">
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Logradouro atual"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.snapshotLogradouro}"/></h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Logradouro proposto"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.logradouroProposto}"/></h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Número"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.snapshotNumero}"/>
+                                <h:outputText value=" → "/>
+                                <h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.numeroProposto}"/>
+                            </h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Bairro"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.snapshotBairro}"/>
+                                <h:outputText value=" → "/>
+                                <h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.bairroProposto}"/>
+                            </h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Cidade"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.snapshotCidade}"/>
+                                <h:outputText value=" → "/>
+                                <h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.cidadeProposta}"/>
+                            </h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Estado"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.snapshotEstado}"/>
+                                <h:outputText value=" → "/>
+                                <h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.estadoProposto}"/>
+                            </h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="CEP"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.snapshotCep}"/>
+                                <h:outputText value=" → "/>
+                                <h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.cepProposto}"/>
+                            </h:panelGroup>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block"
+                              rendered="#{cc.attrs.bean.solicitacaoVisualizacao.tipo == 'CLINICO'}"
+                              styleClass="panel" style="margin-bottom:12px;">
+                    <h:panelGroup layout="block" styleClass="panel-title"><h:outputText value="Dados Clínicos — Atual vs. Proposto"/></h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="panel-body">
+                        <h:panelGroup layout="block" styleClass="kv">
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Peso (kg)"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.snapshotPeso}"/>
+                                <h:outputText value=" → "/>
+                                <h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.pesoProposto}"/>
+                            </h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Altura (m)"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.snapshotAltura}"/>
+                                <h:outputText value=" → "/>
+                                <h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.alturaProposta}"/>
+                            </h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Tipo sanguíneo"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.snapshotTipoSanguineo}"/>
+                                <h:outputText value=" → "/>
+                                <h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.tipoSanguineoProposto}"/>
+                            </h:panelGroup>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block"
+                              rendered="#{cc.attrs.bean.solicitacaoVisualizacao.motivoCancelamento != null}"
+                              styleClass="panel"
+                              style="border-left:3px solid #c00; margin-top:4px;">
+                    <h:panelGroup layout="block" styleClass="panel-title"><h:outputText value="Cancelamento"/></h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="panel-body">
+                        <h:panelGroup layout="block" styleClass="kv">
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Cancelado em"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.dataCancelamento}"/></h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Por"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.tipoCancelador}"/></h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Motivo"/></h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v"><h:outputText value="#{cc.attrs.bean.solicitacaoVisualizacao.motivoCancelamento}"/></h:panelGroup>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </h:panelGroup>
+
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <f:facet name="footer">
+            <p:commandButton value="Fechar"
+                             icon="fa fa-times"
+                             type="button"
+                             onclick="PF('dlgVisualizacao').hide();"
+                             styleClass="btn secondary"/>
+        </f:facet>
+    </p:dialog>
+</cc:implementation>
+</html>

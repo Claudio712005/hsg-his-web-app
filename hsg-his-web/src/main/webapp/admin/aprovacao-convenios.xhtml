@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/templates/admin/layout.xhtml">
+
+    <ui:define name="title">HSG - Aprovação de Convênios</ui:define>
+
+    <ui:define name="breadcrumbItems">
+        <span class="sep">&#187;</span>
+        <span>Aprovação de Convênios</span>
+    </ui:define>
+
+    <ui:define name="content">
+
+        <h:panelGroup layout="block" styleClass="page-title">
+            <h:panelGroup layout="block">
+                <h1>
+                    <i class="fa fa-clipboard-check" style="margin-right:8px;"/>
+                    Aprovação de Convênios
+                </h1>
+                <h:panelGroup layout="block" styleClass="sub">
+                    <h:outputText value="Avalie as solicitações de adesão a convênio enviadas pelos pacientes. Ao aprovar, o convênio ativo anterior do paciente é automaticamente substituído (regra de um convênio ativo por vez)."/>
+                </h:panelGroup>
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <div class="stat-cards">
+            <div class="stat-card">
+                <div class="sc-ic"><i class="fa fa-hourglass-half"></i></div>
+                <div class="sc-body">
+                    <div class="sc-num">#{aprovacaoConvenioBean.totalPendentes}</div>
+                    <div class="sc-lbl">Solicitações pendentes</div>
+                </div>
+            </div>
+        </div>
+
+        <h:form id="formAprovConv">
+
+            <h:panelGroup layout="block" styleClass="filter-bar">
+                <div class="filter-group">
+                    <label class="filter-label" for="filtroPacConv">Paciente</label>
+                    <h:inputText id="filtroPacConv"
+                                 value="#{aprovacaoConvenioBean.filtroPaciente}"
+                                 styleClass="filter-input"
+                                 placeholder="Nome do paciente"/>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label" for="filtroStConv">Situação</label>
+                    <h:selectOneMenu id="filtroStConv"
+                                     value="#{aprovacaoConvenioBean.filtroStatus}"
+                                     styleClass="filter-select">
+                        <f:selectItem itemLabel="Todas" itemValue=""/>
+                        <f:selectItems value="#{aprovacaoConvenioBean.statusOpcoes}"
+                                       var="st"
+                                       itemValue="#{st.name()}"
+                                       itemLabel="#{st.descricao}"/>
+                    </h:selectOneMenu>
+                </div>
+                <div class="filter-actions">
+                    <p:commandButton value="Filtrar"
+                                     styleClass="btn primary"
+                                     actionListener="#{aprovacaoConvenioBean.aplicarFiltros}"
+                                     update="tabelaSolicConv"
+                                     process="filtroPacConv filtroStConv @this"
+                                     icon="fa fa-search"/>
+                    <p:commandButton value="Limpar"
+                                     styleClass="btn secondary"
+                                     actionListener="#{aprovacaoConvenioBean.limparFiltros}"
+                                     update="filtroPacConv filtroStConv tabelaSolicConv"
+                                     process="@this"
+                                     icon="fa fa-times"/>
+                </div>
+            </h:panelGroup>
+
+            <p:dataTable id="tabelaSolicConv"
+                         value="#{aprovacaoConvenioBean.model}"
+                         var="sol"
+                         lazy="true"
+                         rows="10"
+                         paginator="true"
+                         paginatorPosition="bottom"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         rowsPerPageTemplate="5,10,25"
+                         currentPageReportTemplate="{startRecord}–{endRecord} de {totalRecords}"
+                         emptyMessage="Nenhuma solicitação encontrada."
+                         styleClass="lazy-table"
+                         tableStyle="width:100%; table-layout:fixed;">
+
+                <p:column headerText="Paciente" sortBy="#{sol.paciente.nomeCompleto}" sortField="paciente"
+                          style="width:18%;">
+                    <h:outputText value="#{sol.paciente.nomeCompleto}"/>
+                </p:column>
+
+                <p:column headerText="Plano solicitado" sortBy="#{sol.plano.nome}" sortField="plano"
+                          style="width:22%;">
+                    <h:outputText value="#{sol.plano.convenio.nome} — #{sol.plano.nome}"/>
+                </p:column>
+
+                <p:column headerText="Carteirinha" style="width:120px;" styleClass="mono">
+                    <h:outputText value="#{sol.carteirinhaMascara != null ? sol.carteirinhaMascara : '—'}"/>
+                </p:column>
+
+                <p:column headerText="Validade" style="width:100px;" styleClass="mono center-align">
+                    <h:outputText value="#{aprovacaoConvenioBean.formatarDataSimples(sol.dataValidade)}"/>
+                </p:column>
+
+                <p:column headerText="Situação" sortBy="#{sol.status}" sortField="status"
+                          style="width:100px;" styleClass="center-align">
+                    <h:outputText styleClass="chip #{sol.status.name() eq 'A' ? 'ativo' : (sol.status.name() eq 'P' ? 'pendente' : 'inativo')}"
+                                  value="#{sol.status.descricao}"/>
+                </p:column>
+
+                <p:column headerText="Solicitado em" sortBy="#{sol.dataCadastro}" sortField="dataCadastro"
+                          style="width:135px;" styleClass="mono">
+                    <h:outputText value="#{aprovacaoConvenioBean.formatarData(sol.dataCadastro)}"/>
+                </p:column>
+
+                <p:column headerText="Ações" style="width:170px;" styleClass="center-align">
+                    <p:commandButton icon="fa fa-eye"
+                                     styleClass="btn icon-btn info"
+                                     title="Ver detalhes"
+                                     update=":formAprovConv:dlgBodyDetSolic"
+                                     oncomplete="PF('wDlgDetSolic').show()"
+                                     process="@this">
+                        <f:setPropertyActionListener target="#{aprovacaoConvenioBean.solicitacaoSelecionada}" value="#{sol}"/>
+                    </p:commandButton>
+                    <p:commandButton icon="fa fa-check"
+                                     styleClass="btn icon-btn success"
+                                     title="Aprovar"
+                                     rendered="#{sol.status.name() eq 'P'}"
+                                     actionListener="#{aprovacaoConvenioBean.selecionar(sol)}"
+                                     update=":msgs :formAprovConv:tabelaSolicConv"
+                                     oncomplete="PF('wConfirmAprovar').show()"
+                                     process="@this"/>
+                    <p:commandButton icon="fa fa-ban"
+                                     styleClass="btn icon-btn danger"
+                                     title="Rejeitar"
+                                     rendered="#{sol.status.name() eq 'P'}"
+                                     actionListener="#{aprovacaoConvenioBean.prepararRejeicao(sol)}"
+                                     update=":formAprovConv:dlgBodyRejSolic"
+                                     oncomplete="PF('wDlgRejSolic').show()"
+                                     process="@this"/>
+                </p:column>
+
+            </p:dataTable>
+
+            <p:dialog id="dlgDetSolic"
+                      widgetVar="wDlgDetSolic"
+                      header="Detalhes da Solicitação"
+                      modal="true"
+                      resizable="false"
+                      closeOnEscape="true"
+                      width="720"
+                      styleClass="hsg-dialog">
+
+                <h:panelGroup id="dlgBodyDetSolic" layout="block">
+                    <ui:fragment rendered="#{aprovacaoConvenioBean.solicitacaoSelecionada != null}">
+
+                        <div class="dlg-section">
+                            <div class="dlg-section-title"><i class="fa fa-user"/> Paciente e contato</div>
+                            <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Nome"/></h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="v">
+                                    <b><h:outputText value="#{aprovacaoConvenioBean.solicitacaoSelecionada.paciente.nomeCompleto}"/></b>
+                                </h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="k"><h:outputText value="E-mail"/></h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="v mono">
+                                    <h:outputText value="#{aprovacaoConvenioBean.solicitacaoSelecionada.paciente.email != null ? aprovacaoConvenioBean.solicitacaoSelecionada.paciente.email : '—'}"/>
+                                </h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Telefone"/></h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="v mono">
+                                    <h:outputText value="#{aprovacaoConvenioBean.solicitacaoSelecionada.paciente.telefone != null ? aprovacaoConvenioBean.solicitacaoSelecionada.paciente.telefone : '—'}"/>
+                                </h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Data de nascimento"/></h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="v mono">
+                                    <h:outputText value="#{aprovacaoConvenioBean.formatarDataSimples(aprovacaoConvenioBean.solicitacaoSelecionada.paciente.dataNascimento)}"/>
+                                </h:panelGroup>
+                            </h:panelGroup>
+                        </div>
+
+                        <div class="dlg-section">
+                            <div class="dlg-section-title"><i class="fa fa-layer-group"/> Plano solicitado</div>
+                            <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Convênio"/></h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="v">
+                                    <h:outputText value="#{aprovacaoConvenioBean.solicitacaoSelecionada.plano.convenio.nome}"/>
+                                </h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Plano"/></h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="v">
+                                    <b><h:outputText value="#{aprovacaoConvenioBean.solicitacaoSelecionada.plano.nome}"/></b>
+                                </h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Mensalidade"/></h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="v mono">
+                                    <h:outputText value="#{aprovacaoConvenioBean.solicitacaoSelecionada.plano.valorMensalidade != null ? aprovacaoConvenioBean.solicitacaoSelecionada.plano.valorMensalidade : 0}">
+                                        <f:convertNumber type="currency" currencySymbol="R$ "/>
+                                    </h:outputText>
+                                </h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Tipo de cobertura"/></h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="v">
+                                    <h:outputText value="#{aprovacaoConvenioBean.solicitacaoSelecionada.plano.tipoCobertura.descricao}"/>
+                                </h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Acomodação individual"/></h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="v">
+                                    <h:outputText styleClass="chip #{aprovacaoConvenioBean.solicitacaoSelecionada.plano.acomodacaoIndividual ? 'ativo' : 'inativo'}"
+                                                  value="#{aprovacaoConvenioBean.solicitacaoSelecionada.plano.acomodacaoIndividual ? 'Sim' : 'Não'}"/>
+                                </h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Carteirinha"/></h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="v mono">
+                                    <h:outputText value="#{aprovacaoConvenioBean.solicitacaoSelecionada.carteirinhaMascara}"/>
+                                </h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Validade"/></h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="v mono">
+                                    <h:outputText value="#{aprovacaoConvenioBean.formatarDataSimples(aprovacaoConvenioBean.solicitacaoSelecionada.dataValidade)}"/>
+                                </h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Titularidade"/></h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="v">
+                                    <h:outputText value="#{aprovacaoConvenioBean.solicitacaoSelecionada.tipoTitularidade.descricao}"/>
+                                </h:panelGroup>
+                            </h:panelGroup>
+                        </div>
+
+                        <div class="dlg-section">
+                            <div class="dlg-section-title"><i class="fa fa-list-check"/> Coberturas do plano</div>
+                            <p:dataTable id="tabelaCobAprov"
+                                         value="#{aprovacaoConvenioBean.regrasDoPlanoSelecionado}"
+                                         var="reg"
+                                         rows="5"
+                                         paginator="true"
+                                         paginatorPosition="bottom"
+                                         paginatorTemplate="{CurrentPageReport} {PreviousPageLink} {PageLinks} {NextPageLink}"
+                                         currentPageReportTemplate="{startRecord}–{endRecord} de {totalRecords}"
+                                         emptyMessage="Este plano não possui regras de cobertura cadastradas."
+                                         styleClass="lazy-table"
+                                         tableStyle="width:100%; table-layout:fixed;">
+                                <p:column headerText="Procedimento" style="width:38%;">
+                                    <h:outputText value="#{reg.procedimento}"/>
+                                </p:column>
+                                <p:column headerText="Categoria" style="width:120px;">
+                                    <h:outputText value="#{reg.categoria != null ? reg.categoria : '—'}"/>
+                                </p:column>
+                                <p:column headerText="Carência" style="width:90px;" styleClass="center-align mono">
+                                    <h:outputText value="#{reg.carenciaDias} d"/>
+                                </p:column>
+                                <p:column headerText="Copag." style="width:80px;" styleClass="center-align mono">
+                                    <h:outputText value="#{reg.percentualCopagamento}">
+                                        <f:convertNumber type="number" maxFractionDigits="2" minFractionDigits="0"/>
+                                    </h:outputText>
+                                    <h:outputText value="%"/>
+                                </p:column>
+                                <p:column headerText="Cobre?" style="width:90px;" styleClass="center-align">
+                                    <h:outputText styleClass="chip #{reg.coberto ? 'ativo' : 'inativo'}"
+                                                  value="#{reg.coberto ? 'Sim' : 'Não'}"/>
+                                </p:column>
+                            </p:dataTable>
+                        </div>
+
+                        <div class="dlg-section">
+                            <div class="dlg-section-title"><i class="fa fa-info-circle"/> Solicitação</div>
+                            <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Plano atual"/></h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="v">
+                                    <h:outputText value="#{aprovacaoConvenioBean.solicitacaoSelecionada.snapshotPlanoAtual != null ? aprovacaoConvenioBean.solicitacaoSelecionada.snapshotPlanoAtual : 'Nenhum (primeira adesão)'}"/>
+                                </h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Motivo"/></h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="v">
+                                    <h:outputText value="#{aprovacaoConvenioBean.solicitacaoSelecionada.motivo != null ? aprovacaoConvenioBean.solicitacaoSelecionada.motivo : '—'}"/>
+                                </h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Situação"/></h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="v">
+                                    <h:outputText styleClass="chip #{aprovacaoConvenioBean.solicitacaoSelecionada.status.name() eq 'A' ? 'ativo' : (aprovacaoConvenioBean.solicitacaoSelecionada.status.name() eq 'P' ? 'pendente' : 'inativo')}"
+                                                  value="#{aprovacaoConvenioBean.solicitacaoSelecionada.status.descricao}"/>
+                                </h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Solicitado em"/></h:panelGroup>
+                                <h:panelGroup layout="block" styleClass="v mono">
+                                    <h:outputText value="#{aprovacaoConvenioBean.formatarData(aprovacaoConvenioBean.solicitacaoSelecionada.dataCadastro)}"/>
+                                </h:panelGroup>
+                                <ui:fragment rendered="#{aprovacaoConvenioBean.solicitacaoSelecionada.motivoRejeicao != null}">
+                                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Motivo da rejeição"/></h:panelGroup>
+                                    <h:panelGroup layout="block" styleClass="v">
+                                        <h:outputText value="#{aprovacaoConvenioBean.solicitacaoSelecionada.motivoRejeicao}"/>
+                                    </h:panelGroup>
+                                </ui:fragment>
+                            </h:panelGroup>
+                        </div>
+
+                    </ui:fragment>
+                </h:panelGroup>
+
+                <f:facet name="footer">
+                    <p:commandButton value="Fechar" icon="fa fa-times" type="button"
+                                     onclick="PF('wDlgDetSolic').hide();" styleClass="btn secondary"/>
+                </f:facet>
+            </p:dialog>
+
+            <p:dialog id="dlgRejSolic"
+                      widgetVar="wDlgRejSolic"
+                      header="Rejeitar Solicitação"
+                      modal="true"
+                      resizable="false"
+                      closeOnEscape="true"
+                      width="520"
+                      styleClass="hsg-dialog">
+
+                <h:panelGroup id="dlgBodyRejSolic" layout="block">
+                    <ui:fragment rendered="#{aprovacaoConvenioBean.solicitacaoSelecionada != null}">
+
+                        <h:panelGroup layout="block" styleClass="note"
+                                      style="margin-bottom:12px; background:#fdecea; border-color:#f5b5b0;">
+                            <i class="fa fa-exclamation-triangle" style="color:#c62828;"/>
+                            <h:outputText value=" Rejeitando solicitação do paciente "/>
+                            <b><h:outputText value="#{aprovacaoConvenioBean.solicitacaoSelecionada.paciente.nomeCompleto}"/></b>
+                            <h:outputText value=" para o plano "/>
+                            <b><h:outputText value="#{aprovacaoConvenioBean.solicitacaoSelecionada.plano.nome}"/></b>
+                            <h:outputText value="."/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                            <h:panelGroup layout="block" styleClass="k">
+                                <h:outputText value="Motivo da rejeição"/>
+                                <h:outputText value=" *" style="color:#c00;"/>
+                            </h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <p:inputTextarea id="motRejConv"
+                                                 value="#{aprovacaoConvenioBean.motivoRejeicao}"
+                                                 rows="3" maxlength="500"
+                                                 required="true"
+                                                 requiredMessage="Informe o motivo da rejeição."
+                                                 styleClass="input-field" style="width:100%;"
+                                                 placeholder="Descreva por que a solicitação está sendo rejeitada"/>
+                                <p:message for="motRejConv" styleClass="field-error"/>
+                            </h:panelGroup>
+                        </h:panelGroup>
+
+                    </ui:fragment>
+                </h:panelGroup>
+
+                <f:facet name="footer">
+                    <p:commandButton value="Confirmar Rejeição" icon="fa fa-ban" styleClass="btn danger"
+                                     action="#{aprovacaoConvenioBean.rejeitar}"
+                                     process=":formAprovConv:dlgBodyRejSolic"
+                                     update=":formAprovConv:dlgBodyRejSolic :msgs :formAprovConv:tabelaSolicConv"
+                                     oncomplete="if(!args.validationFailed) PF('wDlgRejSolic').hide();"/>
+                    <p:commandButton value="Cancelar" icon="fa fa-arrow-left" type="button"
+                                     onclick="PF('wDlgRejSolic').hide(); return false;" styleClass="btn secondary"/>
+                </f:facet>
+            </p:dialog>
+
+            <p:confirmDialog widgetVar="wConfirmAprovar"
+                             header="Confirmar aprovação"
+                             message="Aprovar esta solicitação? O convênio ativo anterior do paciente, se houver, será substituído."
+                             icon="pi pi-exclamation-triangle">
+                <p:commandButton value="Aprovar" icon="fa fa-check" styleClass="btn primary"
+                                 action="#{aprovacaoConvenioBean.aprovar}"
+                                 process="@this"
+                                 update=":msgs :formAprovConv:tabelaSolicConv"
+                                 oncomplete="PF('wConfirmAprovar').hide();"/>
+                <p:commandButton value="Cancelar" type="button" styleClass="btn secondary"
+                                 onclick="PF('wConfirmAprovar').hide();"/>
+            </p:confirmDialog>
+
+        </h:form>
+
+    </ui:define>
+
+</ui:composition>

@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <h:form id="formPlanos">
+
+        <div class="prof-section-header">
+            <i class="fa fa-layer-group prof-section-icon"/>
+            <span>Planos de Convênio</span>
+            <p:commandButton value="Novo Plano"
+                             icon="fa fa-plus"
+                             styleClass="btn primary"
+                             style="float:right;"
+                             actionListener="#{convenioBean.novoPlano}"
+                             update=":tabViewConvenios:formPlanos:dlgFormPlano"
+                             oncomplete="PF('wDlgFormPlano').show()"
+                             process="@this"/>
+        </div>
+
+        <h:panelGroup layout="block" styleClass="filter-bar">
+            <div class="filter-group">
+                <label class="filter-label" for="filtroConvPlano">Convênio</label>
+                <h:selectOneMenu id="filtroConvPlano"
+                                 value="#{convenioBean.filtroConvenioIdPlano}"
+                                 styleClass="filter-select"
+                                 converter="javax.faces.Long">
+                    <f:selectItem itemLabel="Todos" itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{convenioBean.conveniosParaSelect}"
+                                   var="c"
+                                   itemValue="#{c.id}"
+                                   itemLabel="#{c.nome}"/>
+                </h:selectOneMenu>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="filtroNomePl">Nome do plano</label>
+                <h:inputText id="filtroNomePl"
+                             value="#{convenioBean.filtroNomePlano}"
+                             styleClass="filter-input"
+                             placeholder="Ex.: Pleno"/>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="filtroCobPl">Cobertura</label>
+                <h:selectOneMenu id="filtroCobPl"
+                                 value="#{convenioBean.filtroCoberturaPlano}"
+                                 styleClass="filter-select">
+                    <f:selectItem itemLabel="Todas" itemValue=""/>
+                    <f:selectItems value="#{convenioBean.tiposCobertura}"
+                                   var="tc"
+                                   itemValue="#{tc.valor}"
+                                   itemLabel="#{tc.descricao}"/>
+                </h:selectOneMenu>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="filtroStPl">Status</label>
+                <h:selectOneMenu id="filtroStPl"
+                                 value="#{convenioBean.filtroStatusPlano}"
+                                 styleClass="filter-select">
+                    <f:selectItem itemLabel="Todos"   itemValue=""/>
+                    <f:selectItem itemLabel="Ativo"   itemValue="A"/>
+                    <f:selectItem itemLabel="Inativo" itemValue="I"/>
+                </h:selectOneMenu>
+            </div>
+            <div class="filter-actions">
+                <p:commandButton value="Filtrar"
+                                 styleClass="btn primary"
+                                 actionListener="#{convenioBean.aplicarFiltrosPlano}"
+                                 update="tabelaPlanos"
+                                 process="filtroConvPlano filtroNomePl filtroCobPl filtroStPl @this"
+                                 icon="fa fa-search"/>
+                <p:commandButton value="Limpar"
+                                 styleClass="btn secondary"
+                                 actionListener="#{convenioBean.limparFiltrosPlano}"
+                                 update="filtroConvPlano filtroNomePl filtroCobPl filtroStPl tabelaPlanos"
+                                 process="@this"
+                                 icon="fa fa-times"/>
+            </div>
+        </h:panelGroup>
+
+        <p:dataTable id="tabelaPlanos"
+                     value="#{convenioBean.planoModel}"
+                     var="pl"
+                     lazy="true"
+                     rows="10"
+                     paginator="true"
+                     paginatorPosition="bottom"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                     rowsPerPageTemplate="5,10,25"
+                     currentPageReportTemplate="{startRecord}–{endRecord} de {totalRecords}"
+                     emptyMessage="Nenhum plano encontrado."
+                     styleClass="lazy-table"
+                     tableStyle="width:100%; table-layout:fixed;">
+
+            <p:column headerText="Convênio" sortBy="#{pl.convenio.nome}" sortField="convenio" style="width:20%;">
+                <h:outputText value="#{pl.convenio.nome}"/>
+            </p:column>
+
+            <p:column headerText="Plano" sortBy="#{pl.nome}" sortField="nome" style="width:22%;">
+                <h:outputText value="#{pl.nome}"/>
+            </p:column>
+
+            <p:column headerText="Cobertura" sortBy="#{pl.tipoCobertura}" sortField="tipoCobertura"
+                      style="width:130px;">
+                <h:outputText value="#{convenioBean.formatarTipoCobertura(pl.tipoCobertura)}"/>
+            </p:column>
+
+            <p:column headerText="Mensalidade" sortBy="#{pl.valorMensalidade}" sortField="valorMensalidade"
+                      style="width:130px;" styleClass="center-align mono">
+                <h:outputText value="#{pl.valorMensalidade != null ? pl.valorMensalidade : 0}">
+                    <f:convertNumber type="currency" currencySymbol="R$ "/>
+                </h:outputText>
+            </p:column>
+
+            <p:column headerText="Acomod. ind." style="width:110px;" styleClass="center-align">
+                <h:outputText styleClass="chip #{pl.acomodacaoIndividual ? 'ativo' : 'inativo'}"
+                              value="#{pl.acomodacaoIndividual ? 'Sim' : 'Não'}"/>
+            </p:column>
+
+            <p:column headerText="Status" sortBy="#{pl.status}" sortField="status"
+                      style="width:90px;" styleClass="center-align">
+                <h:outputText styleClass="chip #{pl.status.valor eq 'A' ? 'ativo' : 'inativo'}"
+                              value="#{pl.status.descricao}"/>
+            </p:column>
+
+            <p:column headerText="Ações" style="width:170px;" styleClass="center-align">
+                <p:commandButton icon="fa fa-eye"
+                                 styleClass="btn icon-btn info"
+                                 title="Ver detalhes"
+                                 update=":tabViewConvenios:formPlanos:dlgBodyPlano"
+                                 oncomplete="PF('wDlgPlano').show()"
+                                 process="@this">
+                    <f:setPropertyActionListener target="#{convenioBean.planoSelecionado}" value="#{pl}"/>
+                </p:commandButton>
+                <p:commandButton icon="fa fa-pen"
+                                 styleClass="btn icon-btn warn"
+                                 title="Editar"
+                                 actionListener="#{convenioBean.prepararEdicaoPlano(pl)}"
+                                 update=":tabViewConvenios:formPlanos:dlgFormPlano"
+                                 oncomplete="PF('wDlgFormPlano').show()"
+                                 process="@this"/>
+                <p:commandButton icon="fa fa-ban"
+                                 styleClass="btn icon-btn danger"
+                                 title="Inativar"
+                                 rendered="#{pl.status.valor eq 'A'}"
+                                 actionListener="#{convenioBean.inativarPlano(pl.id)}"
+                                 update=":msgs :tabViewConvenios:formPlanos:tabelaPlanos"
+                                 process="@this">
+                    <p:confirm header="Confirmar inativação"
+                               message="Tem certeza que deseja inativar este plano?"
+                               icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+                <p:commandButton icon="fa fa-check"
+                                 styleClass="btn icon-btn success"
+                                 title="Ativar"
+                                 rendered="#{pl.status.valor ne 'A'}"
+                                 actionListener="#{convenioBean.ativarPlano(pl.id)}"
+                                 update=":msgs :tabViewConvenios:formPlanos:tabelaPlanos"
+                                 process="@this"/>
+            </p:column>
+
+        </p:dataTable>
+
+        <ui:include src="dialog-plano-detalhes.xhtml"/>
+        <ui:include src="dialog-plano-form.xhtml"/>
+
+    </h:form>
+
+</ui:composition>

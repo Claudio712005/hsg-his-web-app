@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/templates/paciente/layout.xhtml">
+
+    <ui:define name="title">HSG - Meu Convênio</ui:define>
+
+    <ui:define name="breadcrumbItems">
+        <h:outputText value="&#187;" styleClass="sep"/>
+        <h:outputText value="Meu Convênio" style="font-weight:bold;"/>
+    </ui:define>
+
+    <ui:define name="content">
+        <h:form id="formMeuConvenio">
+
+            <p:growl id="msgs" widgetVar="msgs" showDetail="true" life="6000" globalOnly="true"/>
+
+            <h:panelGroup layout="block" styleClass="panel" style="margin-bottom:20px;">
+                <h:panelGroup layout="block" styleClass="panel-title">
+                    <i class="fa fa-id-card panel-icon"/>
+                    <h:outputText value="Convênio Ativo"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="panel-body">
+
+                    <h:panelGroup layout="block" rendered="#{meuConvenioBean.convenioAtivo == null}"
+                                  styleClass="note">
+                        <h:outputText value="Você ainda não possui um convênio ativo. Use o formulário abaixo para solicitar a adesão a um plano."/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" rendered="#{meuConvenioBean.convenioAtivo != null}">
+
+                        <h:panelGroup layout="block"
+                                      style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
+                            <h:panelGroup layout="block"
+                                          style="width:48px; height:48px; border-radius:10px; background:#e3f2fd; display:flex; align-items:center; justify-content:center;">
+                                <i class="fa fa-id-card" style="font-size:22px; color:#1565c0;"/>
+                            </h:panelGroup>
+                            <h:panelGroup layout="block">
+                                <div style="font-size:18px; font-weight:700;">
+                                    <h:outputText value="#{meuConvenioBean.convenioAtivo.plano.convenio.nome}"/>
+                                </div>
+                                <div style="color:#555;">
+                                    <h:outputText value="#{meuConvenioBean.convenioAtivo.plano.nome} — #{meuConvenioBean.convenioAtivo.plano.tipoCobertura.descricao}"/>
+                                </div>
+                            </h:panelGroup>
+                            <h:panelGroup layout="block" style="margin-left:auto;">
+                                <h:outputText styleClass="chip ativo" value="Ativo"/>
+                            </h:panelGroup>
+                        </h:panelGroup>
+
+                        <p:accordionPanel id="accConvenioAtivo" multiple="true" activeIndex="0">
+
+                            <p:tab title="Dados da carteirinha">
+                                <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Carteirinha"/></h:panelGroup>
+                                    <h:panelGroup layout="block" styleClass="v mono">
+                                        <h:outputText value="#{meuConvenioBean.convenioAtivo.carteirinhaMascara}"/>
+                                    </h:panelGroup>
+                                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Validade"/></h:panelGroup>
+                                    <h:panelGroup layout="block" styleClass="v mono">
+                                        <h:outputText value="#{meuConvenioBean.formatarDataSimples(meuConvenioBean.convenioAtivo.dataValidade)}"/>
+                                    </h:panelGroup>
+                                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Titularidade"/></h:panelGroup>
+                                    <h:panelGroup layout="block" styleClass="v">
+                                        <h:outputText value="#{meuConvenioBean.descreverTitularidade(meuConvenioBean.convenioAtivo.tipoTitularidade)}"/>
+                                    </h:panelGroup>
+                                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Aderido em"/></h:panelGroup>
+                                    <h:panelGroup layout="block" styleClass="v mono">
+                                        <h:outputText value="#{meuConvenioBean.formatarData(meuConvenioBean.convenioAtivo.dataAdesao)}"/>
+                                    </h:panelGroup>
+                                </h:panelGroup>
+                            </p:tab>
+
+                            <p:tab title="Plano e valores">
+                                <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Mensalidade"/></h:panelGroup>
+                                    <h:panelGroup layout="block" styleClass="v mono">
+                                        <h:outputText value="#{meuConvenioBean.convenioAtivo.plano.valorMensalidade != null ? meuConvenioBean.convenioAtivo.plano.valorMensalidade : 0}">
+                                            <f:convertNumber type="currency" currencySymbol="R$ "/>
+                                        </h:outputText>
+                                        <h:outputText value=" / mês"/>
+                                    </h:panelGroup>
+                                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Tipo de cobertura"/></h:panelGroup>
+                                    <h:panelGroup layout="block" styleClass="v">
+                                        <h:outputText value="#{meuConvenioBean.convenioAtivo.plano.tipoCobertura.descricao}"/>
+                                    </h:panelGroup>
+                                    <h:panelGroup layout="block" styleClass="k"><h:outputText value="Acomodação individual"/></h:panelGroup>
+                                    <h:panelGroup layout="block" styleClass="v">
+                                        <h:outputText styleClass="chip #{meuConvenioBean.convenioAtivo.plano.acomodacaoIndividual ? 'ativo' : 'inativo'}"
+                                                      value="#{meuConvenioBean.convenioAtivo.plano.acomodacaoIndividual ? 'Sim — quarto privativo' : 'Não — enfermaria'}"/>
+                                    </h:panelGroup>
+                                    <ui:fragment rendered="#{meuConvenioBean.convenioAtivo.plano.descricao != null}">
+                                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Descrição"/></h:panelGroup>
+                                        <h:panelGroup layout="block" styleClass="v">
+                                            <h:outputText value="#{meuConvenioBean.convenioAtivo.plano.descricao}"/>
+                                        </h:panelGroup>
+                                    </ui:fragment>
+                                </h:panelGroup>
+                            </p:tab>
+
+                            <p:tab title="Coberturas e carências">
+                                <p:dataTable id="tabelaCobAtivo"
+                                             value="#{meuConvenioBean.regrasConvenioAtivo}"
+                                             var="reg"
+                                             rows="8"
+                                             paginator="true"
+                                             paginatorPosition="bottom"
+                                             emptyMessage="Nenhuma regra de cobertura cadastrada para este plano."
+                                             styleClass="lazy-table"
+                                             tableStyle="width:100%; table-layout:fixed;">
+                                    <p:column headerText="Procedimento" style="width:34%;">
+                                        <h:outputText value="#{reg.procedimento}"/>
+                                    </p:column>
+                                    <p:column headerText="Categoria" style="width:130px;">
+                                        <h:outputText value="#{reg.categoria != null ? reg.categoria : '—'}"/>
+                                    </p:column>
+                                    <p:column headerText="Carência" style="width:90px;" styleClass="center-align mono">
+                                        <h:outputText value="#{reg.carenciaDias} dias"/>
+                                    </p:column>
+                                    <p:column headerText="Copag." style="width:80px;" styleClass="center-align mono">
+                                        <h:outputText value="#{reg.percentualCopagamento}">
+                                            <f:convertNumber type="number" maxFractionDigits="2" minFractionDigits="0"/>
+                                        </h:outputText>
+                                        <h:outputText value="%"/>
+                                    </p:column>
+                                    <p:column headerText="Cobertura" style="width:100px;" styleClass="center-align">
+                                        <h:outputText styleClass="chip #{reg.coberto ? 'ativo' : 'inativo'}"
+                                                      value="#{reg.coberto ? 'Coberto' : 'Não coberto'}"/>
+                                    </p:column>
+                                    <p:column headerText="Situação" style="width:160px;" styleClass="center-align">
+                                        <h:outputText styleClass="chip #{meuConvenioBean.situacaoCarenciaClass(reg)}"
+                                                      value="#{meuConvenioBean.situacaoCarenciaLabel(reg)}"/>
+                                    </p:column>
+                                </p:dataTable>
+                            </p:tab>
+
+                        </p:accordionPanel>
+
+                    </h:panelGroup>
+
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="panel" style="margin-bottom:20px;">
+                <h:panelGroup layout="block" styleClass="panel-title">
+                    <i class="fa fa-plus-circle panel-icon"/>
+                    <h:outputText value="Solicitar Adesão a Convênio"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="panel-body">
+
+                    <h:panelGroup layout="block" styleClass="note" style="margin-bottom:16px;">
+                        <h:outputText value="Selecione o convênio e plano desejados e informe os dados da carteirinha. A adesão só é efetivada após aprovação da administração. Caso já tenha um convênio ativo, ele será substituído quando esta solicitação for aprovada."/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" rendered="#{meuConvenioBean.possuiPendente}" styleClass="note"
+                                  style="background:#fff8e1; border-color:#ffe082;">
+                        <i class="fa fa-hourglass-half" style="color:#f57f17;"/>
+                        <h:outputText value=" Você já possui uma solicitação pendente de aprovação. Aguarde a avaliação antes de enviar outra."/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" rendered="#{not meuConvenioBean.possuiPendente}">
+                        <h:panelGroup layout="block" styleClass="kv">
+
+                            <h:panelGroup layout="block" styleClass="k">
+                                <h:outputText value="Convênio"/>
+                                <h:outputText value=" *" styleClass="muted"/>
+                            </h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <h:selectOneMenu id="selConvenio"
+                                                 value="#{meuConvenioBean.formConvenioId}"
+                                                 styleClass="input-field" style="width:320px;"
+                                                 converter="javax.faces.Long">
+                                    <f:selectItem itemLabel="Selecione..." itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{meuConvenioBean.conveniosParaSelect}"
+                                                   var="c" itemValue="#{c.id}" itemLabel="#{c.nome}"/>
+                                    <p:ajax event="change" listener="#{meuConvenioBean.aoMudarConvenio}"
+                                            update="selPlano" process="@this"/>
+                                </h:selectOneMenu>
+                            </h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k">
+                                <h:outputText value="Plano"/>
+                                <h:outputText value=" *" styleClass="muted"/>
+                            </h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <h:selectOneMenu id="selPlano"
+                                                 value="#{meuConvenioBean.formPlanoId}"
+                                                 styleClass="input-field" style="width:320px;"
+                                                 converter="javax.faces.Long">
+                                    <f:selectItem itemLabel="Selecione o convênio primeiro..." itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{meuConvenioBean.planosDoConvenioSelecionado}"
+                                                   var="pl" itemValue="#{pl.id}"
+                                                   itemLabel="#{pl.nome} (#{pl.tipoCobertura.descricao})"/>
+                                    <p:ajax event="change" update="painelInfoPlano" process="@this"/>
+                                </h:selectOneMenu>
+                            </h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k">
+                                <h:outputText value="Nº da carteirinha"/>
+                                <h:outputText value=" *" styleClass="muted"/>
+                            </h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <p:inputMask id="numCart"
+                                             value="#{meuConvenioBean.formNumeroCarteirinha}"
+                                             mask="9?99999999999999999"
+                                             styleClass="input-field mono" style="width:260px;"
+                                             placeholder="Somente números"/>
+                                <h:outputText value=" Informe apenas os dígitos da carteirinha." styleClass="muted"
+                                              style="display:block; margin-top:4px;"/>
+                            </h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k">
+                                <h:outputText value="Validade"/>
+                                <h:outputText value=" (opcional)" styleClass="muted"/>
+                            </h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <p:calendar id="dtValidade"
+                                            value="#{meuConvenioBean.formDataValidade}"
+                                            pattern="dd/MM/yyyy"
+                                            mask="true"
+                                            navigator="true"
+                                            showButtonPanel="true"
+                                            styleClass="input-field"
+                                            placeholder="dd/mm/aaaa"/>
+                            </h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k">
+                                <h:outputText value="Titularidade"/>
+                            </h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <h:selectOneMenu id="selTitular"
+                                                 value="#{meuConvenioBean.formTitularidade}"
+                                                 styleClass="input-field" style="width:200px;">
+                                    <f:selectItems value="#{meuConvenioBean.tiposTitularidade}"
+                                                   var="t" itemValue="#{t.valor}" itemLabel="#{t.descricao}"/>
+                                </h:selectOneMenu>
+                            </h:panelGroup>
+
+                            <h:panelGroup layout="block" styleClass="k">
+                                <h:outputText value="Motivo"/>
+                                <h:outputText value=" (opcional)" styleClass="muted"/>
+                            </h:panelGroup>
+                            <h:panelGroup layout="block" styleClass="v">
+                                <p:inputTextarea id="motivoSolic"
+                                                 value="#{meuConvenioBean.formMotivo}"
+                                                 rows="2" maxlength="500"
+                                                 styleClass="input-field" style="width:100%; resize:vertical;"
+                                                 placeholder="Ex.: novo convênio fornecido pelo empregador"/>
+                            </h:panelGroup>
+
+                        </h:panelGroup>
+
+                        <h:panelGroup id="painelInfoPlano" layout="block" style="margin-top:18px;">
+                            <ui:fragment rendered="#{meuConvenioBean.planoSelecionado != null}">
+                                <h:panelGroup layout="block" styleClass="panel"
+                                              style="border:1px solid #c8e6c9; background:#f1f8f3;">
+                                    <h:panelGroup layout="block" styleClass="panel-title">
+                                        <i class="fa fa-circle-info panel-icon"/>
+                                        <h:outputText value="Detalhes do plano #{meuConvenioBean.planoSelecionado.nome}"/>
+                                    </h:panelGroup>
+                                    <h:panelGroup layout="block" styleClass="panel-body">
+
+                                        <h:panelGroup layout="block" styleClass="kv">
+                                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Mensalidade"/></h:panelGroup>
+                                            <h:panelGroup layout="block" styleClass="v mono">
+                                                <h:outputText value="#{meuConvenioBean.planoSelecionado.valorMensalidade != null ? meuConvenioBean.planoSelecionado.valorMensalidade : 0}">
+                                                    <f:convertNumber type="currency" currencySymbol="R$ "/>
+                                                </h:outputText>
+                                                <h:outputText value=" / mês"/>
+                                            </h:panelGroup>
+
+                                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Tipo de cobertura"/></h:panelGroup>
+                                            <h:panelGroup layout="block" styleClass="v">
+                                                <h:outputText value="#{meuConvenioBean.planoSelecionado.tipoCobertura.descricao}"/>
+                                            </h:panelGroup>
+
+                                            <h:panelGroup layout="block" styleClass="k"><h:outputText value="Acomodação individual"/></h:panelGroup>
+                                            <h:panelGroup layout="block" styleClass="v">
+                                                <h:outputText styleClass="chip #{meuConvenioBean.planoSelecionado.acomodacaoIndividual ? 'ativo' : 'inativo'}"
+                                                              value="#{meuConvenioBean.planoSelecionado.acomodacaoIndividual ? 'Sim — quarto privativo' : 'Não — enfermaria'}"/>
+                                            </h:panelGroup>
+
+                                            <ui:fragment rendered="#{meuConvenioBean.planoSelecionado.descricao != null}">
+                                                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Descrição"/></h:panelGroup>
+                                                <h:panelGroup layout="block" styleClass="v">
+                                                    <h:outputText value="#{meuConvenioBean.planoSelecionado.descricao}"/>
+                                                </h:panelGroup>
+                                            </ui:fragment>
+                                        </h:panelGroup>
+
+                                        <h:panelGroup layout="block" style="margin-top:14px; font-weight:600;">
+                                            <i class="fa fa-list-check" style="margin-right:6px;"/>
+                                            <h:outputText value="Coberturas e carências"/>
+                                        </h:panelGroup>
+
+                                        <p:dataTable id="tabelaRegrasPlano"
+                                                     value="#{meuConvenioBean.regrasDoPlanoSelecionado}"
+                                                     var="reg"
+                                                     rows="5"
+                                                     paginator="true"
+                                                     paginatorPosition="bottom"
+                                                     emptyMessage="Este plano ainda não possui regras de cobertura cadastradas."
+                                                     styleClass="lazy-table"
+                                                     style="margin-top:8px;"
+                                                     tableStyle="width:100%; table-layout:fixed;">
+
+                                            <p:column headerText="Procedimento" style="width:34%;">
+                                                <h:outputText value="#{reg.procedimento}"/>
+                                            </p:column>
+                                            <p:column headerText="Categoria" style="width:130px;">
+                                                <h:outputText value="#{reg.categoria != null ? reg.categoria : '—'}"/>
+                                            </p:column>
+                                            <p:column headerText="Carência" style="width:100px;" styleClass="center-align mono">
+                                                <h:outputText value="#{reg.carenciaDias} dias"/>
+                                            </p:column>
+                                            <p:column headerText="Copag." style="width:90px;" styleClass="center-align mono">
+                                                <h:outputText value="#{reg.percentualCopagamento}">
+                                                    <f:convertNumber type="number" maxFractionDigits="2" minFractionDigits="0"/>
+                                                </h:outputText>
+                                                <h:outputText value="%"/>
+                                            </p:column>
+                                            <p:column headerText="Cobertura" style="width:110px;" styleClass="center-align">
+                                                <h:outputText styleClass="chip #{reg.coberto ? 'ativo' : 'inativo'}"
+                                                              value="#{reg.coberto ? 'Coberto' : 'Não coberto'}"/>
+                                            </p:column>
+                                        </p:dataTable>
+
+                                    </h:panelGroup>
+                                </h:panelGroup>
+                            </ui:fragment>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block"
+                                      style="margin-top:18px; padding-top:14px; border-top:1px solid #e4e4e4;">
+                            <p:commandButton value="Enviar Solicitação"
+                                             icon="fa fa-paper-plane"
+                                             styleClass="btn primary btn-big"
+                                             action="#{meuConvenioBean.solicitar}"
+                                             process="@form"
+                                             update="@form"/>
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="panel">
+                <h:panelGroup layout="block" styleClass="panel-title">
+                    <i class="fa fa-list panel-icon"/>
+                    <h:outputText value="Minhas Solicitações"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="panel-body">
+
+                    <p:dataTable id="tabelaMinhasSolic"
+                                 value="#{meuConvenioBean.solicitacoes}"
+                                 var="sol"
+                                 rows="5"
+                                 paginator="true"
+                                 paginatorPosition="bottom"
+                                 emptyMessage="Nenhuma solicitação registrada."
+                                 styleClass="lazy-table"
+                                 tableStyle="width:100%; table-layout:fixed;">
+
+                        <p:column headerText="Plano" style="width:30%;">
+                            <h:outputText value="#{sol.plano.convenio.nome} — #{sol.plano.nome}"/>
+                        </p:column>
+
+                        <p:column headerText="Carteirinha" style="width:120px;" styleClass="mono">
+                            <h:outputText value="#{sol.carteirinhaMascara}"/>
+                        </p:column>
+
+                        <p:column headerText="Situação" style="width:110px;" styleClass="center-align">
+                            <h:outputText styleClass="chip #{sol.status.name() eq 'A' ? 'ativo' : (sol.status.name() eq 'P' ? 'pendente' : 'inativo')}"
+                                          value="#{sol.status.descricao}"/>
+                        </p:column>
+
+                        <p:column headerText="Solicitado em" style="width:140px;" styleClass="mono">
+                            <h:outputText value="#{meuConvenioBean.formatarData(sol.dataCadastro)}"/>
+                        </p:column>
+
+                        <p:column headerText="Observação" style="width:25%;">
+                            <h:outputText value="#{sol.motivoRejeicao != null ? sol.motivoRejeicao : '—'}"/>
+                        </p:column>
+
+                        <p:column headerText="Ações" style="width:110px;" styleClass="center-align">
+                            <p:commandButton icon="fa fa-times"
+                                             styleClass="btn icon-btn danger"
+                                             title="Cancelar solicitação"
+                                             rendered="#{sol.status.name() eq 'P'}"
+                                             action="#{meuConvenioBean.cancelarSolicitacao(sol.id)}"
+                                             process="@this"
+                                             update="@form">
+                                <p:confirm header="Confirmar cancelamento"
+                                           message="Deseja cancelar esta solicitação?"
+                                           icon="pi pi-exclamation-triangle"/>
+                            </p:commandButton>
+                        </p:column>
+
+                    </p:dataTable>
+
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Sim" type="button" styleClass="ui-confirmdialog-yes btn primary"/>
+                <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no btn secondary"/>
+            </p:confirmDialog>
+
+        </h:form>
+    </ui:define>
+
+</ui:composition>

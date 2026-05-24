@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <p:dialog id="dlgRegra"
+              widgetVar="wDlgRegra"
+              header="Detalhes da Regra"
+              modal="true"
+              resizable="false"
+              closeOnEscape="true"
+              width="660"
+              styleClass="hsg-dialog">
+
+        <h:panelGroup id="dlgBodyRegra" layout="block">
+
+            <h:panelGroup layout="block" rendered="#{convenioBean.regraSelecionada == null}">
+                <h:panelGroup layout="block" styleClass="note" style="padding:16px 12px;">
+                    <h:outputText value="Nenhuma regra selecionada."/>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" rendered="#{convenioBean.regraSelecionada != null}">
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-link"/>
+                        Vínculo
+                    </div>
+                    <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Convênio"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText value="#{convenioBean.regraSelecionada.plano.convenio.nome}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Plano"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <b><h:outputText value="#{convenioBean.regraSelecionada.plano.nome}"/></b>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </div>
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-list-check"/>
+                        Regra de cobertura
+                    </div>
+                    <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Procedimento"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <b><h:outputText value="#{convenioBean.regraSelecionada.procedimento}"/></b>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Categoria"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText value="#{convenioBean.regraSelecionada.categoria != null ? convenioBean.regraSelecionada.categoria : '—'}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Cobertura"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText styleClass="chip #{convenioBean.regraSelecionada.coberto ? 'ativo' : 'inativo'}"
+                                          value="#{convenioBean.regraSelecionada.coberto ? 'Coberto' : 'Não coberto'}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Carência"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{convenioBean.regraSelecionada.carenciaDias} dia(s)"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Copagamento"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{convenioBean.regraSelecionada.percentualCopagamento}%"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Status"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText styleClass="chip #{convenioBean.regraSelecionada.status.valor eq 'A' ? 'ativo' : 'inativo'}"
+                                          value="#{convenioBean.regraSelecionada.status.descricao}"/>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </div>
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-comment"/>
+                        Observação
+                    </div>
+                    <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText value="#{convenioBean.regraSelecionada.observacao != null ? convenioBean.regraSelecionada.observacao : '—'}"/>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </div>
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-calendar-alt"/>
+                        Registro
+                    </div>
+                    <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Cadastrada em"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{convenioBean.formatarData(convenioBean.regraSelecionada.dataCadastro)}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Última atualização"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{convenioBean.formatarData(convenioBean.regraSelecionada.dataUltimaAtualizacao)}"/>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </div>
+
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <f:facet name="footer">
+            <p:commandButton value="Fechar"
+                             icon="fa fa-times"
+                             type="button"
+                             onclick="PF('wDlgRegra').hide();"
+                             styleClass="btn secondary"/>
+        </f:facet>
+
+    </p:dialog>
+
+</ui:composition>

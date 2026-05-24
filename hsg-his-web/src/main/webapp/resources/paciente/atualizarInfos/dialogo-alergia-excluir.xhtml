@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:cc="http://java.sun.com/jsf/composite"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+<cc:interface>
+    <cc:attribute name="bean" required="true"/>
+</cc:interface>
+
+<cc:implementation>
+    <p:dialog id="dialog"
+              widgetVar="dlgAlergiaExcluir"
+              header="Confirmar Exclusão"
+              modal="true"
+              resizable="false"
+              width="460"
+              closeOnEscape="true"
+              styleClass="dialog-cancelamento">
+        <h:form id="formExclusao">
+
+            <h:panelGroup id="body" layout="block" style="display:flex; flex-direction:column; gap:12px;">
+                <h:panelGroup layout="block"
+                              style="color:#b00; background:#fff5f5; border:1px solid #fcc; padding:10px 14px; border-radius:4px;">
+                    <h:outputText value="Esta ação não pode ser desfeita. A alergia será excluída permanentemente."/>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block"
+                          styleClass="dialog-footer"
+                          style="display:flex; justify-content:flex-end; gap:8px; padding-top:12px; border-top:1px solid #e5e7eb; margin-top:12px;">
+                <p:commandButton value="Confirmar exclusão"
+                                 icon="fa fa-trash"
+                                 action="#{cc.attrs.bean.confirmarExclusao}"
+                                 process="@form"
+                                 update=":mainForm:msgs :mainForm:tabs"
+                                 styleClass="btn danger"
+                                 oncomplete="if (!args.validationFailed) PF('dlgAlergiaExcluir').hide();"/>
+                <p:commandButton value="Voltar"
+                                 icon="fa fa-times"
+                                 type="button"
+                                 onclick="PF('dlgAlergiaExcluir').hide();"
+                                 styleClass="btn secondary"/>
+            </h:panelGroup>
+        </h:form>
+    </p:dialog>
+</cc:implementation>
+</html>

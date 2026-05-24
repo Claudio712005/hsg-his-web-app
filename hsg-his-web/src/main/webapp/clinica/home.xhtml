@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                template="/WEB-INF/templates/clinica/layout.xhtml">
+
+    <ui:define name="title">HSG - Painel Clínico</ui:define>
+
+    <ui:define name="breadcrumbItems">
+        <h:outputText value="&#187;" styleClass="sep"/>
+        <h:outputText value="Painel Clínico" style="font-weight:bold;"/>
+    </ui:define>
+
+    <ui:define name="content">
+
+        <h:panelGroup layout="block" styleClass="page-title">
+            <h:panelGroup layout="block">
+                <h1>Painel Clínico</h1>
+                <h:panelGroup layout="block" styleClass="sub">
+                    <h:outputText value="Bem-vindo ao sistema de gestão hospitalar HSG."/>
+                </h:panelGroup>
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <ui:fragment rendered="#{beanSessao.usuarioClinica.tipo eq 'MEDICO'}">
+            <ui:include src="fragments/home/perfil-medico.xhtml"/>
+        </ui:fragment>
+
+        <ui:fragment rendered="#{beanSessao.usuarioClinica.tipo eq 'ENFERMEIRO'}">
+            <ui:include src="fragments/home/perfil-enfermeiro.xhtml"/>
+        </ui:fragment>
+
+    </ui:define>
+
+</ui:composition>

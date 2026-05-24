@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <h:form id="formEnfermeiros">
+
+        <div class="prof-section-header">
+            <i class="fa fa-users prof-section-icon"/>
+            <span>Enfermeiros</span>
+        </div>
+
+        <h:panelGroup layout="block" styleClass="filter-bar">
+            <div class="filter-group">
+                <label class="filter-label" for="filtroNomeEnf">Nome do enfermeiro</label>
+                <h:inputText id="filtroNomeEnf"
+                             value="#{adminBean.filtroNomeEnfermeiro}"
+                             styleClass="filter-input"
+                             placeholder="Ex.: Maria Santos"/>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="filtroSetorEnf">Setor</label>
+                <h:inputText id="filtroSetorEnf"
+                             value="#{adminBean.filtroSetorEnfermeiro}"
+                             styleClass="filter-input"
+                             placeholder="Ex.: UTI, Cirurgia..."/>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="filtroStatusEnf">Status</label>
+                <h:selectOneMenu id="filtroStatusEnf"
+                                 value="#{adminBean.filtroStatusEnfermeiro}"
+                                 styleClass="filter-select">
+                    <f:selectItem itemLabel="Todos" itemValue=""/>
+                    <f:selectItem itemLabel="Ativo"    itemValue="A"/>
+                    <f:selectItem itemLabel="Inativo"  itemValue="I"/>
+                    <f:selectItem itemLabel="Pendente" itemValue="P"/>
+                </h:selectOneMenu>
+            </div>
+            <div class="filter-actions">
+                <p:commandButton value="Filtrar"
+                                 styleClass="btn primary"
+                                 actionListener="#{adminBean.aplicarFiltrosEnfermeiro}"
+                                 update="tabelaEnfermeiros"
+                                 process="filtroNomeEnf filtroSetorEnf filtroStatusEnf @this"
+                                 icon="fa fa-search"/>
+                <p:commandButton value="Limpar"
+                                 styleClass="btn secondary"
+                                 actionListener="#{adminBean.limparFiltrosEnfermeiro}"
+                                 update="filtroNomeEnf filtroSetorEnf filtroStatusEnf tabelaEnfermeiros"
+                                 process="@this"
+                                 icon="fa fa-times"/>
+            </div>
+        </h:panelGroup>
+
+        <p:dataTable id="tabelaEnfermeiros"
+                     value="#{adminBean.enfermeiroModel}"
+                     var="enf"
+                     lazy="true"
+                     rows="5"
+                     paginator="true"
+                     paginatorPosition="bottom"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                     rowsPerPageTemplate="5,10,25"
+                     currentPageReportTemplate="{startRecord}–{endRecord} de {totalRecords}"
+                     emptyMessage="Nenhum enfermeiro encontrado."
+                     styleClass="lazy-table"
+                     tableStyle="width:100%; table-layout:fixed;">
+
+            <p:column headerText="Nome" sortBy="#{enf.nomeCompleto}" sortField="nome"
+                      style="width:35%;">
+                <h:outputText value="#{enf.nomeCompleto}"/>
+            </p:column>
+
+            <p:column headerText="COREN" sortBy="#{enf.coren.numero}" sortField="coren.numero"
+                      style="width:140px;">
+                <h:outputText value="#{enf.coren != null ? enf.coren.formatado : '—'}" styleClass="mono"/>
+            </p:column>
+
+            <p:column headerText="Setor" sortBy="#{enf.setor}" sortField="setor"
+                      style="width:20%;">
+                <h:outputText value="#{enf.setor != null ? enf.setor : '—'}"/>
+            </p:column>
+
+            <p:column headerText="Status" sortBy="#{enf.status}" sortField="status"
+                      style="width:80px;" styleClass="center-align">
+                <h:outputText styleClass="chip #{enf.status.valor eq 'A' ? 'ativo' : (enf.status.valor eq 'I' ? 'inativo' : 'pendente')}"
+                              value="#{enf.status.descricao}"/>
+            </p:column>
+
+            <p:column headerText="Cadastrado em" sortBy="#{enf.dataCadastro}" sortField="dataCadastro"
+                      style="width:115px;">
+                <h:outputText value="#{adminBean.formatarData(enf.dataCadastro)}"/>
+            </p:column>
+
+            <p:column headerText="Ações" style="width:60px;" styleClass="center-align">
+                <p:commandButton icon="fa fa-eye"
+                                 styleClass="btn icon-btn info"
+                                 title="Ver detalhes"
+                                 update=":tabViewClinica:formEnfermeiros:dlgBodyEnfermeiro"
+                                 oncomplete="PF('wDlgEnfermeiro').show()"
+                                 process="@this">
+                    <f:setPropertyActionListener target="#{adminBean.enfermeiroSelecionado}" value="#{enf}"/>
+                </p:commandButton>
+            </p:column>
+
+        </p:dataTable>
+
+        <ui:include src="dialog-enfermeiro.xhtml"/>
+
+    </h:form>
+
+</ui:composition>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:pac="http://java.sun.com/jsf/composite/paciente/home"
+                template="/WEB-INF/templates/paciente/layout.xhtml">
+
+    <ui:define name="title">HSG - Painel do Paciente</ui:define>
+
+    <ui:define name="breadcrumbItems">
+        <h:outputText value="&#187;" styleClass="sep"/>
+        <h:outputText value="Meu Painel" style="font-weight:bold;"/>
+    </ui:define>
+
+    <ui:define name="content">
+        <h:form>
+
+            <h:panelGroup layout="block" styleClass="page-title">
+                <h:panelGroup layout="block">
+                    <h1>Painel do Paciente</h1>
+                    <h:panelGroup layout="block" styleClass="sub">
+                        <h:outputText value="Acompanhe suas informações cadastrais e dados do sistema."/>
+                    </h:panelGroup>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="right">
+                    <h:outputText value="Cadastrado em: "/>
+                    <b><h:outputText value="#{painelPacienteBean.dataCadastroFormatada}"/></b>
+                    <br/>
+                    <h:outputText value="Usuário: "/>
+                    <b><h:outputText value="#{beanSessao.paciente.username}"/></b>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="welcome">
+                <h:panelGroup layout="block" styleClass="icon"><i class="fas fa-info-circle"></i></h:panelGroup>
+                <h:panelGroup layout="block">
+                    <h:outputText value="Bem-vindo, "/>
+                    <b><h:outputText value="#{beanSessao.paciente.nomeCompleto}"/></b>
+                    <h:outputText value=". Seu status atual é "/>
+                    <h:outputText value="#{painelPacienteBean.statusDescricao}"
+                                  styleClass="chip #{painelPacienteBean.statusCssClass}"
+                                  style="vertical-align:middle;"/>
+                    <h:outputText value=" no sistema HSG."/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="date">
+                    <h:outputText value="Prontuário: "/>
+                    <b><h:outputText value="#{painelPacienteBean.prontuario}"/></b>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <pac:card-resumo bean="#{painelPacienteBean}" sessao="#{beanSessao}"/>
+
+            <pac:card-convenio bean="#{painelPacienteBean}"/>
+
+            <h:panelGroup layout="block" styleClass="grid-2-asym">
+                <pac:ultima-medicao bean="#{painelPacienteBean}"/>
+                <pac:acoes-rapidas  bean="#{painelPacienteBean}"/>
+            </h:panelGroup>
+
+        </h:form>
+    </ui:define>
+
+</ui:composition>

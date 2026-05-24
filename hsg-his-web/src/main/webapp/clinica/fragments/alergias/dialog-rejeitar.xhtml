@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:p="http://primefaces.org/ui">
+
+    <p:dialog id="dlgRejeitarAlergia"
+              widgetVar="wDlgRejeitarAlergia"
+              header="Rejeitar Alergia"
+              modal="true"
+              resizable="false"
+              closeOnEscape="true"
+              width="520"
+              styleClass="hsg-dialog">
+
+        <h:panelGroup id="dlgBodyRejeitarAlergia" layout="block">
+
+            <h:panelGroup layout="block"
+                          rendered="#{aprovacaoAlergiaBean.alergiaSelecionada == null}">
+                <h:panelGroup layout="block" styleClass="note" style="padding:16px 12px;">
+                    <h:outputText value="Nenhuma alergia selecionada."/>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block"
+                          rendered="#{aprovacaoAlergiaBean.alergiaSelecionada != null}">
+
+                <h:panelGroup layout="block" styleClass="note"
+                              style="margin-bottom:12px; background:#fdecea; border-color:#f5b5b0;">
+                    <i class="fa fa-exclamation-triangle" style="color:#c62828;"/>
+                    <h:outputText value=" Você está rejeitando a alergia "/>
+                    <b><h:outputText value="#{aprovacaoAlergiaBean.alergiaSelecionada.nomeAlergia}"/></b>
+                    <h:outputText value=" do paciente "/>
+                    <b><h:outputText value="#{aprovacaoAlergiaBean.alergiaSelecionada.nomePaciente}"/></b>
+                    <h:outputText value=". Esta ação não pode ser desfeita."/>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Motivo da rejeição"/>
+                        <h:outputText value=" *" style="color:#c00;"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <p:inputTextarea id="obsRejeitar"
+                                         value="#{aprovacaoAlergiaBean.observacaoAprovador}"
+                                         rows="3"
+                                         maxlength="500"
+                                         required="true"
+                                         requiredMessage="Informe o motivo da rejeição."
+                                         styleClass="input-field"
+                                         style="width:100%;"
+                                         placeholder="Descreva por que a alergia está sendo rejeitada"/>
+                        <p:message for="obsRejeitar" styleClass="field-error"/>
+                    </h:panelGroup>
+
+                </h:panelGroup>
+
+            </h:panelGroup>
+
+            <h:panelGroup layout="block"
+                          style="display:flex; justify-content:flex-end; gap:8px; padding-top:14px; border-top:1px solid #e5e7eb; margin-top:14px;">
+                <p:commandButton value="Confirmar Rejeição"
+                                 icon="fa fa-times"
+                                 styleClass="btn danger"
+                                 action="#{aprovacaoAlergiaBean.confirmarRejeicao}"
+                                 process=":formAlergiasLista:dlgBodyRejeitarAlergia"
+                                 update=":formAlergiasLista:dlgBodyRejeitarAlergia :formAlergiasLista:msgs :formAlergiasLista:tabelaAlergias :formAlergiasLista:painelTituloPendentes :formHistoricoAlergias:tabelaHistorico"
+                                 oncomplete="if(!args.validationFailed) PF('wDlgRejeitarAlergia').hide();"/>
+                <p:commandButton value="Cancelar"
+                                 icon="fa fa-arrow-left"
+                                 type="button"
+                                 onclick="PF('wDlgRejeitarAlergia').hide(); return false;"
+                                 styleClass="btn secondary"/>
+            </h:panelGroup>
+
+        </h:panelGroup>
+
+    </p:dialog>
+
+</ui:composition>

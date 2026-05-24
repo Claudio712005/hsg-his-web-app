@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<h:head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title><ui:insert name="title">HSG — Portal do Profissional</ui:insert></title>
+    <h:outputStylesheet library="css" name="paciente-portal.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <style type="text/css">
+        .public-topbar {
+            height: 52px;
+            background: linear-gradient(135deg, #1f3a68 0%, #2d5fa8 100%);
+            border-bottom: 2px solid #0e1f3a;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 10px;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .public-topbar .logo {
+            width: 30px; height: 30px;
+            background: rgba(255,255,255,0.18);
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 15px;
+            flex-shrink: 0;
+        }
+        .public-topbar .brand-name {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .public-topbar .brand-sub {
+            font-size: 11px;
+            font-weight: 400;
+            opacity: 0.65;
+            margin-left: 6px;
+            padding-left: 10px;
+            border-left: 1px solid rgba(255,255,255,0.25);
+        }
+        .public-wrap {
+            padding-top: 52px;
+            min-height: 100vh;
+            background: #e9ecef;
+            display: flex;
+            flex-direction: column;
+        }
+        .public-main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            padding: 32px 16px 40px;
+        }
+        .public-card {
+            background: #fff;
+            border: 1px solid #d4dae6;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(31,58,104,0.08);
+            width: 100%;
+            max-width: 680px;
+        }
+        .public-footer {
+            text-align: center;
+            font-size: 11px;
+            color: #9ca3af;
+            padding: 14px;
+            border-top: 1px solid #e0e0e0;
+            background: #fff;
+        }
+    </style>
+    <ui:insert name="head"/>
+</h:head>
+
+<h:body>
+
+    <div class="public-topbar">
+        <div class="logo">H</div>
+        <span class="brand-name">HSG — Hospital Information System</span>
+        <span class="brand-sub">Portal do Profissional</span>
+    </div>
+
+    <div class="public-wrap">
+        <div class="public-main">
+            <div class="public-card">
+                <ui:insert name="content">
+                    <p>Conteúdo não definido.</p>
+                </ui:insert>
+            </div>
+        </div>
+    </div>
+
+    <div class="public-footer">
+        &#169; 2012–2026 HSG Hospital Information System &#160;|&#160; Todos os direitos reservados
+    </div>
+
+</h:body>
+</html>

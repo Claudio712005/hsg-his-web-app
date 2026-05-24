@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:cc="http://java.sun.com/jsf/composite"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+<cc:interface>
+    <cc:attribute name="bean" required="true"/>
+</cc:interface>
+
+<cc:implementation>
+    <h:panelGroup id="panelClinico" layout="block" styleClass="panel" style="margin-bottom:20px;">
+        <h:panelGroup layout="block" styleClass="panel-title">
+            <h:outputText value="Solicitar Atualização Clínica"/>
+        </h:panelGroup>
+        <h:panelGroup layout="block" styleClass="panel-body">
+
+            <h:panelGroup layout="block" styleClass="note" style="margin-bottom:16px;">
+                <h:outputText value="Informe os valores atuais de peso, altura e tipo sanguíneo. A atualização só é efetivada após aprovação da equipe de enfermagem."/>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="kv">
+
+                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Peso (kg)"/></h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <p:inputNumber id="peso"
+                                 value="#{cc.attrs.bean.formClinico.peso}"
+                                 converterMessage="Informe um número válido para o peso (ex: 72.5)."
+                                 validatorMessage="Peso deve estar no formato correto (ex: 72.5)."
+                                 styleClass="input-field mono" style="width:140px;"
+                                 placeholder="Ex: 72.5">
+                        <p:ajax event="change" process="@this" update="btnClinico"/>
+                    </p:inputNumber>
+                    <p:message for="peso" styleClass="field-error"/>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Altura (m)"/></h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <p:inputNumber id="altura"
+                                 value="#{cc.attrs.bean.formClinico.altura}"
+                                 converterMessage="Informe um número válido para a altura (ex: 1.75)."
+                                 validatorMessage="Altura deve estar no formato correto (ex: 1.75)."
+                                 styleClass="input-field mono" style="width:140px;"
+                                 placeholder="Ex: 1.75">
+                        <p:ajax event="change" process="@this" update="btnClinico"/>
+                    </p:inputNumber>
+                    <p:message for="altura" styleClass="field-error"/>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k"><h:outputText value="Tipo Sanguíneo"/></h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <p:selectOneMenu id="tipoSanguineo"
+                                     required="true"
+                                     requiredMessage="Tipo sanguíneo é obrigatório."
+                                     value="#{cc.attrs.bean.formClinico.tipoSanguineo}"
+                                     styleClass="input-field" style="width:200px;">
+                        <p:ajax event="change" process="@this" update="btnClinico"/>
+                        <f:selectItem itemLabel="Selecione..." itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItems value="#{cc.attrs.bean.tiposSanguineos}"
+                                       var="ts"
+                                       itemLabel="#{ts.descricao}"
+                                       itemValue="#{ts.name()}"/>
+                    </p:selectOneMenu>
+                    <p:message for="tipoSanguineo" styleClass="field-error"/>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="k">
+                    <h:outputText value="Motivo"/>
+                    <h:outputText value=" (opcional)" styleClass="muted"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="v">
+                    <p:inputTextarea id="motivoClin"
+                                     value="#{cc.attrs.bean.formClinico.motivo}"
+                                     maxlength="500" rows="3" styleClass="input-field"
+                                     style="width:100%; resize:vertical;"/>
+                </h:panelGroup>
+
+            </h:panelGroup>
+
+            <h:panelGroup layout="block"
+                          style="margin-top:20px; padding-top:14px; border-top:1px solid #e4e4e4; display:flex; gap:8px; align-items:center;">
+                <p:commandButton id="btnClinico"
+                                 value="Solicitar Atualização Clínica"
+                                 action="#{cc.attrs.bean.solicitarAtualizacaoClinica}"
+                                 process="panelClinico"
+                                 update=":mainForm:msgs :mainForm:tabs:tabelaHistoricoClinico"
+                                 disabled="#{not cc.attrs.bean.formClinicoAlterado}"
+                                 styleClass="btn primary btn-big"
+                                 icon="fa fa-plus"/>
+            </h:panelGroup>
+
+        </h:panelGroup>
+    </h:panelGroup>
+</cc:implementation>
+</html>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html">
+
+    <aside class="sidebar">
+        <div class="sb-title">Menu do Paciente</div>
+
+        <div class="menu-group open">
+            <div class="menu-header">
+                <i class="fas fa-angle-right chev"></i>
+                <i class="fas fa-home"></i>
+                Meu Painel
+            </div>
+            <div class="menu-items">
+                <a href="#{request.contextPath}/paciente/home.xhtml"
+                   class="#{request.servletPath eq '/paciente/home.xhtml' ? 'active' : ''}">Visão Geral</a>
+            </div>
+        </div>
+
+        <div class="menu-group open">
+            <div class="menu-header">
+                <i class="fas fa-angle-right chev"></i>
+                <i class="fas fa-user"></i>
+                Meus Dados
+            </div>
+            <div class="menu-items">
+                <a href="#{request.contextPath}/paciente/atualizarInfos.xhtml"
+                   class="#{request.servletPath eq '/paciente/atualizarInfos.xhtml' ? 'active' : ''}">Atualizar Dados</a>
+                <a href="#{request.contextPath}/paciente/meu-convenio.xhtml"
+                   class="#{request.servletPath eq '/paciente/meu-convenio.xhtml' ? 'active' : ''}">Convênio</a>
+                <a href="#{request.contextPath}/paciente/consultar-convenios.xhtml"
+                   class="#{request.servletPath eq '/paciente/consultar-convenios.xhtml' ? 'active' : ''}">Consultar Convênios</a>
+            </div>
+        </div>
+
+    </aside>
+
+</ui:composition>

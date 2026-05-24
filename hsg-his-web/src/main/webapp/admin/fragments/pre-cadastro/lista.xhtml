@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:p="http://primefaces.org/ui">
+
+    <style type="text/css">
+        .data tbody tr.row-expired { background: #fff8e1; }
+        .data tbody tr.row-expired:hover { background: #fff3cd; }
+        .chip-expirado {
+            display: inline-block;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            padding: 1px 7px;
+            font-size: 10px;
+            color: #7a5000;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+    </style>
+
+    <h:panelGroup id="panelListaPreCadastro" layout="block" styleClass="panel"
+                  rendered="#{beanSessao.logadoComoAdmin}">
+
+        <h:panelGroup layout="block" styleClass="panel-title">
+            <i class="fa fa-list panel-icon"/>
+            <h:outputText value="Pré-cadastros Registrados"/>
+            <h:panelGroup layout="block" style="margin-left:auto; display:flex; align-items:center; gap:6px;">
+                <span style="font-size:11px; color:#666; font-weight:normal;">Pendentes:</span>
+                <span class="chip pendente">
+                    <h:outputText value="#{preCadastroBean.totalPendentes}"/>
+                </span>
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <h:panelGroup layout="block" rendered="#{empty preCadastroBean.lista}" styleClass="empty-state">
+            <div class="empty-icon"><i class="fa fa-inbox"/></div>
+            <h:outputText value="Nenhum pré-cadastro registrado ainda."/>
+        </h:panelGroup>
+
+        <h:panelGroup layout="block" rendered="#{not empty preCadastroBean.lista}">
+            <table class="data">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th style="width:90px;">Tipo</th>
+                        <th style="width:185px;">E-mail pessoal</th>
+                        <th style="width:185px;">E-mail corporativo</th>
+                        <th style="width:80px;" class="center-align">Status</th>
+                        <th style="width:90px;" class="center-align">Convite</th>
+                        <th style="width:130px;">Criado em</th>
+                        <th style="width:95px;" class="center-align">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <ui:repeat value="#{preCadastroBean.lista}" var="pc">
+                        <tr class="#{pc.conviteExpirado and pc.pendente ? 'row-expired' : ''}">
+                            <td><h:outputText value="#{pc.nome}"/></td>
+                            <td><h:outputText value="#{pc.tipoProfissional.descricao}"/></td>
+                            <td class="mono" style="font-size:11px;">
+                                <h:outputText value="#{pc.emailPessoal}"/>
+                            </td>
+                            <td class="mono" style="font-size:11px;">
+                                <h:panelGroup rendered="#{not empty pc.emailCorporativo}">
+                                    <h:outputText value="#{pc.emailCorporativo}"/>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{empty pc.emailCorporativo}">
+                                    <span style="color:#bbb;">—</span>
+                                </h:panelGroup>
+                            </td>
+                            <td class="center-align">
+                                <h:panelGroup rendered="#{pc.status.name() == 'PENDENTE' and not pc.conviteExpirado}">
+                                    <span class="chip pendente">Pendente</span>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{pc.status.name() == 'PENDENTE' and pc.conviteExpirado}">
+                                    <span class="chip pendente">Pendente</span>
+                                    <br/>
+                                    <span class="chip-expirado" title="Convite expirado — reenvio disponível">&#9888; convite expirado</span>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{pc.status.name() == 'CONCLUIDO'}">
+                                    <span class="chip ativo">Concluído</span>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{pc.status.name() == 'EXPIRADO'}">
+                                    <span class="chip inativo">Expirado</span>
+                                </h:panelGroup>
+                            </td>
+                            <td class="center-align">
+                                <h:panelGroup rendered="#{pc.emailEnviado and not pc.conviteExpirado}">
+                                    <i class="fa fa-check" style="color:#2e7d32;"
+                                       title="Enviado em #{pc.dataEnvioEmailFormatada} — expira em #{pc.dataExpiracaoConviteFormatada}"/>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{pc.emailEnviado and pc.conviteExpirado}">
+                                    <i class="fa fa-exclamation-triangle" style="color:#e65100;"
+                                       title="Convite expirado em #{pc.dataExpiracaoConviteFormatada}"/>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{not pc.emailEnviado}">
+                                    <i class="fa fa-minus" style="color:#bbb;" title="Não enviado"/>
+                                </h:panelGroup>
+                            </td>
+                            <td class="mono" style="font-size:11px;">
+                                <h:outputText value="#{pc.dataCriacaoFormatada}"/>
+                            </td>
+                            <td class="center-align">
+                                <h:form>
+                                    <p:commandButton icon="fa fa-eye"
+                                                     title="Ver detalhes"
+                                                     styleClass="btn icon-btn"
+                                                     action="#{preCadastroBean.prepararVisualizacao(pc.id)}"
+                                                     process="@this"
+                                                     update=":dlgPreCadastro"
+                                                     oncomplete="PF('wDlgPreCadastro').show()"/>
+                                    <p:commandButton icon="fa fa-envelope"
+                                                     title="Enviar convite"
+                                                     styleClass="btn icon-btn primary"
+                                                     action="#{preCadastroBean.enviarConvite(pc.id)}"
+                                                     process="@this"
+                                                     update=":msgs :panelListaPreCadastro"
+                                                     rendered="#{pc.pendente and not pc.emailEnviado}"/>
+                                    <p:commandButton icon="fa fa-redo"
+                                                     title="Reenviar convite (convite anterior expirado)"
+                                                     styleClass="btn icon-btn secondary"
+                                                     action="#{preCadastroBean.enviarConvite(pc.id)}"
+                                                     process="@this"
+                                                     update=":msgs :panelListaPreCadastro"
+                                                     rendered="#{pc.pendente and pc.conviteExpirado}"/>
+                                </h:form>
+                            </td>
+                        </tr>
+                    </ui:repeat>
+                </tbody>
+            </table>
+        </h:panelGroup>
+
+        <h:panelGroup layout="block" styleClass="note">
+            <i class="fa fa-info-circle"/>
+            <h:outputText value=" Exibindo os 50 registros mais recentes. Links de convite expiram em 2 dias após o envio. O reenvio só é permitido após a expiração do convite anterior."/>
+        </h:panelGroup>
+
+    </h:panelGroup>
+
+</ui:composition>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html">
+
+    <div class="topbar">
+        <div class="brand">
+            <div class="logo">H</div>
+            HSG&#160;-&#160;Hospital Management System
+            <span class="sub">Portal Clínico&#160;|&#160;v#{infoApp.versaoExibicao}</span>
+        </div>
+        <div class="spacer"/>
+
+        <nav class="topmenu" role="navigation">
+
+            <h:link outcome="/clinica/home" styleClass="item">
+                <i class="fa fa-home"/>
+                <h:outputText value=" Início"/>
+            </h:link>
+
+            <div class="item has-submenu">
+                <i class="fa fa-user-injured"/>
+                <h:outputText value=" Pacientes "/>
+                <i class="fa fa-caret-down caret"/>
+                <div class="submenu">
+                    <a class="submenu-item" href="#">
+                        <i class="fa fa-search"/>
+                        <h:outputText value=" Buscar paciente"/>
+                    </a>
+                    <a class="submenu-item" href="#">
+                        <i class="fa fa-folder-open"/>
+                        <h:outputText value=" Prontuários"/>
+                    </a>
+                </div>
+            </div>
+
+            <h:panelGroup layout="block"
+                          styleClass="item has-submenu"
+                          rendered="#{beanSessao.usuarioClinica.tipo eq 'ENFERMEIRO'}">
+                <i class="fa fa-user-nurse"/>
+                <h:outputText value=" Enfermagem "/>
+                <i class="fa fa-caret-down caret"/>
+                <div class="submenu">
+                    <h:link outcome="/clinica/alergias" styleClass="submenu-item">
+                        <i class="fa fa-allergies"/>
+                        <h:outputText value=" Validação de alergias"/>
+                    </h:link>
+                    <a class="submenu-item" href="#">
+                        <i class="fa fa-heartbeat"/>
+                        <h:outputText value=" Medições"/>
+                    </a>
+                </div>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block"
+                          styleClass="item has-submenu"
+                          rendered="#{beanSessao.usuarioClinica.tipo eq 'MEDICO'}">
+                <i class="fa fa-prescription-bottle-alt"/>
+                <h:outputText value=" Prescrições "/>
+                <i class="fa fa-caret-down caret"/>
+                <div class="submenu">
+                    <a class="submenu-item" href="#">
+                        <i class="fa fa-plus-circle"/>
+                        <h:outputText value=" Nova prescrição"/>
+                    </a>
+                    <a class="submenu-item" href="#">
+                        <i class="fa fa-history"/>
+                        <h:outputText value=" Histórico"/>
+                    </a>
+                </div>
+            </h:panelGroup>
+
+            <div class="item">
+                <i class="fa fa-question-circle"/>
+                <h:outputText value=" Ajuda"/>
+            </div>
+
+        </nav>
+
+        <div class="user">
+            <div class="avatar">
+                #{beanSessao.usuarioClinica != null ? beanSessao.usuarioClinica.nomeCompleto.substring(0,1) : '?'}
+            </div>
+            <div class="meta">
+                <div class="label">
+                    #{beanSessao.usuarioClinica != null and beanSessao.usuarioClinica.tipo == 'MEDICO' ? 'Médico' : 'Enfermeiro'}
+                </div>
+                <div class="name">
+                    #{beanSessao.usuarioClinica != null ? beanSessao.usuarioClinica.nomeCompleto : ''}
+                </div>
+            </div>
+        </div>
+        <h:form id="logoutHeaderForm" styleClass="logout-form">
+            <h:commandButton value="Sair"
+                             action="#{painelClinicaBean.sair}"
+                             styleClass="logout"/>
+        </h:form>
+    </div>
+
+</ui:composition>

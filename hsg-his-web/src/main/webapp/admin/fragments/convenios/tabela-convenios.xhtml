@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <h:form id="formConvenios">
+
+        <div class="prof-section-header">
+            <i class="fa fa-id-card prof-section-icon"/>
+            <span>Convênios</span>
+            <p:commandButton value="Novo Convênio"
+                             icon="fa fa-plus"
+                             styleClass="btn primary"
+                             style="float:right;"
+                             actionListener="#{convenioBean.novoConvenio}"
+                             update=":tabViewConvenios:formConvenios:dlgFormConvenio"
+                             oncomplete="PF('wDlgFormConvenio').show()"
+                             process="@this"/>
+        </div>
+
+        <h:panelGroup layout="block" styleClass="filter-bar">
+            <div class="filter-group">
+                <label class="filter-label" for="filtroNomeConv">Nome</label>
+                <h:inputText id="filtroNomeConv"
+                             value="#{convenioBean.filtroNomeConvenio}"
+                             styleClass="filter-input"
+                             placeholder="Ex.: Unimed"/>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="filtroStatusConv">Status</label>
+                <h:selectOneMenu id="filtroStatusConv"
+                                 value="#{convenioBean.filtroStatusConvenio}"
+                                 styleClass="filter-select">
+                    <f:selectItem itemLabel="Todos"   itemValue=""/>
+                    <f:selectItem itemLabel="Ativo"   itemValue="A"/>
+                    <f:selectItem itemLabel="Inativo" itemValue="I"/>
+                </h:selectOneMenu>
+            </div>
+            <div class="filter-actions">
+                <p:commandButton value="Filtrar"
+                                 styleClass="btn primary"
+                                 actionListener="#{convenioBean.aplicarFiltrosConvenio}"
+                                 update="tabelaConvenios"
+                                 process="filtroNomeConv filtroStatusConv @this"
+                                 icon="fa fa-search"/>
+                <p:commandButton value="Limpar"
+                                 styleClass="btn secondary"
+                                 actionListener="#{convenioBean.limparFiltrosConvenio}"
+                                 update="filtroNomeConv filtroStatusConv tabelaConvenios"
+                                 process="@this"
+                                 icon="fa fa-times"/>
+            </div>
+        </h:panelGroup>
+
+        <p:dataTable id="tabelaConvenios"
+                     value="#{convenioBean.convenioModel}"
+                     var="conv"
+                     lazy="true"
+                     rows="10"
+                     paginator="true"
+                     paginatorPosition="bottom"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                     rowsPerPageTemplate="5,10,25"
+                     currentPageReportTemplate="{startRecord}–{endRecord} de {totalRecords}"
+                     emptyMessage="Nenhum convênio encontrado."
+                     styleClass="lazy-table"
+                     tableStyle="width:100%; table-layout:fixed;">
+
+            <p:column headerText="Nome" sortBy="#{conv.nome}" sortField="nome" style="width:25%;">
+                <h:outputText value="#{conv.nome}"/>
+            </p:column>
+
+            <p:column headerText="Registro ANS" sortBy="#{conv.registroAns}" sortField="registroAns"
+                      style="width:130px;" styleClass="mono">
+                <h:outputText value="#{conv.registroAns != null ? conv.registroAns : '—'}"/>
+            </p:column>
+
+            <p:column headerText="Telefone" style="width:170px;" styleClass="mono">
+                <h:outputText value="#{conv.telefone != null ? conv.telefone : '—'}"/>
+            </p:column>
+
+            <p:column headerText="Status" sortBy="#{conv.status}" sortField="status"
+                      style="width:90px;" styleClass="center-align">
+                <h:outputText styleClass="chip #{conv.status.valor eq 'A' ? 'ativo' : 'inativo'}"
+                              value="#{conv.status.descricao}"/>
+            </p:column>
+
+            <p:column headerText="Cadastrado em" sortBy="#{conv.dataCadastro}" sortField="dataCadastro"
+                      style="width:135px;">
+                <h:outputText value="#{convenioBean.formatarData(conv.dataCadastro)}"/>
+            </p:column>
+
+            <p:column headerText="Ações" style="width:170px;" styleClass="center-align">
+                <p:commandButton icon="fa fa-eye"
+                                 styleClass="btn icon-btn info"
+                                 title="Ver detalhes"
+                                 update=":tabViewConvenios:formConvenios:dlgBodyConvenio"
+                                 oncomplete="PF('wDlgConvenio').show()"
+                                 process="@this">
+                    <f:setPropertyActionListener target="#{convenioBean.convenioSelecionado}" value="#{conv}"/>
+                </p:commandButton>
+                <p:commandButton icon="fa fa-pen"
+                                 styleClass="btn icon-btn warn"
+                                 title="Editar"
+                                 actionListener="#{convenioBean.prepararEdicaoConvenio(conv)}"
+                                 update=":tabViewConvenios:formConvenios:dlgFormConvenio"
+                                 oncomplete="PF('wDlgFormConvenio').show()"
+                                 process="@this"/>
+                <p:commandButton icon="fa fa-ban"
+                                 styleClass="btn icon-btn danger"
+                                 title="Inativar"
+                                 rendered="#{conv.status.valor eq 'A'}"
+                                 actionListener="#{convenioBean.inativarConvenio(conv.id)}"
+                                 update=":msgs :tabViewConvenios:formConvenios:tabelaConvenios"
+                                 process="@this">
+                    <p:confirm header="Confirmar inativação"
+                               message="Tem certeza que deseja inativar este convênio?"
+                               icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+                <p:commandButton icon="fa fa-check"
+                                 styleClass="btn icon-btn success"
+                                 title="Ativar"
+                                 rendered="#{conv.status.valor ne 'A'}"
+                                 actionListener="#{convenioBean.ativarConvenio(conv.id)}"
+                                 update=":msgs :tabViewConvenios:formConvenios:tabelaConvenios"
+                                 process="@this"/>
+            </p:column>
+
+        </p:dataTable>
+
+        <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+            <p:commandButton value="Sim" type="button" styleClass="ui-confirmdialog-yes btn primary"/>
+            <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no btn secondary"/>
+        </p:confirmDialog>
+
+        <ui:include src="dialog-convenio-detalhes.xhtml"/>
+        <ui:include src="dialog-convenio-form.xhtml"/>
+
+    </h:form>
+
+</ui:composition>

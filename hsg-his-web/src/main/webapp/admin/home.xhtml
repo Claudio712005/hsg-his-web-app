@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                template="/WEB-INF/templates/admin/layout.xhtml">
+
+    <ui:define name="title">HSG - Painel Administrativo</ui:define>
+
+    <ui:define name="breadcrumbItems">
+        <span class="sep">&#187;</span>
+        <span>Painel</span>
+    </ui:define>
+
+    <ui:define name="content">
+
+        <h:panelGroup layout="block" styleClass="page-title">
+            <h:panelGroup layout="block">
+                <h1>Painel Administrativo</h1>
+                <h:panelGroup layout="block" styleClass="sub">
+                    <h:outputText value="Visão geral do sistema de gestão hospitalar HSG"/>
+                </h:panelGroup>
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <h:panelGroup layout="block" styleClass="welcome">
+            <h:panelGroup layout="block" styleClass="icon">
+                <i class="fa fa-home"></i>
+            </h:panelGroup>
+            <span>
+                Bem-vindo, <b>#{beanSessao.admin != null ? beanSessao.admin.nomeCompleto : 'Administrador'}</b>.
+                Você está acessando o painel de controle do sistema hospitalar.
+            </span>
+        </h:panelGroup>
+
+        <div class="stat-cards">
+            <div class="stat-card">
+                <div class="sc-ic"><i class="fa fa-user-md"></i></div>
+                <div class="sc-body">
+                    <div class="sc-num">#{adminBean.totalMedicosAtivos}</div>
+                    <div class="sc-lbl">Médicos ativos</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="sc-ic"><i class="fa fa-users"></i></div>
+                <div class="sc-body">
+                    <div class="sc-num">#{adminBean.totalEnfermeirosAtivos}</div>
+                    <div class="sc-lbl">Enfermeiros ativos</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="sc-ic"><i class="fa fa-stethoscope"></i></div>
+                <div class="sc-body">
+                    <div class="sc-num">#{adminBean.totalEspecialidades}</div>
+                    <div class="sc-lbl">Especialidades</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="sc-ic"><i class="fa fa-shield-alt"></i></div>
+                <div class="sc-body">
+                    <div class="sc-num">#{adminBean.totalAdmins}</div>
+                    <div class="sc-lbl">Administradores</div>
+                </div>
+            </div>
+        </div>
+
+
+            <h:panelGroup layout="block" styleClass="panel" style="width: 100%;">
+                <h:panelGroup layout="block" styleClass="panel-title">
+                    <i class="fa fa-bolt panel-icon"/>
+                    <h:outputText value="Ações Rápidas"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="panel-body">
+                    <div class="actions-row">
+                        <a href="#{request.contextPath}/admin/pre-cadastro-profissional.xhtml" class="action-card">
+                            <div class="ic"><i class="fa fa-user-plus"/></div>
+                            <div class="txt">
+                                <div class="t">Pré-cadastro de Profissional</div>
+                                <div class="d">Registre médicos e enfermeiros antes da ativação de conta</div>
+                            </div>
+                        </a>
+                        <a href="#{request.contextPath}/admin/convenios.xhtml" class="action-card">
+                            <div class="ic"><i class="fa fa-id-card"/></div>
+                            <div class="txt">
+                                <div class="t">Gestão de Convênios</div>
+                                <div class="d">Cadastre operadoras, planos e regras de cobertura</div>
+                            </div>
+                        </a>
+                    </div>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <ui:include src="fragments/home/painel-profissionais.xhtml"/>
+
+    </ui:define>
+
+</ui:composition>

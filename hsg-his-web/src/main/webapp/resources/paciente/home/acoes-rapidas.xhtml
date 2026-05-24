@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:cc="http://java.sun.com/jsf/composite"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui">
+
+<cc:interface>
+    <cc:attribute name="bean" required="true"/>
+</cc:interface>
+
+<cc:implementation>
+    <h:panelGroup layout="block" styleClass="panel">
+        <h:panelGroup layout="block" styleClass="panel-title">
+            <h:outputText value="Ações Rápidas"/>
+        </h:panelGroup>
+        <h:panelGroup layout="block" styleClass="panel-body">
+            <h:panelGroup layout="block" styleClass="actions-row" style="flex-direction:column;">
+                <h:panelGroup layout="block" styleClass="action-card">
+                    <h:panelGroup layout="block" styleClass="ic">
+                        <i class="fas fa-edit"></i>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="txt">
+                        <h:panelGroup layout="block" styleClass="t"><h:outputText value="Atualizar Dados"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="d"><h:outputText value="Revisar cadastro, endereço e contatos."/></h:panelGroup>
+                    </h:panelGroup>
+                </h:panelGroup>
+            </h:panelGroup>
+            <h:panelGroup layout="block"
+                          style="display:flex; gap:6px; margin-top:8px; padding-top:8px; border-top:1px solid #e4e4e4;">
+                <h:commandButton styleClass="btn primary btn-big"
+                                 action="/paciente/atualizarInfos?faces-redirect=true"
+                                 value="Atualizar Dados"/>
+            </h:panelGroup>
+        </h:panelGroup>
+    </h:panelGroup>
+</cc:implementation>
+</html>

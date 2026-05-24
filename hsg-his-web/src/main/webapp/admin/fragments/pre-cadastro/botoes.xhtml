@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:p="http://primefaces.org/ui">
+
+    <h:panelGroup layout="block"
+                  style="padding:10px 10px; border-top:1px solid #e4e4e4; display:flex; gap:8px; align-items:center; background:#fafbfd;">
+
+        <p:commandButton value="Salvar pré-cadastro"
+                         action="#{preCadastroBean.salvar}"
+                         styleClass="btn primary btn-big"
+                         icon="fa fa-save"
+                         process="panelFormPreCadastro"
+                         update="panelFormPreCadastro :msgs :panelListaPreCadastro"
+                         rendered="#{beanSessao.logadoComoAdmin}"/>
+
+        <p:commandButton value="Limpar formulário"
+                         action="#{preCadastroBean.limparFormulario}"
+                         styleClass="btn secondary"
+                         icon="fa fa-eraser"
+                         immediate="true"
+                         process="@this"
+                         update="panelFormPreCadastro"
+                         rendered="#{beanSessao.logadoComoAdmin}"/>
+
+    </h:panelGroup>
+
+</ui:composition>

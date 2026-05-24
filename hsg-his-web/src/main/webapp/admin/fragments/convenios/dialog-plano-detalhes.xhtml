@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <p:dialog id="dlgPlano"
+              widgetVar="wDlgPlano"
+              header="Detalhes do Plano"
+              modal="true"
+              resizable="false"
+              closeOnEscape="true"
+              width="640"
+              styleClass="hsg-dialog">
+
+        <h:panelGroup id="dlgBodyPlano" layout="block">
+
+            <h:panelGroup layout="block" rendered="#{convenioBean.planoSelecionado == null}">
+                <h:panelGroup layout="block" styleClass="note" style="padding:16px 12px;">
+                    <h:outputText value="Nenhum plano selecionado."/>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" rendered="#{convenioBean.planoSelecionado != null}">
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-layer-group"/>
+                        Identificação
+                    </div>
+                    <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Convênio"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <b><h:outputText value="#{convenioBean.planoSelecionado.convenio.nome}"/></b>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Nome do plano"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <b><h:outputText value="#{convenioBean.planoSelecionado.nome}"/></b>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Código"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{convenioBean.planoSelecionado.codigo != null ? convenioBean.planoSelecionado.codigo : '—'}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Status"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText styleClass="chip #{convenioBean.planoSelecionado.status.valor eq 'A' ? 'ativo' : 'inativo'}"
+                                          value="#{convenioBean.planoSelecionado.status.descricao}"/>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </div>
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-clipboard-list"/>
+                        Características
+                    </div>
+                    <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Tipo de cobertura"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText value="#{convenioBean.formatarTipoCobertura(convenioBean.planoSelecionado.tipoCobertura)}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Mensalidade"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{convenioBean.planoSelecionado.valorMensalidade}">
+                                <f:convertNumber type="currency" currencySymbol="R$ "/>
+                            </h:outputText>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Acomodação individual"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText styleClass="chip #{convenioBean.planoSelecionado.acomodacaoIndividual ? 'ativo' : 'inativo'}"
+                                          value="#{convenioBean.planoSelecionado.acomodacaoIndividual ? 'Sim' : 'Não'}"/>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </div>
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-align-left"/>
+                        Descrição
+                    </div>
+                    <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                        <h:panelGroup layout="block" styleClass="v">
+                            <h:outputText value="#{convenioBean.planoSelecionado.descricao != null ? convenioBean.planoSelecionado.descricao : '—'}"/>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </div>
+
+                <div class="dlg-section">
+                    <div class="dlg-section-title">
+                        <i class="fa fa-calendar-alt"/>
+                        Registro
+                    </div>
+                    <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Cadastrado em"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{convenioBean.formatarData(convenioBean.planoSelecionado.dataCadastro)}"/>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" styleClass="k"><h:outputText value="Última atualização"/></h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="v mono">
+                            <h:outputText value="#{convenioBean.formatarData(convenioBean.planoSelecionado.dataUltimaAtualizacao)}"/>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </div>
+
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <f:facet name="footer">
+            <p:commandButton value="Fechar"
+                             icon="fa fa-times"
+                             type="button"
+                             onclick="PF('wDlgPlano').hide();"
+                             styleClass="btn secondary"/>
+        </f:facet>
+
+    </p:dialog>
+
+</ui:composition>

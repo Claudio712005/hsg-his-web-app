@@ -1,0 +1,169 @@
+name: hsg-his
+
+services:
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: hsg-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB:       postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/db/init/init-dbs.sql:/docker-entrypoint-initdb.d/01-init-dbs.sql:ro
+    networks:
+      - hsg-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  flyway:
+    image: flyway/flyway:9-alpine
+    container_name: hsg-flyway
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/hsg
+      FLYWAY_USER: postgres
+      FLYWAY_PASSWORD: postgres
+      FLYWAY_SCHEMAS: hsg
+      FLYWAY_DEFAULT_SCHEMA: hsg
+    volumes:
+      - ./infra/db/migrations:/flyway/sql:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - hsg-network
+    command: migrate
+
+  seed:
+    image: postgres:15-alpine
+    container_name: hsg-seed
+    environment:
+      PGPASSWORD: postgres
+      APP_ENV: DEV
+    volumes:
+      - ./infra/db/seed/init.sql:/init.sql:ro
+    command: >
+      sh -c '
+        if [ "$$APP_ENV" = "DEV" ]; then
+          echo "[seed] APP_ENV=DEV — carregando dados de desenvolvimento...";
+          psql -h postgres -U postgres -d hsg -f /init.sql && echo "[seed] Concluído.";
+        else
+          echo "[seed] APP_ENV=$$APP_ENV — seed ignorado.";
+        fi
+      '
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+    networks:
+      - hsg-network
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: hsg-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - hsg-network
+
+  keycloak:
+    build:
+      context: .
+      dockerfile: infra/keycloak/docker/Dockerfile
+    image: hsg-keycloak:local
+    container_name: hsg-keycloak
+    restart: unless-stopped
+    environment:
+      KC_DB:                    postgres
+      KC_DB_URL:                jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME:           postgres
+      KC_DB_PASSWORD:           postgres
+
+      KC_HOSTNAME:              localhost
+      KC_HOSTNAME_PORT:         "8080"
+      KC_HOSTNAME_STRICT:       "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+
+      KEYCLOAK_ADMIN:           admin
+      KEYCLOAK_ADMIN_PASSWORD:  Admin@HSG2026
+
+      KC_LOG_LEVEL:             INFO
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - hsg-network
+    command: start-dev --import-realm
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  app:
+    build:
+      context: .
+      dockerfile: infra/app/docker/Dockerfile
+    image: hsg-app:local
+    container_name: hsg-app
+    restart: unless-stopped
+    environment:
+      APP_DB_HOST:     postgres
+      APP_DB_PORT:     "5432"
+      APP_DB_NAME:     hsg
+      APP_DB_USER:     postgres
+      APP_DB_PASSWORD: postgres
+
+      APP_ENV: DEV
+
+      KC_AUTH_URL:    "http://localhost:8080/realms/hsg-his/protocol/openid-connect/auth"
+      KC_TOKEN_URL:   "http://keycloak:8080/realms/hsg-his/protocol/openid-connect/token"
+      KC_CLIENT_ID:   "hsg-his-web"
+      KC_REDIRECT_URI: "http://localhost:8180/hsg-his/callback"
+
+      MAIL_SMTP_HOST:     mailhog
+      MAIL_SMTP_PORT:     "1025"
+      MAIL_SMTP_AUTH:     "false"
+      MAIL_SMTP_STARTTLS: "false"
+      MAIL_SMTP_FROM:     "noreply@hsg-his.com.br"
+
+      HSG_BASE_URL:       "http://localhost:8180/hsg-his"
+      HSG_EMAIL_DOMINIO:  "hsg.com.br"
+
+      KC_ADMIN_BASE_URL:  "http://keycloak:8080"
+      KC_REALM:           "hsg-his"
+      KC_ADMIN_USER:      "admin"
+      KC_ADMIN_PASS:      "Admin@HSG2026"
+
+      CPF_ENCRYPTION_KEY: "HSG_DEV_ONLY_PLACEHOLDER_32CHAR_"
+      CARTEIRINHA_ENCRYPTION_KEY: "HSG_DEV_CART_PLACEHOLDER_32CHARS_"
+    ports:
+      - "8180:8080"
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+      keycloak:
+        condition: service_started
+      mailhog:
+        condition: service_started
+    networks:
+      - hsg-network
+
+volumes:
+  postgres_data:
+    name: hsg_postgres_data
+
+networks:
+  hsg-network:
+    name: hsg-network
+    driver: bridge

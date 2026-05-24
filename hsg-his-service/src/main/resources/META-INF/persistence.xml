@@ -1,0 +1,43 @@
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             version="2.1">
+
+    <persistence-unit name="defaultPU" transaction-type="JTA">
+
+        <jta-data-source>java:jboss/datasources/HsgDS</jta-data-source>
+
+        <class>br.com.hsg.domain.entity.ContaUsuario</class>
+        <class>br.com.hsg.domain.entity.Admin</class>
+        <class>br.com.hsg.domain.entity.Paciente</class>
+        <class>br.com.hsg.domain.entity.Enfermeiro</class>
+        <class>br.com.hsg.domain.entity.Medico</class>
+        <class>br.com.hsg.domain.entity.Especialidade</class>
+        <class>br.com.hsg.domain.entity.MedicaoPaciente</class>
+        <class>br.com.hsg.domain.entity.TipoSanguineo</class>
+        <class>br.com.hsg.domain.entity.SolicitacaoAtualizacao</class>
+        <class>br.com.hsg.domain.entity.Endereco</class>
+        <class>br.com.hsg.domain.entity.Alergia</class>
+        <class>br.com.hsg.domain.entity.AlergiaHistorico</class>
+        <class>br.com.hsg.domain.entity.PreCadastroProfissional</class>
+        <class>br.com.hsg.domain.entity.EnvioConviteHistorico</class>
+        <class>br.com.hsg.domain.entity.Convenio</class>
+        <class>br.com.hsg.domain.entity.PlanoConvenio</class>
+        <class>br.com.hsg.domain.entity.RegraCobertura</class>
+        <class>br.com.hsg.domain.entity.PacienteConvenio</class>
+        <class>br.com.hsg.domain.entity.SolicitacaoConvenio</class>
+        <class>br.com.hsg.domain.entity.MedicoEspecialidade</class>
+        <class>br.com.hsg.domain.entity.AgendaMedica</class>
+        <class>br.com.hsg.domain.entity.AgendaMedicaExcecao</class>
+        <class>br.com.hsg.domain.entity.AgendaMedicaSlot</class>
+        <class>br.com.hsg.domain.entity.Consulta</class>
+
+        <properties>
+            <property name="hibernate.dialect"        value="org.hibernate.dialect.PostgreSQL95Dialect"/>
+            <property name="hibernate.hbm2ddl.auto"   value="none"/>
+            <property name="hibernate.show_sql"        value="false"/>
+            <property name="hibernate.format_sql"      value="true"/>
+            <property name="hibernate.default_schema"  value="hsg"/>
+        </properties>
+
+    </persistence-unit>
+
+</persistence>

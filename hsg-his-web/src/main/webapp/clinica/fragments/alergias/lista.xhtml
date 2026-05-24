@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <h:form id="formAlergiasLista">
+
+        <h:panelGroup layout="block" styleClass="panel panel-destaque">
+
+            <h:panelGroup id="painelTituloPendentes" layout="block" styleClass="panel-title">
+                <i class="fa fa-exclamation-circle panel-icon"/>
+                <h:outputText value="Fila de Validação Pendente"/>
+                <h:outputText styleClass="badge-contador"
+                              value="#{aprovacaoAlergiaBean.totalPendentes}"/>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="panel-body">
+
+                <p:messages id="msgs" showDetail="true" closable="true"
+                            globalOnly="true"
+                            warnClass="msg-warn" infoClass="msg-info" errorClass="msg-error"/>
+
+                <h:panelGroup layout="block" styleClass="note" style="margin-bottom:12px;">
+                    <i class="fa fa-info-circle"/>
+                    <h:outputText value=" Ao "/>
+                    <b>aprovar</b>
+                    <h:outputText value=", a alergia passa a constar no prontuário do paciente. Ao "/>
+                    <b>rejeitar</b>
+                    <h:outputText value=", informe obrigatoriamente o motivo — o registro sai da fila e fica disponível no histórico."/>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" styleClass="filter-bar">
+                    <div class="filter-group">
+                        <label class="filter-label" for="filtroPaciente">Paciente</label>
+                        <h:inputText id="filtroPaciente"
+                                     value="#{aprovacaoAlergiaBean.filtroPaciente}"
+                                     styleClass="filter-input"
+                                     placeholder="Nome do paciente"/>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label" for="filtroTipo">Tipo</label>
+                        <h:selectOneMenu id="filtroTipo"
+                                         value="#{aprovacaoAlergiaBean.filtroTipo}"
+                                         styleClass="filter-select">
+                            <f:selectItem itemLabel="Todos" itemValue=""/>
+                            <f:selectItems value="#{aprovacaoAlergiaBean.tiposAlergia}"
+                                           var="t"
+                                           itemValue="#{t.name()}"
+                                           itemLabel="#{t.descricao}"/>
+                        </h:selectOneMenu>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label" for="filtroGravidade">Gravidade</label>
+                        <h:selectOneMenu id="filtroGravidade"
+                                         value="#{aprovacaoAlergiaBean.filtroGravidade}"
+                                         styleClass="filter-select">
+                            <f:selectItem itemLabel="Todas" itemValue=""/>
+                            <f:selectItems value="#{aprovacaoAlergiaBean.gravidadesAlergia}"
+                                           var="g"
+                                           itemValue="#{g.name()}"
+                                           itemLabel="#{g.descricao}"/>
+                        </h:selectOneMenu>
+                    </div>
+                    <div class="filter-actions">
+                        <p:commandButton value="Filtrar"
+                                         styleClass="btn primary"
+                                         icon="fa fa-search"
+                                         actionListener="#{aprovacaoAlergiaBean.aplicarFiltros}"
+                                         update="tabelaAlergias painelTituloPendentes"
+                                         process="filtroPaciente filtroTipo filtroGravidade @this"/>
+                        <p:commandButton value="Limpar"
+                                         styleClass="btn secondary"
+                                         icon="fa fa-times"
+                                         actionListener="#{aprovacaoAlergiaBean.limparFiltros}"
+                                         update="filtroPaciente filtroTipo filtroGravidade tabelaAlergias painelTituloPendentes"
+                                         process="@this"/>
+                    </div>
+                </h:panelGroup>
+
+                <p:dataTable id="tabelaAlergias"
+                             var="al"
+                             value="#{aprovacaoAlergiaBean.model}"
+                             lazy="true"
+                             rows="10"
+                             paginator="true"
+                             paginatorPosition="bottom"
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             rowsPerPageTemplate="5,10,25"
+                             currentPageReportTemplate="{startRecord}–{endRecord} de {totalRecords}"
+                             emptyMessage="Nenhuma alergia pendente de validação."
+                             styleClass="lazy-table"
+                             tableStyle="width:100%; table-layout:fixed;">
+
+                    <p:column headerText="Paciente" sortBy="#{al.nomePaciente}" sortField="nomePaciente" style="width:28%;">
+                        <h:outputText value="#{al.nomePaciente}"/>
+                    </p:column>
+
+                    <p:column headerText="Alergia" sortBy="#{al.nomeAlergia}" sortField="nomeAlergia" style="width:22%;">
+                        <b><h:outputText value="#{al.nomeAlergia}"/></b>
+                    </p:column>
+
+                    <p:column headerText="Tipo" sortBy="#{al.tipoDescricao}" sortField="tipoAlergia" style="width:120px;">
+                        <h:outputText value="#{al.tipoDescricao}"/>
+                    </p:column>
+
+                    <p:column headerText="Gravidade" sortBy="#{al.gravidadeDescricao}" sortField="gravidadeAlergia" style="width:120px;" styleClass="center-align">
+                        <h:outputText styleClass="chip #{al.gravidadeCssClass}"
+                                      value="#{al.gravidadeDescricao}"/>
+                    </p:column>
+
+                    <p:column headerText="Informada em" sortBy="#{al.dataCadastro}" sortField="dataCadastro" style="width:140px;">
+                        <h:outputText value="#{al.dataCadastro}" styleClass="mono"/>
+                    </p:column>
+
+                    <p:column headerText="Ações" style="width:140px;" styleClass="center-align">
+
+                        <p:commandButton icon="fa fa-eye"
+                                         styleClass="btn icon-btn info"
+                                         title="Visualizar"
+                                         process="@this"
+                                         update=":formAlergiasLista:dlgBodyVisualizarAlergia"
+                                         oncomplete="PF('wDlgVisualizarAlergia').show()"
+                                         actionListener="#{aprovacaoAlergiaBean.prepararVisualizacao(al)}"/>
+
+                        <p:commandButton icon="fa fa-check"
+                                         styleClass="btn icon-btn success"
+                                         title="Aprovar"
+                                         process="@this"
+                                         update=":formAlergiasLista:dlgBodyAprovarAlergia"
+                                         oncomplete="PF('wDlgAprovarAlergia').show()"
+                                         actionListener="#{aprovacaoAlergiaBean.prepararAprovacao(al)}"/>
+
+                        <p:commandButton icon="fa fa-times"
+                                         styleClass="btn icon-btn danger"
+                                         title="Rejeitar"
+                                         process="@this"
+                                         update=":formAlergiasLista:dlgBodyRejeitarAlergia"
+                                         oncomplete="PF('wDlgRejeitarAlergia').show()"
+                                         actionListener="#{aprovacaoAlergiaBean.prepararRejeicao(al)}"/>
+
+                    </p:column>
+
+                </p:dataTable>
+
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <ui:include src="dialog-visualizar.xhtml"/>
+        <ui:include src="dialog-aprovar.xhtml"/>
+        <ui:include src="dialog-rejeitar.xhtml"/>
+
+    </h:form>
+
+</ui:composition>

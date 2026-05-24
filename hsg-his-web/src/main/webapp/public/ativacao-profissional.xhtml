@@ -1,0 +1,519 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/templates/public/layout.xhtml">
+
+    <f:metadata>
+        <f:viewParam name="token" value="#{ativacaoBean.token}"/>
+        <f:event type="preRenderView" listener="#{ativacaoBean.init}"/>
+    </f:metadata>
+
+    <ui:define name="title">Ativação de Cadastro — HSG HIS</ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .ativ-card {
+                background: #fff;
+                border-radius: 8px;
+                box-shadow: 0 2px 12px rgba(0,0,0,.10);
+                overflow: hidden;
+                margin: 0 auto;
+                max-width: 680px;
+            }
+            .ativ-card-header {
+                padding: 22px 28px 18px;
+                border-bottom: 1px solid #e4e8f0;
+                background: linear-gradient(135deg, #f0f4fb 0%, #e6edf8 100%);
+            }
+            .ativ-card-header h2 {
+                margin: 0 0 5px;
+                font-size: 18px;
+                color: #1f3a68;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .ativ-card-header p { margin: 0; font-size: 12px; color: #666; }
+
+            .ativ-section {
+                padding: 20px 28px 4px;
+                border-bottom: 1px solid #f0f2f7;
+            }
+            .ativ-section:last-of-type { border-bottom: none; }
+            .ativ-section-title {
+                font-size: 11px;
+                font-weight: 700;
+                color: #1f3a68;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .ativ-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                margin-bottom: 16px;
+            }
+            .ativ-row.single { grid-template-columns: 1fr; }
+            .ativ-field label {
+                display: block;
+                font-size: 11.5px;
+                font-weight: 600;
+                color: #444;
+                margin-bottom: 5px;
+            }
+            .ativ-field .field-hint {
+                font-size: 10.5px;
+                color: #888;
+                margin-top: 3px;
+            }
+            .ativ-field .ui-inputtext,
+            .ativ-field .ui-inputmask,
+            .ativ-field .ui-calendar input,
+            .ativ-field .ui-selectonemenu {
+                width: 100% !important;
+            }
+            .ativ-field .readonly-value {
+                display: inline-block;
+                background: #f4f6fb;
+                border: 1px solid #dde2ed;
+                border-radius: 4px;
+                padding: 7px 12px;
+                font-size: 13px;
+                color: #333;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .ativ-field .readonly-value.mono {
+                font-family: monospace;
+                font-size: 14px;
+                color: #1a6b8a;
+                background: #e8f4fd;
+                border-color: #b3d9f5;
+            }
+            .ativ-field .badge-role {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 5px 14px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+            }
+            .badge-medico   { background: #e3f2fd; color: #0d47a1; border: 1px solid #90caf9; }
+            .badge-enf      { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
+
+            .pwd-match-ok  { color: #2e7d32; font-size: 11px; margin-top: 4px; font-weight: 600; }
+            .pwd-match-err { color: #c62828; font-size: 11px; margin-top: 4px; font-weight: 600; }
+
+            .ativ-footer {
+                padding: 18px 28px;
+                background: #fafbfd;
+                border-top: 1px solid #e4e8f0;
+                display: flex;
+                align-items: center;
+                gap: 14px;
+            }
+            .ativ-footer .ui-button { min-width: 220px; }
+            .ativ-footer .footer-note { font-size: 11px; color: #888; line-height: 1.5; }
+
+            .ativ-error-wrap {
+                padding: 52px 28px;
+                text-align: center;
+            }
+            .ativ-error-icon { font-size: 50px; color: #c62828; margin-bottom: 18px; }
+            .ativ-error-title { font-size: 19px; font-weight: bold; color: #c62828; margin-bottom: 12px; }
+            .ativ-error-msg {
+                font-size: 13px;
+                color: #555;
+                line-height: 1.7;
+                max-width: 420px;
+                margin: 0 auto 24px;
+            }
+
+            .sucesso-dialog .ui-dialog-titlebar {
+                background: linear-gradient(#e8f5e9, #c8e6c9);
+                border-bottom: 1px solid #a5d6a7;
+                color: #1b5e20;
+                font-weight: bold;
+            }
+            .sucesso-dialog .ui-dialog-content { padding: 0; background: #fff; }
+            .sucesso-body { padding: 36px 32px 28px; text-align: center; }
+            .sucesso-icon { font-size: 54px; color: #2e7d32; margin-bottom: 16px; }
+            .sucesso-title { font-size: 19px; font-weight: bold; color: #1b5e20; margin-bottom: 10px; }
+            .sucesso-msg { font-size: 13px; color: #555; line-height: 1.7; margin-bottom: 24px; }
+            .sucesso-login-box {
+                background: #f0f7ff;
+                border: 1px solid #cce0ff;
+                border-radius: 4px;
+                padding: 12px 16px;
+                margin-bottom: 24px;
+                font-size: 12px;
+                color: #1f3a68;
+            }
+            .sucesso-login-box .email-corp {
+                display: block;
+                font-family: monospace;
+                font-size: 15px;
+                font-weight: bold;
+                color: #1a6b8a;
+                margin-top: 5px;
+            }
+            .btn-login-kc {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: linear-gradient(135deg, #2d5fa8, #1f3a68) !important;
+                color: #fff !important;
+                padding: 12px 32px;
+                border-radius: 4px;
+                font-size: 13px;
+                font-weight: bold;
+                text-decoration: none !important;
+                border: none;
+                cursor: pointer;
+            }
+            .btn-login-kc:hover,
+            .btn-login-kc:visited,
+            .btn-login-kc:active { opacity: 0.9; color: #fff !important; text-decoration: none !important; }
+
+            #formAtivacao .ui-messages-error {
+                margin: 0 28px 16px;
+                border-radius: 4px;
+            }
+        </style>
+    </ui:define>
+
+    <ui:define name="content">
+
+        <h:form id="formAtivacao">
+
+            <div class="ativ-card">
+
+                <h:panelGroup layout="block" rendered="#{not empty ativacaoBean.erroToken}">
+                    <div class="ativ-error-wrap">
+                        <div class="ativ-error-icon"><i class="fa fa-exclamation-circle"/></div>
+                        <div class="ativ-error-title">Convite indisponível</div>
+                        <div class="ativ-error-msg">
+                            <h:outputText value="#{ativacaoBean.erroToken}"/>
+                        </div>
+                        <p style="font-size:12px; color:#888; margin:0;">
+                            Em caso de dúvidas, entre em contato com a administração do hospital.
+                        </p>
+                    </div>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" rendered="#{ativacaoBean.preRenderado}">
+
+                    <div class="ativ-card-header">
+                        <h2><i class="fa fa-user-check"/>&#160;Ativação de Cadastro Profissional</h2>
+                        <p>Confirme seus dados e preencha as informações complementares para ativar seu acesso ao HSG HIS.</p>
+                    </div>
+
+                    <p:messages id="msgs" showDetail="false" closable="true" style="margin:16px 28px 0;"/>
+
+                    <div class="ativ-section">
+                        <div class="ativ-section-title">
+                            <i class="fa fa-id-card"/>&#160;Dados do Convite
+                        </div>
+
+                        <div class="ativ-row">
+                            <div class="ativ-field">
+                                <label>Nome completo</label>
+                                <span class="readonly-value">
+                                    <h:outputText value="#{ativacaoBean.preCadastro.nome}"/>
+                                </span>
+                            </div>
+                            <div class="ativ-field">
+                                <label>CPF</label>
+                                <span class="readonly-value mono">
+                                    <h:outputText value="#{ativacaoBean.preCadastro.cpf}"/>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="ativ-row">
+                            <div class="ativ-field">
+                                <label>Tipo de profissional</label>
+                                <span>
+                                    <h:panelGroup rendered="#{ativacaoBean.preCadastro.medico}">
+                                        <span class="badge-role badge-medico">
+                                            <i class="fa fa-user-md"/>&#160;Médico
+                                        </span>
+                                    </h:panelGroup>
+                                    <h:panelGroup rendered="#{ativacaoBean.preCadastro.enfermeiro}">
+                                        <span class="badge-role badge-enf">
+                                            <i class="fa fa-procedures"/>&#160;Enfermeiro(a)
+                                        </span>
+                                    </h:panelGroup>
+                                </span>
+                            </div>
+                            <div class="ativ-field">
+                                <label>
+                                    E-mail corporativo
+                                    <span class="field-hint">Será seu login no sistema</span>
+                                </label>
+                                <span class="readonly-value mono">
+                                    <h:outputText value="#{ativacaoBean.preCadastro.emailCorporativo}"/>
+                                </span>
+                            </div>
+                        </div>
+
+                        <h:panelGroup layout="block" rendered="#{ativacaoBean.preCadastro.medico}">
+                            <div class="ativ-row">
+                                <div class="ativ-field">
+                                    <label>CRM</label>
+                                    <span class="readonly-value mono">
+                                        <h:outputText value="#{ativacaoBean.preCadastro.crm}"/>
+                                    </span>
+                                </div>
+                                <div class="ativ-field">
+                                    <label>UF do CRM</label>
+                                    <span class="readonly-value">
+                                        <h:outputText value="#{ativacaoBean.preCadastro.ufCrm}"/>
+                                    </span>
+                                </div>
+                            </div>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" rendered="#{ativacaoBean.preCadastro.enfermeiro}">
+                            <div class="ativ-row">
+                                <div class="ativ-field">
+                                    <label>COREN</label>
+                                    <span class="readonly-value mono">
+                                        <h:outputText value="#{ativacaoBean.preCadastro.coren}"/>
+                                    </span>
+                                </div>
+                                <div class="ativ-field">
+                                    <label>UF do COREN</label>
+                                    <span class="readonly-value">
+                                        <h:outputText value="#{ativacaoBean.preCadastro.ufCoren}"/>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="ativ-row">
+                                <div class="ativ-field">
+                                    <label>Categoria COREN</label>
+                                    <span class="readonly-value">
+                                        <h:outputText value="#{ativacaoBean.preCadastro.categoriaCoren != null ? ativacaoBean.preCadastro.categoriaCoren.descricao : '—'}"/>
+                                    </span>
+                                </div>
+                                <div class="ativ-field"/>
+                            </div>
+                        </h:panelGroup>
+
+                    </div>
+
+                    <div class="ativ-section">
+                        <div class="ativ-section-title">
+                            <i class="fa fa-calendar-alt"/>&#160;Dados Pessoais
+                        </div>
+
+                        <div class="ativ-row">
+                            <div class="ativ-field">
+                                <label>
+                                    Data de nascimento <span style="color:#c62828;">*</span>
+                                </label>
+                                <p:calendar id="dataNascimento"
+                                            value="#{ativacaoBean.form.dataNascimento}"
+                                            pattern="dd/MM/yyyy"
+                                            navigator="true"
+                                            yearRange="-100:-18"
+                                            showButtonPanel="true"
+                                            placeholder="DD/MM/AAAA"
+                                            required="true"
+                                            requiredMessage="Data de nascimento é obrigatória."
+                                            style="width:100%;"/>
+                            </div>
+                            <div class="ativ-field">
+                                <label>
+                                    Telefone <span style="color:#c62828;">*</span>
+                                    <span class="field-hint">DDD + número (ex: (11) 99999-9999)</span>
+                                </label>
+                                <p:inputMask id="telefone"
+                                             value="#{ativacaoBean.form.telefone}"
+                                             mask="(99) 99999-9999"
+                                             placeholder="(00) 00000-0000"
+                                             required="true"
+                                             requiredMessage="Telefone é obrigatório."
+                                             style="width:100%;"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h:panelGroup id="panelMedico" layout="block" rendered="#{ativacaoBean.preCadastro.medico}">
+                        <div class="ativ-section">
+                            <div class="ativ-section-title">
+                                <i class="fa fa-user-md"/>&#160;Dados do Médico
+                            </div>
+                            <div class="ativ-row">
+                                <div class="ativ-field">
+                                    <label>Especialidade</label>
+                                    <span class="readonly-value">
+                                        <h:outputText value="#{not empty ativacaoBean.preCadastro.especialidade
+                                                               ? ativacaoBean.preCadastro.especialidade
+                                                               : '—'}"/>
+                                    </span>
+                                    <div class="field-hint">Definida pela administração</div>
+                                </div>
+                                <div class="ativ-field"/>
+                            </div>
+                        </div>
+                    </h:panelGroup>
+
+                    <h:panelGroup id="panelEnfermeiro" layout="block" rendered="#{ativacaoBean.preCadastro.enfermeiro}">
+                        <div class="ativ-section">
+                            <div class="ativ-section-title">
+                                <i class="fa fa-procedures"/>&#160;Dados do Enfermeiro
+                            </div>
+                            <div class="ativ-row">
+                                <div class="ativ-field">
+                                    <label>Especialidade</label>
+                                    <p:inputText id="especialidadeEnf"
+                                                 value="#{ativacaoBean.form.especialidadeEnf}"
+                                                 placeholder="Ex: UTI Adulto, Pediatria..."
+                                                 maxlength="100"
+                                                 style="width:100%;"/>
+                                </div>
+                                <div class="ativ-field">
+                                    <label>Setor / Unidade</label>
+                                    <p:inputText id="setor"
+                                                 value="#{ativacaoBean.form.setor}"
+                                                 placeholder="Ex: UTI, Pronto-Socorro..."
+                                                 maxlength="100"
+                                                 style="width:100%;"/>
+                                </div>
+                            </div>
+                        </div>
+                    </h:panelGroup>
+
+                    <div class="ativ-section">
+                        <div class="ativ-section-title">
+                            <i class="fa fa-lock"/>&#160;Segurança
+                        </div>
+
+                        <div class="ativ-row" style="align-items: start;">
+                            <div class="ativ-field">
+                                <label>Senha <span style="color:#c62828;">*</span></label>
+                                <p:password id="senha"
+                                            value="#{ativacaoBean.form.senha}"
+                                            feedback="true"
+                                            promptLabel="Digite sua senha"
+                                            weakLabel="Fraca"
+                                            goodLabel="Boa"
+                                            strongLabel="Forte"
+                                            required="true"
+                                            requiredMessage="Senha é obrigatória."
+                                            minLength="8"
+                                            style="width:100%;">
+                                    <p:ajax event="blur"
+                                            listener="#{ativacaoBean.verificarSenhas}"
+                                            update="panelSenhaMatch"
+                                            process="senha confirmacaoSenha"/>
+                                </p:password>
+                                <div class="field-hint">Mín. 8 caracteres, 1 maiúscula, 1 número, 1 especial</div>
+                            </div>
+                            <div class="ativ-field">
+                                <label>
+                                    Confirmação de senha <span style="color:#c62828;">*</span>
+                                </label>
+                                <p:password id="confirmacaoSenha"
+                                            value="#{ativacaoBean.form.confirmacaoSenha}"
+                                            feedback="false"
+                                            required="true"
+                                            requiredMessage="Confirmação de senha é obrigatória."
+                                            placeholder="Repita a senha"
+                                            style="width:100%;">
+                                    <p:ajax event="blur"
+                                            listener="#{ativacaoBean.verificarSenhas}"
+                                            update="panelSenhaMatch"
+                                            process="senha confirmacaoSenha"/>
+                                    <p:ajax event="keyup"
+                                            listener="#{ativacaoBean.verificarSenhas}"
+                                            update="panelSenhaMatch"
+                                            process="senha confirmacaoSenha"/>
+                                </p:password>
+                                <h:panelGroup id="panelSenhaMatch" layout="block">
+                                    <h:panelGroup rendered="#{ativacaoBean.senhasNaoConferem}">
+                                        <span class="pwd-match-err">
+                                            <i class="fa fa-times-circle"/>&#160;As senhas não coincidem.
+                                        </span>
+                                    </h:panelGroup>
+                                    <h:panelGroup rendered="#{not ativacaoBean.senhasNaoConferem
+                                                              and not empty ativacaoBean.form.confirmacaoSenha
+                                                              and not empty ativacaoBean.form.senha}">
+                                        <span class="pwd-match-ok">
+                                            <i class="fa fa-check-circle"/>&#160;As senhas conferem.
+                                        </span>
+                                    </h:panelGroup>
+                                </h:panelGroup>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ativ-footer">
+                        <p:commandButton id="btnConfirmar"
+                                         value="Confirmar e ativar cadastro"
+                                         action="#{ativacaoBean.confirmar}"
+                                         icon="fa fa-check"
+                                         styleClass="ui-button-success"
+                                         process="@form"
+                                         update="msgs dlgSucesso panelSenhaMatch"
+                                         disabled="#{ativacaoBean.senhasNaoConferem}"/>
+                        <span class="footer-note">
+                            Ao confirmar, sua conta será criada e seu acesso ao sistema será habilitado imediatamente.
+                        </span>
+                    </div>
+
+                </h:panelGroup>
+
+            </div>
+
+            <p:dialog id="dlgSucesso"
+                      widgetVar="wDlgSucesso"
+                      header="Cadastro Ativado com Sucesso"
+                      modal="true"
+                      resizable="false"
+                      closable="false"
+                      closeOnEscape="false"
+                      width="500"
+                      styleClass="sucesso-dialog">
+
+                <div class="sucesso-body">
+                    <div class="sucesso-icon"><i class="fa fa-check-circle"/></div>
+                    <div class="sucesso-title">Bem-vindo(a) ao HSG HIS!</div>
+                    <div class="sucesso-msg">
+                        Seu cadastro foi ativado com sucesso.<br/>
+                        Utilize o e-mail corporativo abaixo para acessar o sistema.
+                    </div>
+
+                    <h:panelGroup rendered="#{ativacaoBean.preCadastro != null
+                                             and not empty ativacaoBean.preCadastro.emailCorporativo}">
+                        <div class="sucesso-login-box">
+                            <span>Seu e-mail de acesso (login):</span>
+                            <span class="email-corp">
+                                <h:outputText value="#{ativacaoBean.preCadastro.emailCorporativo}"/>
+                            </span>
+                        </div>
+                    </h:panelGroup>
+
+                    <a href="#{ativacaoBean.kcLoginUrl}" class="btn-login-kc">
+                        <i class="fa fa-sign-in-alt"></i>&#160;Acessar o sistema agora
+                    </a>
+                </div>
+
+            </p:dialog>
+
+        </h:form>
+
+    </ui:define>
+
+</ui:composition>

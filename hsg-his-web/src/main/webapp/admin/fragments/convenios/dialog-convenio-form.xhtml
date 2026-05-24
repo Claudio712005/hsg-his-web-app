@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <p:dialog id="dlgFormConvenio"
+              widgetVar="wDlgFormConvenio"
+              header="#{convenioBean.formConvenioId == null ? 'Cadastrar Convênio' : 'Editar Convênio'}"
+              modal="true"
+              resizable="false"
+              closeOnEscape="true"
+              width="660"
+              styleClass="hsg-dialog">
+
+        <h:panelGroup layout="block">
+
+            <h:panelGroup layout="block" styleClass="note" style="margin-bottom:16px;">
+                <h:outputText value="Cadastre a operadora informando o nome e dados administrativos. Apenas o nome é obrigatório; os demais campos auxiliam na identificação e contato."/>
+            </h:panelGroup>
+
+            <div class="dlg-section">
+                <div class="dlg-section-title">
+                    <i class="fa fa-id-card"/>
+                    Identificação
+                </div>
+                <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Nome"/>
+                        <h:outputText value=" *" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <h:inputText id="formConvNome"
+                                     value="#{convenioBean.formConvenioNome}"
+                                     styleClass="input-field"
+                                     style="width:100%;"
+                                     maxlength="150"
+                                     placeholder="Ex.: Unimed"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Descrição"/>
+                        <h:outputText value=" (opcional)" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <p:inputTextarea id="formConvDesc"
+                                         value="#{convenioBean.formConvenioDescricao}"
+                                         styleClass="input-field"
+                                         style="width:100%; resize:vertical;"
+                                         rows="3"
+                                         maxlength="500"
+                                         placeholder="Breve descrição da operadora"/>
+                    </h:panelGroup>
+                </h:panelGroup>
+            </div>
+
+            <div class="dlg-section">
+                <div class="dlg-section-title">
+                    <i class="fa fa-building"/>
+                    Dados administrativos
+                </div>
+                <h:panelGroup layout="block" styleClass="kv" style="margin:0;">
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Registro ANS"/>
+                        <h:outputText value=" (opcional)" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <p:inputMask id="formConvRegAns"
+                                     value="#{convenioBean.formConvenioRegistroAns}"
+                                     mask="999999"
+                                     styleClass="input-field mono"
+                                     style="width:160px;"
+                                     placeholder="Ex.: 000701"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="CNPJ"/>
+                        <h:outputText value=" (opcional)" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <p:inputMask id="formConvCnpj"
+                                     value="#{convenioBean.formConvenioCnpj}"
+                                     mask="99.999.999/9999-99"
+                                     styleClass="input-field mono"
+                                     style="width:220px;"
+                                     placeholder="00.000.000/0000-00"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Telefone"/>
+                        <h:outputText value=" (opcional)" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <p:inputMask id="formConvTel"
+                                     value="#{convenioBean.formConvenioTelefone}"
+                                     mask="(99) 9999-9999?9"
+                                     styleClass="input-field mono"
+                                     style="width:200px;"
+                                     placeholder="(00) 00000-0000"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="k">
+                        <h:outputText value="Site"/>
+                        <h:outputText value=" (opcional)" styleClass="muted"/>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" styleClass="v">
+                        <h:inputText id="formConvSite"
+                                     value="#{convenioBean.formConvenioSite}"
+                                     styleClass="input-field"
+                                     style="width:100%;"
+                                     maxlength="200"
+                                     placeholder="https://www.exemplo.com.br"/>
+                    </h:panelGroup>
+                </h:panelGroup>
+            </div>
+
+        </h:panelGroup>
+
+        <f:facet name="footer">
+            <p:commandButton value="Cancelar"
+                             icon="fa fa-times"
+                             type="button"
+                             onclick="PF('wDlgFormConvenio').hide();"
+                             styleClass="btn secondary"/>
+            <p:commandButton value="Salvar"
+                             icon="fa fa-save"
+                             styleClass="btn primary"
+                             actionListener="#{convenioBean.salvarConvenio}"
+                             update=":msgs :tabViewConvenios:formConvenios:tabelaConvenios :tabViewConvenios:formConvenios:dlgFormConvenio"
+                             oncomplete="if (!args.validationFailed &amp;&amp; !args.errorMessage) PF('wDlgFormConvenio').hide();"
+                             process="@form"/>
+        </f:facet>
+
+    </p:dialog>
+
+</ui:composition>

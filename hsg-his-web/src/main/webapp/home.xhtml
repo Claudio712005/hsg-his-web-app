@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<h:head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>HSG — Portal</title>
+    <h:outputStylesheet library="css" name="paciente-portal.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <style>
+        .portal-wrap {
+            max-width: 920px;
+            margin: 72px auto 0 auto;
+            padding: 20px 16px 32px 16px;
+        }
+
+        .portal-hero {
+            background: linear-gradient(135deg, #1f3a68 0%, #2a5298 100%);
+            border: 1px solid #0e1f3a;
+            color: #fff;
+            padding: 28px 32px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .hero-icon {
+            font-size: 46px;
+            opacity: 0.85;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .hero-body h2 {
+            margin: 0 0 6px 0;
+            font-size: 22px;
+            font-weight: bold;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .hero-body p {
+            margin: 0 0 8px 0;
+            font-size: 12px;
+            color: #c8d8f0;
+        }
+        .role-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #fff;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 3px 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .info-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        .info-card {
+            background: #fff;
+            border: 1px solid #c8c8c8;
+            border-top: 3px solid #1f3a68;
+            padding: 14px 12px 12px 12px;
+        }
+        .info-card .ic-icon {
+            font-size: 18px;
+            color: #1f3a68;
+            opacity: 0.75;
+            margin-bottom: 8px;
+        }
+        .info-card .ic-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #888;
+            letter-spacing: 0.4px;
+            margin-bottom: 3px;
+        }
+        .info-card .ic-value {
+            font-size: 15px;
+            font-weight: bold;
+            color: #1f3a68;
+        }
+        .info-card .ic-sub {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+        }
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #27ae60;
+            border-radius: 50%;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+
+        .cta-box {
+            background: linear-gradient(#fff, #f4f7fb);
+            border: 1px solid #8aa4cc;
+            border-left: 4px solid #1f3a68;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 18px;
+        }
+        .cta-box h3 {
+            margin: 0 0 5px 0;
+            font-size: 15px;
+            color: #1f3a68;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .cta-box p {
+            margin: 0;
+            font-size: 12px;
+            color: #555;
+            line-height: 1.5;
+        }
+        .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(#2a5298, #1f3a68);
+            color: #fff !important;
+            padding: 11px 24px;
+            font-size: 13px;
+            font-weight: bold;
+            font-family: Arial, Helvetica, sans-serif;
+            border: 1px solid #0e1f3a;
+            text-decoration: none !important;
+            white-space: nowrap;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .cta-btn:hover {
+            background: linear-gradient(#3a62a8, #2a4a7a) !important;
+        }
+
+        .bottom-panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .portal-footer {
+            text-align: center;
+            font-size: 11px;
+            color: #aaa;
+            padding-top: 14px;
+            border-top: 1px solid #e4e4e4;
+        }
+    </style>
+</h:head>
+
+<h:body>
+    <div class="topbar">
+        <div class="brand">
+            <div class="logo">H</div>
+            HSG&#160;—&#160;Hospital Management System
+            <span class="sub">Portal&#160;|&#160;v#{infoApp.versaoExibicao}</span>
+        </div>
+        <div class="spacer"/>
+
+        <div class="user">
+            <div class="avatar">
+                <h:panelGroup rendered="#{beanSessao.logadoComoPaciente}">
+                    <h:outputText value="#{beanSessao.paciente.nomeCompleto.substring(0,1)}"/>
+                </h:panelGroup>
+                <h:panelGroup rendered="#{beanSessao.logadoComoClinica}">
+                    <h:outputText value="#{beanSessao.usuarioClinica.nomeCompleto.substring(0,1)}"/>
+                </h:panelGroup>
+                <h:panelGroup rendered="#{beanSessao.logadoComoAdmin}">
+                    <h:outputText value="#{beanSessao.admin.nomeCompleto.substring(0,1)}"/>
+                </h:panelGroup>
+            </div>
+            <div class="meta">
+                <div class="label">
+                    <h:outputText rendered="#{beanSessao.logadoComoPaciente}" value="Paciente"/>
+                    <h:outputText rendered="#{beanSessao.logadoComoClinica and beanSessao.usuarioClinica.tipo == 'MEDICO'}" value="Médico"/>
+                    <h:outputText rendered="#{beanSessao.logadoComoClinica and beanSessao.usuarioClinica.tipo == 'ENFERMEIRO'}" value="Enfermeiro"/>
+                    <h:outputText rendered="#{beanSessao.logadoComoAdmin}" value="Administrador"/>
+                </div>
+                <div class="name">
+                    <h:outputText rendered="#{beanSessao.logadoComoPaciente}" value="#{beanSessao.paciente.nomeCompleto}"/>
+                    <h:outputText rendered="#{beanSessao.logadoComoClinica}" value="#{beanSessao.usuarioClinica.nomeCompleto}"/>
+                    <h:outputText rendered="#{beanSessao.logadoComoAdmin}" value="#{beanSessao.admin.nomeCompleto}"/>
+                </div>
+            </div>
+        </div>
+
+        <a href="#{request.contextPath}/logout" class="logout">Sair</a>
+    </div>
+
+    <div class="portal-wrap">
+
+        <div class="portal-hero">
+            <div class="hero-icon">
+                <h:panelGroup rendered="#{beanSessao.logadoComoPaciente}">
+                    <i class="fas fa-heartbeat"/>
+                </h:panelGroup>
+                <h:panelGroup rendered="#{beanSessao.logadoComoClinica and beanSessao.usuarioClinica.tipo == 'MEDICO'}">
+                    <i class="fas fa-user-md"/>
+                </h:panelGroup>
+                <h:panelGroup rendered="#{beanSessao.logadoComoClinica and beanSessao.usuarioClinica.tipo == 'ENFERMEIRO'}">
+                    <i class="fas fa-user-nurse"/>
+                </h:panelGroup>
+                <h:panelGroup rendered="#{beanSessao.logadoComoAdmin}">
+                    <i class="fas fa-shield-alt"/>
+                </h:panelGroup>
+            </div>
+            <div class="hero-body">
+                <h2>
+                    Bem-vindo,&#160;
+                    <h:outputText rendered="#{beanSessao.logadoComoPaciente}" value="#{beanSessao.paciente.nomeCompleto}"/>
+                    <h:outputText rendered="#{beanSessao.logadoComoClinica}" value="#{beanSessao.usuarioClinica.nomeCompleto}"/>
+                    <h:outputText rendered="#{beanSessao.logadoComoAdmin}" value="#{beanSessao.admin.nomeCompleto}"/>
+                </h2>
+                <p>Você está acessando o Portal do Sistema de Gestão Hospitalar HSG.</p>
+                <span class="role-badge">
+                    <h:outputText rendered="#{beanSessao.logadoComoPaciente}" value="Paciente"/>
+                    <h:outputText rendered="#{beanSessao.logadoComoClinica and beanSessao.usuarioClinica.tipo == 'MEDICO'}" value="Médico"/>
+                    <h:outputText rendered="#{beanSessao.logadoComoClinica and beanSessao.usuarioClinica.tipo == 'ENFERMEIRO'}" value="Enfermeiro"/>
+                    <h:outputText rendered="#{beanSessao.logadoComoAdmin}" value="Administrador do Sistema"/>
+                </span>
+            </div>
+        </div>
+
+        <div class="info-cards">
+
+            <div class="info-card">
+                <div class="ic-icon"><i class="fas fa-hospital"/></div>
+                <div class="ic-label">Sistema</div>
+                <div class="ic-value">HSG HIS</div>
+                <div class="ic-sub">Hospital Information System</div>
+            </div>
+
+            <div class="info-card">
+                <div class="ic-icon"><i class="fas fa-circle" style="color:#27ae60; opacity:1;"/></div>
+                <div class="ic-label">Status</div>
+                <div class="ic-value"><span class="status-dot"/>Online</div>
+                <div class="ic-sub">Todos os serviços ativos</div>
+            </div>
+
+            <div class="info-card">
+                <div class="ic-icon"><i class="fas fa-id-badge"/></div>
+                <div class="ic-label">Usuário</div>
+                <div class="ic-value">
+                    <h:outputText rendered="#{beanSessao.logadoComoPaciente}" value="#{beanSessao.paciente.username}"/>
+                    <h:outputText rendered="#{beanSessao.logadoComoClinica}" value="#{beanSessao.usuarioClinica.username}"/>
+                    <h:outputText rendered="#{beanSessao.logadoComoAdmin}" value="#{beanSessao.admin.username}"/>
+                </div>
+                <div class="ic-sub">
+                    <h:outputText rendered="#{beanSessao.logadoComoPaciente}" value="Paciente"/>
+                    <h:outputText rendered="#{beanSessao.logadoComoClinica and beanSessao.usuarioClinica.tipo == 'MEDICO'}"
+                                  value="Médico — #{beanSessao.usuarioClinica.especialidade}"/>
+                    <h:outputText rendered="#{beanSessao.logadoComoClinica and beanSessao.usuarioClinica.tipo == 'ENFERMEIRO'}"
+                                  value="Enfermeiro(a)"/>
+                    <h:outputText rendered="#{beanSessao.logadoComoAdmin}" value="Administrador"/>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="ic-icon"><i class="fas fa-code-branch"/></div>
+                <div class="ic-label">Versão</div>
+                <div class="ic-value">v#{infoApp.versaoExibicao}</div>
+                <div class="ic-sub">Build 2026.05</div>
+            </div>
+
+        </div>
+
+        <h:panelGroup layout="block" styleClass="cta-box" rendered="#{beanSessao.logadoComoPaciente}">
+            <div>
+                <h3><i class="fas fa-heartbeat" style="margin-right:8px;"/>Painel do Paciente</h3>
+                <p>Acesse seus dados clínicos, histórico de consultas, exames e informações cadastrais.</p>
+            </div>
+            <a href="#{request.contextPath}/paciente/home.xhtml" class="cta-btn">
+                <i class="fas fa-arrow-right"/>&#160;Acessar Meu Painel
+            </a>
+        </h:panelGroup>
+
+        <h:panelGroup layout="block" styleClass="cta-box"
+                      rendered="#{beanSessao.logadoComoClinica and beanSessao.usuarioClinica.tipo == 'MEDICO'}">
+            <div>
+                <h3><i class="fas fa-user-md" style="margin-right:8px;"/>Painel Clínico — Médico</h3>
+                <p>Gerencie atendimentos, consulte prontuários e registre evoluções clínicas dos seus pacientes.</p>
+            </div>
+            <a href="#{request.contextPath}/clinica/home.xhtml" class="cta-btn">
+                <i class="fas fa-arrow-right"/>&#160;Acessar Painel Clínico
+            </a>
+        </h:panelGroup>
+
+        <h:panelGroup layout="block" styleClass="cta-box"
+                      rendered="#{beanSessao.logadoComoClinica and beanSessao.usuarioClinica.tipo == 'ENFERMEIRO'}">
+            <div>
+                <h3><i class="fas fa-user-nurse" style="margin-right:8px;"/>Painel Clínico — Enfermeiro</h3>
+                <p>Acompanhe pacientes, registre evoluções de enfermagem e acesse a escala de plantão.</p>
+            </div>
+            <a href="#{request.contextPath}/clinica/home.xhtml" class="cta-btn">
+                <i class="fas fa-arrow-right"/>&#160;Acessar Painel Clínico
+            </a>
+        </h:panelGroup>
+
+        <h:panelGroup layout="block" styleClass="cta-box" rendered="#{beanSessao.logadoComoAdmin}">
+            <div>
+                <h3><i class="fas fa-cogs" style="margin-right:8px;"/>Painel Administrativo</h3>
+                <p>Gerencie profissionais, pré-cadastros, permissões e configurações gerais do sistema.</p>
+            </div>
+            <a href="#{request.contextPath}/admin/home.xhtml" class="cta-btn">
+                <i class="fas fa-arrow-right"/>&#160;Acessar Painel Admin
+            </a>
+        </h:panelGroup>
+
+        <div class="bottom-panels">
+
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-info-circle panel-icon"/>
+                    Sobre o Sistema
+                </div>
+                <div class="panel-body" style="line-height:1.6; color:#444; font-size:12px;">
+                    <p style="margin:0 0 8px 0;">
+                        O <b>HSG HIS</b> é a plataforma integrada de gestão hospitalar do
+                        Hospital São Gabriel. O sistema centraliza o gerenciamento de pacientes,
+                        equipe clínica e processos administrativos em um único ambiente seguro e auditado.
+                    </p>
+                    <p style="margin:0;">
+                        Todos os acessos são autenticados via Keycloak e registrados conforme as
+                        políticas de segurança da instituição.
+                    </p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-headset panel-icon"/>
+                    Suporte e Contato
+                </div>
+                <div class="panel-body">
+                    <div class="kv" style="grid-template-columns: 120px 1fr;">
+                        <div class="k">Suporte TI</div>
+                        <div class="v">suporte@hsg.hospital.br</div>
+                        <div class="k">Telefone</div>
+                        <div class="v">(11) 3000-0000</div>
+                        <div class="k">Atendimento</div>
+                        <div class="v">Seg–Sex, 07h–19h</div>
+                        <div class="k">Plantão 24h</div>
+                        <div class="v">(11) 3000-0001</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="portal-footer">
+            HSG Hospital Management System &#160;·&#160; v#{infoApp.versaoExibicao} &#160;·&#160;
+            © 2026 Hospital São Gabriel. Todos os direitos reservados.
+        </div>
+
+    </div>
+
+</h:body>
+</html>

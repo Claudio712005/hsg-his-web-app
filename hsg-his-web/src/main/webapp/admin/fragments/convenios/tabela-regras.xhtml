@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <h:form id="formRegras">
+
+        <div class="prof-section-header">
+            <i class="fa fa-list-check prof-section-icon"/>
+            <span>Regras de Cobertura</span>
+            <p:commandButton value="Nova Regra"
+                             icon="fa fa-plus"
+                             styleClass="btn primary"
+                             style="float:right;"
+                             actionListener="#{convenioBean.novaRegra}"
+                             update=":tabViewConvenios:formRegras:dlgFormRegra"
+                             oncomplete="PF('wDlgFormRegra').show()"
+                             process="@this"/>
+        </div>
+
+        <h:panelGroup layout="block" styleClass="filter-bar">
+            <div class="filter-group">
+                <label class="filter-label" for="filtroPlanoRegra">Plano</label>
+                <h:selectOneMenu id="filtroPlanoRegra"
+                                 value="#{convenioBean.filtroPlanoIdRegra}"
+                                 styleClass="filter-select"
+                                 converter="javax.faces.Long">
+                    <f:selectItem itemLabel="Todos" itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{convenioBean.planosAtivosTodos}"
+                                   var="pl"
+                                   itemValue="#{pl.id}"
+                                   itemLabel="#{convenioBean.descreverPlano(pl)}"/>
+                </h:selectOneMenu>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="filtroProcRegra">Procedimento</label>
+                <h:inputText id="filtroProcRegra"
+                             value="#{convenioBean.filtroProcedimentoRegra}"
+                             styleClass="filter-input"
+                             placeholder="Ex.: Consulta"/>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="filtroCatRegra">Categoria</label>
+                <h:inputText id="filtroCatRegra"
+                             value="#{convenioBean.filtroCategoriaRegra}"
+                             styleClass="filter-input"
+                             placeholder="Ex.: Exames"/>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="filtroStRegra">Status</label>
+                <h:selectOneMenu id="filtroStRegra"
+                                 value="#{convenioBean.filtroStatusRegra}"
+                                 styleClass="filter-select">
+                    <f:selectItem itemLabel="Todos"   itemValue=""/>
+                    <f:selectItem itemLabel="Ativo"   itemValue="A"/>
+                    <f:selectItem itemLabel="Inativo" itemValue="I"/>
+                </h:selectOneMenu>
+            </div>
+            <div class="filter-actions">
+                <p:commandButton value="Filtrar"
+                                 styleClass="btn primary"
+                                 actionListener="#{convenioBean.aplicarFiltrosRegra}"
+                                 update="tabelaRegras"
+                                 process="filtroPlanoRegra filtroProcRegra filtroCatRegra filtroStRegra @this"
+                                 icon="fa fa-search"/>
+                <p:commandButton value="Limpar"
+                                 styleClass="btn secondary"
+                                 actionListener="#{convenioBean.limparFiltrosRegra}"
+                                 update="filtroPlanoRegra filtroProcRegra filtroCatRegra filtroStRegra tabelaRegras"
+                                 process="@this"
+                                 icon="fa fa-times"/>
+            </div>
+        </h:panelGroup>
+
+        <p:dataTable id="tabelaRegras"
+                     value="#{convenioBean.regraModel}"
+                     var="reg"
+                     lazy="true"
+                     rows="10"
+                     paginator="true"
+                     paginatorPosition="bottom"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                     rowsPerPageTemplate="5,10,25"
+                     currentPageReportTemplate="{startRecord}–{endRecord} de {totalRecords}"
+                     emptyMessage="Nenhuma regra encontrada."
+                     styleClass="lazy-table"
+                     tableStyle="width:100%; table-layout:fixed;">
+
+            <p:column headerText="Plano" sortBy="#{reg.plano.nome}" sortField="plano" style="width:20%;">
+                <h:outputText value="#{reg.plano.convenio.nome} - #{reg.plano.nome}"/>
+            </p:column>
+
+            <p:column headerText="Procedimento" sortBy="#{reg.procedimento}" sortField="procedimento"
+                      style="width:25%;">
+                <h:outputText value="#{reg.procedimento}"/>
+            </p:column>
+
+            <p:column headerText="Categoria" sortBy="#{reg.categoria}" sortField="categoria"
+                      style="width:130px;">
+                <h:outputText value="#{reg.categoria != null ? reg.categoria : '—'}"/>
+            </p:column>
+
+            <p:column headerText="Carência (dias)" sortBy="#{reg.carenciaDias}" sortField="carenciaDias"
+                      style="width:110px;" styleClass="center-align mono">
+                <h:outputText value="#{reg.carenciaDias}">
+                    <f:convertNumber type="number" integerOnly="true" minIntegerDigits="1"/>
+                </h:outputText>
+            </p:column>
+
+            <p:column headerText="Copag." sortBy="#{reg.percentualCopagamento}" sortField="percentualCopagamento"
+                      style="width:90px;" styleClass="center-align mono">
+                <h:outputText value="#{reg.percentualCopagamento}">
+                    <f:convertNumber type="number" maxFractionDigits="2" minFractionDigits="0"/>
+                </h:outputText>
+                <h:outputText value="%"/>
+            </p:column>
+
+            <p:column headerText="Cobre?" style="width:75px;" styleClass="center-align">
+                <h:outputText styleClass="chip #{reg.coberto ? 'ativo' : 'inativo'}"
+                              value="#{reg.coberto ? 'Sim' : 'Não'}"/>
+            </p:column>
+
+            <p:column headerText="Status" sortBy="#{reg.status}" sortField="status"
+                      style="width:90px;" styleClass="center-align">
+                <h:outputText styleClass="chip #{reg.status.valor eq 'A' ? 'ativo' : 'inativo'}"
+                              value="#{reg.status.descricao}"/>
+            </p:column>
+
+            <p:column headerText="Ações" style="width:170px;" styleClass="center-align">
+                <p:commandButton icon="fa fa-eye"
+                                 styleClass="btn icon-btn info"
+                                 title="Ver detalhes"
+                                 update=":tabViewConvenios:formRegras:dlgBodyRegra"
+                                 oncomplete="PF('wDlgRegra').show()"
+                                 process="@this">
+                    <f:setPropertyActionListener target="#{convenioBean.regraSelecionada}" value="#{reg}"/>
+                </p:commandButton>
+                <p:commandButton icon="fa fa-pen"
+                                 styleClass="btn icon-btn warn"
+                                 title="Editar"
+                                 actionListener="#{convenioBean.prepararEdicaoRegra(reg)}"
+                                 update=":tabViewConvenios:formRegras:dlgFormRegra"
+                                 oncomplete="PF('wDlgFormRegra').show()"
+                                 process="@this"/>
+                <p:commandButton icon="fa fa-ban"
+                                 styleClass="btn icon-btn danger"
+                                 title="Inativar"
+                                 rendered="#{reg.status.valor eq 'A'}"
+                                 actionListener="#{convenioBean.inativarRegra(reg.id)}"
+                                 update=":msgs :tabViewConvenios:formRegras:tabelaRegras"
+                                 process="@this">
+                    <p:confirm header="Confirmar inativação"
+                               message="Tem certeza que deseja inativar esta regra?"
+                               icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+                <p:commandButton icon="fa fa-check"
+                                 styleClass="btn icon-btn success"
+                                 title="Ativar"
+                                 rendered="#{reg.status.valor ne 'A'}"
+                                 actionListener="#{convenioBean.ativarRegra(reg.id)}"
+                                 update=":msgs :tabViewConvenios:formRegras:tabelaRegras"
+                                 process="@this"/>
+            </p:column>
+
+        </p:dataTable>
+
+        <ui:include src="dialog-regra-detalhes.xhtml"/>
+        <ui:include src="dialog-regra-form.xhtml"/>
+
+    </h:form>
+
+</ui:composition>

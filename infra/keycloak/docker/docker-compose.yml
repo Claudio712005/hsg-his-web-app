@@ -1,0 +1,64 @@
+name: hsg-keycloak
+
+services:
+
+  keycloak-db:
+    image: postgres:15-alpine
+    container_name: hsg-keycloak-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${KC_DB_NAME:-keycloak}
+      POSTGRES_USER:     ${KC_DB_USER:-keycloak}
+      POSTGRES_PASSWORD: ${KC_DB_PASSWORD:-keycloak_dev_secret}
+    volumes:
+      - keycloak_db_data:/var/lib/postgresql/data
+    networks:
+      - keycloak-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${KC_DB_USER:-keycloak} -d ${KC_DB_NAME:-keycloak}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  keycloak:
+    build:
+      context: ../../..
+      dockerfile: infra/keycloak/docker/Dockerfile
+    image: hsg-keycloak:local
+    container_name: hsg-keycloak
+    restart: unless-stopped
+    environment:
+      KC_DB:             postgres
+      KC_DB_URL:         jdbc:postgresql://keycloak-db:5432/${KC_DB_NAME:-keycloak}
+      KC_DB_USERNAME:    ${KC_DB_USER:-keycloak}
+      KC_DB_PASSWORD:    ${KC_DB_PASSWORD:-keycloak_dev_secret}
+      KC_HOSTNAME:             ${KC_HOSTNAME:-localhost}
+      KC_HOSTNAME_PORT:        ${KC_PORT:-8080}
+      KC_HOSTNAME_STRICT:      "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KEYCLOAK_ADMIN:          ${KC_ADMIN_USER:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-Admin@HSG2026}
+      KC_LOG_LEVEL: ${KC_LOG_LEVEL:-INFO}
+    ports:
+      - "${KC_PORT:-8080}:8080"
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    networks:
+      - keycloak-net
+    command: start-dev --import-realm
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  keycloak_db_data:
+    name: hsg_keycloak_db_data
+
+networks:
+  keycloak-net:
+    driver: bridge

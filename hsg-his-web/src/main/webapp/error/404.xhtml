@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                template="/WEB-INF/templates/error/layout.xhtml">
+
+    <ui:define name="title">HSG - Página Não Encontrada</ui:define>
+
+    <ui:define name="content">
+        <ui:include src="/error/fragments/erro-corpo.xhtml">
+            <ui:param name="codHttp"   value="404"/>
+            <ui:param name="icone"     value="fa-search"/>
+            <ui:param name="corCodigo" value="#b0bdd4"/>
+            <ui:param name="titulo"    value="Página não encontrada"/>
+            <ui:param name="mensagem"  value="O recurso solicitado não existe ou foi removido. Verifique o endereço e tente novamente."/>
+        </ui:include>
+    </ui:define>
+
+</ui:composition>
