@@ -16,14 +16,58 @@
 
     <ui:define name="head">
         <style>
-            .am-toolbar{position:sticky;top:0;z-index:5;background:#fff;border:1px solid #e6e9ef;border-radius:14px;
-                padding:14px 18px;display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;margin-bottom:18px;
-                box-shadow:0 1px 3px rgba(0,0,0,.05);}
-            .am-toolbar .group{display:flex;flex-direction:column;gap:4px;}
-            .am-toolbar label{font-size:11.5px;color:#7a8694;font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
-            .am-toolbar .grow{flex:1;min-width:260px;}
-            .am-toolbar .actions{display:flex;gap:8px;margin-left:auto;}
+            .am-toolbar-card{position:sticky;top:0;z-index:5;background:#fff;border:1px solid #e6e9ef;
+                border-radius:14px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden;}
+            .am-toolbar{padding:14px 18px;display:grid;grid-template-columns:minmax(0,1fr) 150px auto;gap:14px;
+                align-items:end;}
+            .am-toolbar .group{display:flex;flex-direction:column;gap:6px;min-width:0;}
+            .am-toolbar label{font-size:11.5px;color:#7a8694;font-weight:600;text-transform:uppercase;letter-spacing:.3px;
+                display:flex;align-items:center;gap:4px;min-height:18px;}
+            .am-toolbar .actions{display:flex;gap:8px;align-items:end;flex-wrap:wrap;}
+            .am-toolbar .hint{font-size:11px;color:#7a8694;min-height:14px;}
+            .am-toolbar .ctrl{height:38px;}
+            .am-toolbar .ctrl .ui-selectonemenu,
+            .am-toolbar .ctrl .ui-inputnumber,
+            .am-toolbar .ctrl .ui-inputnumber-input,
+            .am-toolbar .ctrl .ui-selectonemenu-label,
+            .am-toolbar .ctrl input{height:38px !important;box-sizing:border-box;}
+            .am-toolbar .ctrl .ui-selectonemenu{width:100% !important;}
+            .am-toolbar .ctrl .ui-selectonemenu-label{line-height:38px !important;padding:0 32px 0 12px;}
+            .am-toolbar .ctrl .ui-selectonemenu-trigger{height:38px !important;}
+            .am-toolbar .ctrl .ui-inputnumber,
+            .am-toolbar .ctrl .ui-inputnumber-input{width:100% !important;}
+            .am-toolbar .ctrl .ui-inputnumber-input{text-align:center;font-family:monospace;font-size:14px;font-weight:600;}
+            .am-toolbar .actions .ui-button{height:38px !important;box-sizing:border-box;}
+            .ui-selectonemenu-panel.am-medico-panel .ui-selectonemenu-list-item{padding:8px 12px;line-height:1.35;font-size:13px;}
+            .ui-selectonemenu-panel.am-medico-panel{max-width:520px;}
+            .am-medico-info{display:flex;flex-wrap:wrap;gap:8px;padding:10px 18px;
+                background:#fafbfc;border-top:1px solid #e6e9ef;}
+            .am-medico-info .chip-info{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;
+                background:#eaf1ff;color:#1565c0;border:1px solid #cfe4ff;border-radius:999px;padding:3px 10px;}
+            .am-medico-info .chip-info.crm{background:#f3f4f6;color:#3b4350;border-color:#e1e3e6;font-family:monospace;}
+            .am-medico-info .chip-info.esp{background:#efecff;color:#5648c6;border-color:#d9d2ff;}
+            .am-medico-info .chip-info.warn{background:#fef6e0;color:#7a5a00;border-color:#f3d574;}
 
+            @media (max-width: 880px){
+                .am-toolbar{grid-template-columns:1fr;}
+                .am-toolbar .actions{justify-content:flex-start;}
+            }
+
+            /* Overflow safety: keep schedule and grids inside tab panels */
+            .hsg-tabview{min-width:0;}
+            .hsg-tabview .ui-tabs-panels{overflow:hidden;}
+            .hsg-tabview .ui-tabs-panel{padding:14px;min-width:0;overflow:hidden;}
+            .ui-schedule, .ui-schedule .fc{max-width:100% !important;width:100% !important;box-sizing:border-box;}
+            .ui-schedule{height:auto !important;}
+            .ui-schedule .fc{height:auto !important;}
+            .ui-schedule .fc-view-container,
+            .ui-schedule .fc-time-grid-container{height:auto !important;overflow:visible !important;}
+            .ui-schedule .fc-time-grid .fc-slats td{height:1.8em;}
+            .ui-schedule .fc-toolbar.fc-header-toolbar{flex-wrap:wrap;gap:6px;}
+            .ui-schedule .fc table{table-layout:fixed;width:100% !important;}
+            .ui-schedule .fc-event{white-space:normal !important;overflow:hidden;text-overflow:ellipsis;cursor:pointer;
+                padding:2px 4px !important;font-size:11.5px;line-height:1.25;}
+            .ui-schedule .fc-event:hover{filter:brightness(1.08);}
             .am-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px;}
             .am-kpi{border:1px solid #e6e9ef;border-radius:12px;background:#fff;padding:14px 16px;display:flex;gap:12px;align-items:center;}
             .am-kpi .ic{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto;}
@@ -31,23 +75,45 @@
             .am-kpi.k3 .ic{background:#e7faf2;color:#15b67e;} .am-kpi.k4 .ic{background:#efecff;color:#7262FD;}
             .am-kpi .num{font-size:22px;font-weight:800;color:#1f2a37;line-height:1;}
             .am-kpi .lbl{font-size:12px;color:#7a8694;margin-top:4px;}
-
+            .am-concept{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:#f7f9fc;
+                border:1px solid #e6e9ef;border-radius:12px;padding:12px 14px;margin-bottom:18px;}
+            .am-concept .step{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#fff;
+                border:1px solid #e6e9ef;border-radius:8px;font-size:12.5px;color:#1f2a37;}
+            .am-concept .step .ic{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;
+                justify-content:center;font-size:11px;color:#fff;}
+            .am-concept .step.s1 .ic{background:#1565c0;}
+            .am-concept .step.s2 .ic{background:#15b67e;}
+            .am-concept .step.s3 .ic{background:#7262FD;}
+            .am-concept .arrow{color:#aab2bd;font-size:14px;}
+            .am-concept b{color:#1f2a37;}
             .am-legend{display:flex;flex-wrap:wrap;gap:14px;padding:10px 14px;border:1px dashed #e6e9ef;border-radius:10px;
                 background:#fafbfc;margin-bottom:14px;font-size:12.5px;color:#555;}
             .am-legend .dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:middle;}
-
             .fc-event.evt-livre     {background:#15b67e !important;border-color:#0f8e63 !important;color:#fff !important;}
             .fc-event.evt-reservado {background:#cf9b08 !important;border-color:#a07a06 !important;color:#fff !important;}
             .fc-event.evt-bloqueado {background:#c62828 !important;border-color:#9a1f1f !important;color:#fff !important;}
             .fc-event.evt-cancelado {background:#8d99a6 !important;border-color:#6f7a85 !important;color:#fff !important;}
             .fc-event.evt-excecao   {background:#7262FD !important;border-color:#5648c6 !important;color:#fff !important;}
-
-            .grade-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;}
-            .grade-col{border:1px solid #e6e9ef;border-radius:10px;background:#fff;display:flex;flex-direction:column;min-height:160px;}
-            .grade-col .head{padding:8px 10px;border-bottom:1px solid #eef0f3;font-weight:700;text-align:center;
-                font-size:12px;text-transform:uppercase;color:#555;background:#fafbfc;border-radius:10px 10px 0 0;}
+            .fc-time-grid .fc-slats td{height:2.2em;}
+            .fc-time-grid-container,.fc-day-grid-container{overflow:visible !important;}
+            .fc-axis{width:60px !important;text-align:right !important;font-variant-numeric:tabular-nums;}
+            .fc-day-header{padding:6px 0 !important;font-weight:700 !important;font-size:12px !important;
+                text-transform:uppercase;letter-spacing:.3px;color:#1f2a37;background:#fafbfc;}
+            .fc-day{vertical-align:top;}
+            .fc-time-grid .fc-bg td{border-color:#eef0f3 !important;}
+            .fc-today{background:#fff8e1 !important;}
+            .grade-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;align-items:stretch;width:100%;}
+            @media (max-width: 1100px){ .grade-grid{grid-template-columns:repeat(4,minmax(0,1fr));} }
+            @media (max-width: 780px){ .grade-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
+            .grade-col{border:1px solid #e6e9ef;border-radius:10px;background:#fff;display:flex;flex-direction:column;min-height:220px;min-width:0;}
+            .grade-col .head{padding:10px;border-bottom:1px solid #eef0f3;font-weight:700;text-align:center;
+                font-size:12px;text-transform:uppercase;color:#555;background:#fafbfc;border-radius:10px 10px 0 0;
+                letter-spacing:.4px;}
+            .grade-col .head .full{display:block;font-size:10.5px;color:#7a8694;font-weight:500;
+                text-transform:none;margin-top:2px;letter-spacing:0;}
             .grade-col .body{padding:8px;display:flex;flex-direction:column;gap:6px;flex:1;}
-            .grade-col .empty{color:#aab2bd;font-size:11.5px;text-align:center;padding:14px 0;}
+            .grade-col .empty{color:#aab2bd;font-size:11.5px;text-align:center;padding:18px 4px;
+                border:1px dashed #e1e3e6;border-radius:6px;margin:auto 4px;}
             .faixa{border:1px solid #cfe4ff;background:#eaf1ff;border-radius:8px;padding:6px 8px;font-size:12px;display:flex;
                 justify-content:space-between;gap:6px;align-items:center;}
             .faixa.inativa{background:#f3f4f6;border-color:#e1e3e6;color:#999;text-decoration:line-through;}
@@ -55,61 +121,272 @@
             .faixa.inativa .horas{color:#999;}
             .faixa .acts a{cursor:pointer;margin-left:4px;color:#7a8694;}
             .faixa .acts a:hover{color:#1565c0;}
+            .am-form-card{border:1px solid #e6e9ef;border-radius:12px;background:#fff;padding:18px;margin-bottom:14px;}
+            .am-form-card h4{margin:0 0 4px 0;font-size:15px;color:#1f2a37;display:flex;align-items:center;gap:8px;}
+            .am-form-card .sub{font-size:12px;color:#7a8694;margin-bottom:14px;}
+            .am-field{margin-bottom:14px;}
+            .am-field label{display:block;font-size:12px;font-weight:700;color:#1f2a37;margin-bottom:4px;}
+            .am-field .req{color:#c62828;font-weight:700;margin-left:2px;}
+            .am-field .help{display:block;font-size:11.5px;color:#7a8694;margin-top:4px;line-height:1.4;}
+            .am-field .ex{display:inline-block;background:#fef6e0;color:#7a5a00;border:1px solid #f3d574;
+                padding:1px 6px;border-radius:4px;font-size:10.5px;margin-top:4px;}
+            .am-callout{border:1px solid #e6e9ef;border-radius:10px;padding:14px;margin-bottom:16px;background:#f7f9fc;}
+            .am-callout.info{background:#eaf1ff;border-color:#cfe4ff;}
+            .am-callout.warn{background:#fef6e0;border-color:#f3d574;}
+            .am-callout .title{font-weight:700;color:#1f2a37;margin-bottom:6px;display:flex;align-items:center;gap:6px;font-size:13px;}
+            .am-callout p{margin:0 0 6px 0;font-size:12.5px;color:#3b4350;line-height:1.5;}
+            .am-callout .formula{font-family:monospace;background:#fff;border:1px solid #e6e9ef;
+                border-radius:6px;padding:6px 10px;display:inline-block;font-size:12px;color:#1f2a37;}
+            .hsg-tabview .ui-tabs-panel{padding-top:8px;}
+            .tab-intro{font-size:12.5px;color:#3b4350;margin-bottom:14px;line-height:1.55;}
+            .slot-preview{display:inline-flex;align-items:center;gap:6px;background:#e7faf2;color:#0f8e63;
+                border:1px solid #b6ebd5;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;}
+            .slot-preview .ic{font-size:13px;}
+            /* Médico color palette (legend + event border-left) */
+            .med-palette{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;padding:10px 14px;
+                background:#fff;border:1px solid #e6e9ef;border-radius:10px;}
+            .med-chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;padding:3px 10px;
+                border-radius:999px;border:1px solid #e6e9ef;background:#fafbfc;color:#1f2a37;}
+            .med-chip i{font-size:10px;}
+            .med-c1{border-left:6px solid #1565c0;} .fc-event.med-c1{border-left:6px solid #1565c0 !important;}
+            .med-c2{border-left:6px solid #15b67e;} .fc-event.med-c2{border-left:6px solid #15b67e !important;}
+            .med-c3{border-left:6px solid #cf9b08;} .fc-event.med-c3{border-left:6px solid #cf9b08 !important;}
+            .med-c4{border-left:6px solid #7262FD;} .fc-event.med-c4{border-left:6px solid #7262FD !important;}
+            .med-c5{border-left:6px solid #c62828;} .fc-event.med-c5{border-left:6px solid #c62828 !important;}
+            .med-c6{border-left:6px solid #00838f;} .fc-event.med-c6{border-left:6px solid #00838f !important;}
+            .med-c7{border-left:6px solid #ad1457;} .fc-event.med-c7{border-left:6px solid #ad1457 !important;}
+            .med-c8{border-left:6px solid #5e35b1;} .fc-event.med-c8{border-left:6px solid #5e35b1 !important;}
 
-            .am-form-card{border:1px solid #e6e9ef;border-radius:12px;background:#fff;padding:16px;margin-bottom:14px;}
-            .am-form-card h4{margin:0 0 12px 0;font-size:14px;color:#1f2a37;display:flex;align-items:center;gap:6px;}
+            /* Calendar filter card (multi-doctor tab) */
+            .cal-filter{border:1px solid #e6e9ef;border-radius:12px;background:#fff;margin-bottom:14px;}
+            .cal-filter-head{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:10px 14px;
+                border-bottom:1px solid #eef0f3;background:#fafbfc;border-radius:12px 12px 0 0;}
+            .cal-filter-head strong{font-size:13px;color:#1f2a37;}
+            .cal-filter-head .counter{font-size:12px;color:#7a8694;background:#fff;border:1px solid #e6e9ef;
+                border-radius:999px;padding:2px 10px;}
+            .cal-filter-head .cal-filter-actions{margin-left:auto;display:flex;gap:6px;}
+            .cal-filter-head .btn.small{padding:3px 10px;font-size:11.5px;}
+            .cal-filter-body{padding:12px 14px;}
+            .cal-filter-body .ui-selectmanycheckbox{width:100%;border:none;background:transparent;}
+            .cal-filter-body .ui-selectmanycheckbox td{padding:6px 12px 6px 0 !important;font-size:13px;}
+
+            /* Accordion */
+            .hsg-accordion .ui-accordion-header{border:1px solid #e6e9ef !important;border-radius:10px !important;
+                background:#fafbfc !important;padding:10px 14px !important;margin-bottom:6px !important;}
+            .hsg-accordion .ui-accordion-header.ui-state-active{background:#eaf1ff !important;border-color:#cfe4ff !important;}
+            .hsg-accordion .ui-accordion-header a{color:#1f2a37 !important;font-weight:600 !important;}
+            .hsg-accordion .ui-accordion-content{border:1px solid #e6e9ef !important;border-top:none !important;
+                border-radius:0 0 10px 10px !important;padding:18px !important;background:#fff !important;}
+            .acc-title{font-size:14px;}
+            .acc-sub{font-size:11.5px;color:#7a8694;margin-left:6px;font-weight:500;}
+
+            /* Form 2-col grid */
+            .form-grid-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;}
+            @media (max-width: 700px){ .form-grid-2col{grid-template-columns:1fr;} }
+
+            /* Médico banner: cabeçalho destacado nos tabs específicos do médico */
+            .am-tab-medico-banner{display:flex;align-items:center;gap:14px;padding:14px 18px;
+                background:linear-gradient(135deg,#eaf1ff 0%,#f7f9fc 100%);
+                border:1px solid #cfe4ff;border-left:5px solid #1565c0;border-radius:12px;margin-bottom:18px;
+                box-shadow:0 1px 2px rgba(21,101,192,.06);}
+            .am-tab-medico-banner.warn{background:linear-gradient(135deg,#fef6e0 0%,#fdfbf3 100%);
+                border-color:#f3d574;border-left-color:#cf9b08;}
+            .am-tab-medico-banner .avatar{width:48px;height:48px;border-radius:50%;background:#1565c0;color:#fff;
+                display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto;
+                box-shadow:0 2px 4px rgba(0,0,0,.1);}
+            .am-tab-medico-banner.warn .avatar{background:#cf9b08;}
+            .am-tab-medico-banner .info{flex:1;min-width:0;}
+            .am-tab-medico-banner .label{font-size:11px;color:#7a8694;font-weight:600;text-transform:uppercase;
+                letter-spacing:.4px;display:flex;align-items:center;gap:4px;margin-bottom:2px;}
+            .am-tab-medico-banner .name{font-size:18px;font-weight:700;color:#1f2a37;line-height:1.2;}
+            .am-tab-medico-banner .meta{font-size:12.5px;color:#3b4350;margin-top:4px;display:flex;
+                flex-wrap:wrap;gap:6px 10px;align-items:center;}
+            .am-tab-medico-banner .meta .sep{color:#aab2bd;}
+            .am-tab-medico-banner .meta .mono{font-family:monospace;font-weight:600;color:#1f2a37;}
+            .am-tab-medico-banner .actions{margin-left:auto;}
+
+            /* Faixa em edição — destaque visual */
+            .faixa.selecionada{background:#fff3bf !important;border:2px solid #cf9b08 !important;
+                box-shadow:0 0 0 3px rgba(207,155,8,.18);position:relative;}
+            .faixa.selecionada::before{content:"editando";position:absolute;top:-9px;left:8px;
+                background:#cf9b08;color:#fff;font-size:9.5px;font-weight:700;padding:1px 6px;
+                border-radius:8px;letter-spacing:.4px;text-transform:uppercase;}
+            .faixa.selecionada .horas{color:#7a5a00 !important;}
+
+
+            /* Tab title com ícone */
+            .tab-title{display:inline-flex;align-items:center;gap:6px;}
+            .tab-title i{font-size:13px;}
+
+            /* Empty state padronizado */
+            .empty-state{text-align:center;padding:36px 20px;color:#7a8694;}
+            .empty-state .ic{font-size:36px;color:#cfd5dd;margin-bottom:10px;}
+            .empty-state .title{font-size:14px;font-weight:600;color:#3b4350;margin-bottom:4px;}
+            .empty-state .desc{font-size:12.5px;}
+
+            /* Tab section card: unified container (header chips + body) */
+            .tab-section{border:1px solid #e6e9ef;border-radius:12px;background:#fff;overflow:hidden;margin-bottom:14px;}
+            .tab-section-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 16px;
+                background:#fafbfc;border-bottom:1px solid #eef0f3;}
+            .tab-section-head .title{font-weight:700;color:#1f2a37;font-size:14px;display:flex;align-items:center;gap:6px;}
+            .tab-section-head .chip-info{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;
+                background:#eaf1ff;color:#1565c0;border:1px solid #cfe4ff;border-radius:999px;padding:3px 10px;}
+            .tab-section-head .chip-info.crm{background:#f3f4f6;color:#3b4350;border-color:#e1e3e6;font-family:monospace;}
+            .tab-section-head .chip-info.esp{background:#efecff;color:#5648c6;border-color:#d9d2ff;}
+            .tab-section-body{padding:16px;}
+            .tab-section-divider{height:1px;background:#eef0f3;margin:14px -16px;}
+
+            /* Inline dialog footer (substitui f:facet footer dentro de form) */
+            .dlg-footer{display:flex;justify-content:flex-end;gap:8px;padding-top:14px;margin-top:14px;
+                border-top:1px solid #eef0f3;}
+
+            /* Modal detalhe evento */
+            .detalhe-header{display:flex;align-items:center;gap:14px;padding:10px 0 14px 0;
+                border-bottom:1px solid #eef0f3;margin-bottom:14px;}
+            .detalhe-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;
+                justify-content:center;font-size:22px;color:#fff;background:#7a8694;flex:0 0 auto;}
+            .detalhe-icon.evt-livre{background:#15b67e;}
+            .detalhe-icon.evt-reservado{background:#cf9b08;}
+            .detalhe-icon.evt-bloqueado{background:#c62828;}
+            .detalhe-icon.evt-cancelado{background:#8d99a6;}
+            .detalhe-icon.evt-excecao{background:#7262FD;}
+            .detalhe-titulo{font-size:16px;font-weight:700;color:#1f2a37;}
+            .detalhe-sub{font-size:12.5px;color:#7a8694;margin-top:2px;text-transform:uppercase;letter-spacing:.3px;}
+            .detalhe-grid{display:grid;grid-template-columns:120px 1fr;gap:8px 14px;}
+            .detalhe-grid .dk{font-size:12px;color:#7a8694;font-weight:600;text-transform:uppercase;letter-spacing:.3px;
+                padding-top:2px;}
+            .detalhe-grid .dv{font-size:13.5px;color:#1f2a37;}
+            .detalhe-grid .dv.mono{font-family:monospace;font-weight:600;}
+
+            .bulk-list{max-height:340px;overflow:auto;border:1px solid #e6e9ef;border-radius:10px;background:#fafbfc;}
+            .bulk-list .ui-selectmanycheckbox{width:100%;border:none;background:transparent;}
+            .bulk-list .ui-selectmanycheckbox tr{display:block;border-bottom:1px solid #eef0f3;}
+            .bulk-list .ui-selectmanycheckbox tr:last-child{border-bottom:none;}
+            .bulk-list .ui-selectmanycheckbox td{padding:8px 12px !important;font-size:13px;}
+            .bulk-actions{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+            .bulk-summary{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#eaf1ff;
+                border:1px solid #cfe4ff;border-radius:10px;margin-top:10px;font-size:12.5px;color:#1f2a37;}
+            .bulk-summary b{color:#1565c0;font-size:14px;}
         </style>
     </ui:define>
 
     <ui:define name="content">
 
+        <p:growl id="growlAgenda" widgetVar="wGrowlAgenda"
+                 showDetail="true" life="6000" globalOnly="true" escape="false"/>
+
         <h:panelGroup layout="block" styleClass="page-title">
             <h:panelGroup layout="block">
                 <h1>
-                    <i class="fa fa-calendar-days" style="margin-right:8px;"/>
+                    <i class="fa fa-calendar-alt" style="margin-right:8px;"/>
                     Agenda Médica
                 </h1>
                 <h:panelGroup layout="block" styleClass="sub">
-                    <h:outputText value="Configure a grade semanal, registre exceções e gere os horários disponíveis para agendamento de consultas."/>
+                    <h:outputText value="Configure a grade semanal de cada médico, registre exceções (férias, bloqueios) e gere os horários (slots) disponíveis para agendamento de consultas."/>
                 </h:panelGroup>
             </h:panelGroup>
             <h:panelGroup layout="block" styleClass="right">
                 <a href="javascript:void(0)" onclick="PF('wDlgTutorial').show();" class="btn secondary">
-                    <i class="fa fa-circle-question" style="margin-right:6px;"/> Como usar
+                    <i class="fa fa-question-circle" style="margin-right:6px;"/> Como usar
                 </a>
             </h:panelGroup>
         </h:panelGroup>
 
+        <div class="am-concept">
+            <div class="step s1"><div class="ic"><i class="fa fa-clock"/></div><span><b>1. Faixa semanal</b> — janela do dia em que o médico atende (ex.: Seg 08:00–12:00)</span></div>
+            <i class="fa fa-arrow-right arrow"/>
+            <div class="step s2"><div class="ic"><i class="fa fa-grip-lines"/></div><span><b>2. Slots</b> — divisões fixas da faixa (ex.: 30 min cada → 8 horários)</span></div>
+            <i class="fa fa-arrow-right arrow"/>
+            <div class="step s3"><div class="ic"><i class="fa fa-user-check"/></div><span><b>3. Consultas</b> — paciente reserva um slot livre</span></div>
+        </div>
+
         <h:form id="formAgenda">
 
+            <div class="am-toolbar-card">
             <div class="am-toolbar">
-                <div class="group grow">
-                    <label for="selMedico">Médico</label>
-                    <h:selectOneMenu id="selMedico"
-                                     value="#{agendaMedicaBean.medicoSelecionadoId}"
-                                     styleClass="filter-select" style="width:100%;"
-                                     converter="javax.faces.Long">
-                        <f:selectItems value="#{agendaMedicaBean.medicos}"
-                                       var="m" itemValue="#{m.id}"
-                                       itemLabel="Dr(a). #{m.nomeCompleto}"/>
-                        <p:ajax event="change" listener="#{agendaMedicaBean.aoMudarMedico}"
-                                update="@form"/>
-                    </h:selectOneMenu>
+                <div class="group">
+                    <label for="selMedico">
+                        <i class="fa fa-user-md"/>
+                        Médico (#{agendaMedicaBean.totalMedicosAtivos} ativo#{agendaMedicaBean.totalMedicosAtivos == 1 ? '' : 's'})
+
+                    </label>
+                    <div class="ctrl">
+                        <p:selectOneMenu id="selMedico"
+                                         value="#{agendaMedicaBean.medicoSelecionadoId}"
+                                         converter="javax.faces.Long"
+                                         filter="true" filterMatchMode="contains"
+                                         panelStyleClass="am-medico-panel">
+                            <f:selectItem itemLabel="Selecione um médico..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{agendaMedicaBean.medicos}"
+                                           var="m" itemValue="#{m.id}"
+                                           itemLabel="#{agendaMedicaBean.labelMedicoDropdown(m)}"/>
+                            <p:ajax event="change" listener="#{agendaMedicaBean.aoMudarMedico}"
+                                    update="@form"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <span class="hint">Filtre por nome, CRM ou especialidade.</span>
                 </div>
                 <div class="group">
-                    <label for="diasGerar">Gerar para próximos (dias)</label>
-                    <p:inputNumber id="diasGerar" value="#{agendaMedicaBean.diasGerar}"
-                                   decimalPlaces="0" thousandSeparator="" minValue="1" maxValue="180"
-                                   styleClass="filter-input mono" style="width:110px;"/>
+                    <label for="diasGerar">
+                        <i class="fa fa-calendar-day"/>
+                        Dias a gerar
+
+                    </label>
+                    <div class="ctrl">
+                        <p:inputNumber id="diasGerar" value="#{agendaMedicaBean.diasGerar}"
+                                       decimalPlaces="0" thousandSeparator="" minValue="1" maxValue="180"/>
+                    </div>
+                    <span class="hint">1 a 180 dias.</span>
                 </div>
-                <div class="actions">
-                    <p:commandButton value="Gerar slots"
-                                     icon="fa fa-bolt"
-                                     styleClass="btn primary"
-                                     action="#{agendaMedicaBean.gerarSlots}"
-                                     update="@form :msgs"
-                                     process="@form"/>
+                <div class="group">
+                    <label>&#160;</label>
+                    <div class="actions">
+                        <p:commandButton value="Gerar slots"
+                                         icon="fa fa-bolt"
+                                         styleClass="btn primary"
+                                         action="#{agendaMedicaBean.gerarSlots}"
+                                         update="@form :growlAgenda :msgs"
+                                         process="@form"
+                                         disabled="#{empty agendaMedicaBean.medicoSelecionadoId}"
+                                         title="Gera slots apenas para o médico selecionado."/>
+                        <p:commandButton value="Em massa..."
+                                         icon="fa fa-layer-group"
+                                         styleClass="btn secondary"
+                                         action="#{agendaMedicaBean.prepararGeracaoEmMassa}"
+                                         update=":formBulk"
+                                         oncomplete="PF('wDlgBulk').show();"
+                                         process="@this"
+                                         title="Gerar slots para vários médicos de uma vez."/>
+                    </div>
+                    <span class="hint">&#160;</span>
                 </div>
+            </div>
+
+            <h:panelGroup layout="block" styleClass="am-medico-info"
+                          rendered="#{not empty agendaMedicaBean.medicoSelecionado}">
+                <span class="chip-info crm">
+                    <i class="fa fa-id-badge"/>
+                    #{agendaMedicaBean.medicoSelecionado.crm != null ? agendaMedicaBean.medicoSelecionado.crm.formatado : 'sem CRM'}
+                </span>
+                <h:panelGroup rendered="#{not empty agendaMedicaBean.medicoSelecionado.especialidade}">
+                    <span class="chip-info esp">
+                        <i class="fa fa-stethoscope"/>
+                        #{agendaMedicaBean.medicoSelecionado.especialidade.nome}
+                    </span>
+                </h:panelGroup>
+                <span class="chip-info">
+                    <i class="fa fa-calendar-week"/>
+                    #{agendaMedicaBean.grades.size()} faixa(s) na grade
+                </span>
+                <span class="chip-info">
+                    <i class="fa fa-calendar-times"/>
+                    #{agendaMedicaBean.excecoes.size()} exceção(ões)
+                </span>
+                <span class="chip-info">
+                    <i class="fa fa-check-circle"/>
+                    #{agendaMedicaBean.slotsLivresFuturos} slot(s) livre(s) futuros
+                </span>
+            </h:panelGroup>
             </div>
 
             <h:panelGroup layout="block" rendered="#{empty agendaMedicaBean.medicos}" styleClass="note">
@@ -127,14 +404,14 @@
                         </div>
                     </div>
                     <div class="am-kpi k2">
-                        <div class="ic"><i class="fa fa-calendar-xmark"></i></div>
+                        <div class="ic"><i class="fa fa-calendar-times"></i></div>
                         <div>
                             <div class="num">#{agendaMedicaBean.excecoes.size()}</div>
                             <div class="lbl">Exceções registradas</div>
                         </div>
                     </div>
                     <div class="am-kpi k3">
-                        <div class="ic"><i class="fa fa-circle-check"></i></div>
+                        <div class="ic"><i class="fa fa-check-circle"></i></div>
                         <div>
                             <div class="num">#{agendaMedicaBean.slotsLivresFuturos}</div>
                             <div class="lbl">Slots livres futuros</div>
@@ -151,64 +428,207 @@
 
                 <p:tabView id="tabsAgenda" dynamic="true" styleClass="hsg-tabview">
 
-                    <p:tab title="Calendário">
+                    <p:tab>
+                        <f:facet name="title">
+                            <span class="tab-title"><i class="fa fa-globe"/> Calendário geral</span>
+                        </f:facet>
+
+                        <div class="tab-intro">
+                            <i class="fa fa-globe" style="color:#1565c0;margin-right:4px;"/>
+                            Visão consolidada de <b>todos os #{agendaMedicaBean.totalMedicosAtivos} médicos ativos</b>.
+                            Cada cor de borda no evento identifica um médico (legenda abaixo).
+                            Não edita — somente leitura.
+                        </div>
 
                         <div class="am-legend">
                             <span><span class="dot" style="background:#15b67e;"></span>Livre</span>
                             <span><span class="dot" style="background:#cf9b08;"></span>Reservado</span>
                             <span><span class="dot" style="background:#c62828;"></span>Bloqueado</span>
                             <span><span class="dot" style="background:#8d99a6;"></span>Cancelado</span>
-                            <span><span class="dot" style="background:#7262FD;"></span>Exceção (férias/bloqueio)</span>
+                            <span><span class="dot" style="background:#7262FD;"></span>Exceção</span>
                         </div>
 
-                        <p:schedule id="schedule"
-                                    value="#{agendaMedicaBean.scheduleModel}"
+                        <div class="med-palette">
+                            <ui:repeat value="#{agendaMedicaBean.medicos}" var="m" varStatus="vs">
+                                <span class="med-chip med-c#{(vs.index mod 8) + 1}">
+                                    <i class="fa fa-user-md"/>
+                                    #{m.nomeCompleto}
+                                </span>
+                            </ui:repeat>
+                        </div>
+
+                        <p:schedule id="scheduleGeral"
+                                    value="#{agendaMedicaBean.scheduleModelGeral}"
                                     view="agendaWeek"
                                     locale="pt_BR"
                                     timeZone="America/Sao_Paulo"
                                     minTime="06:00"
                                     maxTime="22:00"
                                     slotDuration="00:30:00"
+                                    slotLabelInterval="01:00:00"
                                     leftHeaderTemplate="prev,next today"
                                     centerHeaderTemplate="title"
                                     rightHeaderTemplate="month,agendaWeek,agendaDay"
                                     allDaySlot="false"
-                                    style="height:580px;"/>
+                                    style="width:100%;">
+                            <p:ajax event="eventSelect" listener="#{agendaMedicaBean.onEventSelect}"
+                                    update=":dlgDetailContent"
+                                    oncomplete="PF('wDlgDetail').show();"/>
+                        </p:schedule>
 
                     </p:tab>
 
-                    <p:tab title="Grade semanal">
+                    <p:tab>
+                        <f:facet name="title">
+                            <span class="tab-title"><i class="fa fa-users"/> Calendário por médicos</span>
+                        </f:facet>
 
-                        <div style="display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start;">
+                        <div class="tab-intro">
+                            <i class="fa fa-user-check" style="color:#5648c6;margin-right:4px;"/>
+                            Selecione <b>um ou mais médicos</b> para comparar suas agendas lado a lado.
+                            Marque os médicos abaixo; o calendário atualiza automaticamente.
+                        </div>
+
+                        <div class="cal-filter">
+                            <div class="cal-filter-head">
+                                <strong>
+                                    <i class="fa fa-filter"/> Médicos no calendário
+                                </strong>
+                                <span class="counter">
+                                    #{agendaMedicaBean.idsMedicosCalendario.size()} de #{agendaMedicaBean.totalMedicosAtivos} selecionado(s)
+                                </span>
+                                <div class="cal-filter-actions">
+                                    <p:commandButton value="Todos" icon="fa fa-check-double" styleClass="btn secondary small"
+                                                     action="#{agendaMedicaBean.selecionarTodosCalendarioMulti}"
+                                                     update=":formAgenda" process="@this"/>
+                                    <p:commandButton value="Limpar" icon="fa fa-times" styleClass="btn secondary small"
+                                                     action="#{agendaMedicaBean.limparCalendarioMulti}"
+                                                     update=":formAgenda" process="@this"/>
+                                </div>
+                            </div>
+
+                            <div class="cal-filter-body">
+                                <p:selectManyCheckbox value="#{agendaMedicaBean.idsMedicosCalendario}"
+                                                      layout="responsive" columns="3"
+                                                      converter="javax.faces.Long">
+                                    <f:selectItems value="#{agendaMedicaBean.medicos}"
+                                                   var="m" itemValue="#{m.id}"
+                                                   itemLabel="#{agendaMedicaBean.labelMedicoDropdown(m)}"/>
+                                    <p:ajax event="change" listener="#{agendaMedicaBean.aoMudarMedicosCalendario}"
+                                            update="scheduleMulti"/>
+                                </p:selectManyCheckbox>
+                            </div>
+                        </div>
+
+                        <h:panelGroup layout="block" rendered="#{empty agendaMedicaBean.idsMedicosCalendario}"
+                                      styleClass="note" style="margin-bottom:14px;">
+                            <i class="fa fa-info-circle" style="margin-right:6px;color:#1565c0;"/>
+                            Marque ao menos um médico acima para visualizar a agenda.
+                        </h:panelGroup>
+
+                        <p:schedule id="scheduleMulti"
+                                    value="#{agendaMedicaBean.scheduleModelMulti}"
+                                    view="agendaWeek"
+                                    locale="pt_BR"
+                                    timeZone="America/Sao_Paulo"
+                                    minTime="06:00"
+                                    maxTime="22:00"
+                                    slotDuration="00:30:00"
+                                    slotLabelInterval="01:00:00"
+                                    leftHeaderTemplate="prev,next today"
+                                    centerHeaderTemplate="title"
+                                    rightHeaderTemplate="month,agendaWeek,agendaDay"
+                                    allDaySlot="false"
+                                    style="width:100%;">
+                            <p:ajax event="eventSelect" listener="#{agendaMedicaBean.onEventSelect}"
+                                    update=":dlgDetailContent"
+                                    oncomplete="PF('wDlgDetail').show();"/>
+                        </p:schedule>
+
+                    </p:tab>
+
+                    <p:tab>
+                        <f:facet name="title">
+                            <span class="tab-title"><i class="fa fa-calendar-week"/> Grade semanal</span>
+                        </f:facet>
+
+                        <div class="am-tab-medico-banner">
+                            <div class="avatar"><i class="fa fa-user-md"/></div>
+                            <div class="info">
+                                <div class="label">
+                                    <i class="fa fa-calendar-week"/> Configurando grade semanal de
+                                </div>
+                                <div class="name">
+                                    #{empty agendaMedicaBean.medicoSelecionado ? 'Nenhum médico selecionado' : 'Dr(a). '.concat(agendaMedicaBean.medicoSelecionado.nomeCompleto)}
+                                </div>
+                                <h:panelGroup layout="block" styleClass="meta"
+                                              rendered="#{not empty agendaMedicaBean.medicoSelecionado}">
+                                    <span class="mono">
+                                        <i class="fa fa-id-badge"/>
+                                        #{agendaMedicaBean.medicoSelecionado.crm != null ? agendaMedicaBean.medicoSelecionado.crm.formatado : 'sem CRM'}
+                                    </span>
+                                    <h:panelGroup rendered="#{not empty agendaMedicaBean.medicoSelecionado.especialidade}">
+                                        <span class="sep">•</span>
+                                        <span>
+                                            <i class="fa fa-stethoscope"/>
+                                            #{agendaMedicaBean.medicoSelecionado.especialidade.nome}
+                                        </span>
+                                    </h:panelGroup>
+                                    <span class="sep">•</span>
+                                    <span>
+                                        <i class="fa fa-layer-group"/>
+                                        #{agendaMedicaBean.grades.size()} faixa(s) cadastrada(s)
+                                    </span>
+                                </h:panelGroup>
+                            </div>
+                        </div>
+
+                        <div class="am-callout info">
+                            <div class="title"><i class="fa fa-info-circle"/> O que é uma faixa de atendimento?</div>
+                            <p>Uma <b>faixa</b> é uma janela contínua do dia em que o médico atende.
+                               Ao gerar slots, o sistema divide a faixa em blocos da <b>duração configurada</b>.</p>
+                            <p>
+                                <span class="formula">Segunda • 08:00–12:00 • slot 30 min → 8 horários</span>
+                            </p>
+                            <p>Cada horário (slot) é o que o paciente vê e reserva ao agendar uma consulta.</p>
+                        </div>
+
+                        <div>
 
                             <div>
                                 <div class="grade-grid">
                                     <ui:repeat value="#{agendaMedicaBean.diasSemana}" var="dia">
                                         <div class="grade-col">
-                                            <div class="head">#{dia.abreviacao}</div>
+                                            <div class="head">
+                                                #{dia.abreviacao}
+                                                <span class="full">#{dia.descricao}</span>
+                                            </div>
                                             <div class="body">
                                                 <ui:repeat value="#{agendaMedicaBean.grades}" var="g">
                                                     <h:panelGroup rendered="#{g.diaSemana eq dia}" layout="block"
-                                                                  styleClass="faixa #{g.status.valor eq 'A' ? '' : 'inativa'}">
+                                                                  styleClass="faixa #{g.status.valor eq 'A' ? '' : 'inativa'} #{g.id eq agendaMedicaBean.formGradeId ? 'selecionada' : ''}">
                                                         <span class="horas">
                                                             #{agendaMedicaBean.formatarHora(g.horaInicio)}–#{agendaMedicaBean.formatarHora(g.horaFim)}
                                                         </span>
                                                         <span class="acts">
-                                                            <p:commandLink title="Editar"
+                                                            <p:commandLink title="Editar horários e duração desta faixa"
                                                                            action="#{agendaMedicaBean.prepararEdicaoGrade(g)}"
                                                                            update=":formAgenda" process="@this">
                                                                 <i class="fa fa-pen"/>
                                                             </p:commandLink>
-                                                            <p:commandLink title="Inativar"
+                                                            <p:commandLink title="Inativar esta faixa (slots futuros não serão mais gerados)"
                                                                            rendered="#{g.status.valor eq 'A'}"
                                                                            action="#{agendaMedicaBean.inativarGrade(g.id)}"
-                                                                           update=":formAgenda :msgs" process="@this">
+                                                                           update=":formAgenda :growlAgenda :msgs" process="@this">
                                                                 <i class="fa fa-ban"/>
+                                                                <p:confirm header="Inativar faixa"
+                                                                           message="Deseja inativar esta faixa? Novos slots não serão gerados para ela. Slots já existentes não são removidos."
+                                                                           icon="fa fa-exclamation-triangle"/>
                                                             </p:commandLink>
-                                                            <p:commandLink title="Ativar"
+                                                            <p:commandLink title="Reativar esta faixa (volta a gerar slots)"
                                                                            rendered="#{g.status.valor ne 'A'}"
                                                                            action="#{agendaMedicaBean.ativarGrade(g.id)}"
-                                                                           update=":formAgenda :msgs" process="@this">
+                                                                           update=":formAgenda :growlAgenda :msgs" process="@this">
                                                                 <i class="fa fa-check"/>
                                                             </p:commandLink>
                                                         </span>
@@ -216,7 +636,7 @@
                                                 </ui:repeat>
                                                 <h:panelGroup rendered="#{empty agendaMedicaBean.grades or not agendaMedicaBean.temFaixaNoDia(dia)}"
                                                               styleClass="empty">
-                                                    —
+                                                    Sem atendimento
                                                 </h:panelGroup>
                                             </div>
                                         </div>
@@ -224,148 +644,228 @@
                                 </div>
                             </div>
 
-                            <div>
-                                <div class="am-form-card">
-                                    <h4><i class="fa fa-plus" style="color:#1565c0;"/>
-                                        #{agendaMedicaBean.formGradeId == null ? 'Nova faixa' : 'Editar faixa'}</h4>
+                            <div style="margin-top:16px;">
+                                <p:accordionPanel multiple="false"
+                                                  activeIndex="#{agendaMedicaBean.accordionFormIndex}"
+                                                  styleClass="hsg-accordion">
+                                    <p:tab>
+                                        <f:facet name="title">
+                                            <span class="acc-title">
+                                                <i class="fa fa-plus" style="color:#1565c0;margin-right:6px;"/>
+                                                #{agendaMedicaBean.formGradeId == null ? 'Cadastrar nova faixa' : 'Editar faixa selecionada'}
+                                                <span class="acc-sub">— clique para expandir / recolher</span>
+                                            </span>
+                                        </f:facet>
 
-                                    <h:panelGroup layout="block" styleClass="kv">
-                                        <h:panelGroup layout="block" styleClass="k">
-                                            <h:outputText value="Dia"/><h:outputText value=" *" styleClass="muted"/>
-                                        </h:panelGroup>
-                                        <h:panelGroup layout="block" styleClass="v">
-                                            <h:selectOneMenu value="#{agendaMedicaBean.formGradeDiaSemana}"
-                                                             styleClass="input-field" style="width:100%;"
-                                                             disabled="#{agendaMedicaBean.formGradeId != null}">
-                                                <f:selectItem itemLabel="Selecione..." itemValue="#{null}" noSelectionOption="true"/>
-                                                <f:selectItems value="#{agendaMedicaBean.diasSemana}"
-                                                               var="d" itemValue="#{d.name()}" itemLabel="#{d.descricao}"/>
-                                            </h:selectOneMenu>
-                                        </h:panelGroup>
+                                        <div class="am-form-card" style="border:none;padding:0;margin:0;">
+                                            <div class="sub">Defina o dia, o horário e a duração de cada slot.</div>
 
-                                        <h:panelGroup layout="block" styleClass="k">
-                                            <h:outputText value="Início"/><h:outputText value=" *" styleClass="muted"/>
-                                        </h:panelGroup>
-                                        <h:panelGroup layout="block" styleClass="v">
-                                            <p:calendar value="#{agendaMedicaBean.formGradeHoraInicio}"
-                                                        pattern="HH:mm" mask="true" timeOnly="true"
-                                                        styleClass="input-field mono" style="width:100%;"/>
-                                        </h:panelGroup>
+                                            <div class="form-grid-2col">
 
-                                        <h:panelGroup layout="block" styleClass="k">
-                                            <h:outputText value="Fim"/><h:outputText value=" *" styleClass="muted"/>
-                                        </h:panelGroup>
-                                        <h:panelGroup layout="block" styleClass="v">
-                                            <p:calendar value="#{agendaMedicaBean.formGradeHoraFim}"
-                                                        pattern="HH:mm" mask="true" timeOnly="true"
-                                                        styleClass="input-field mono" style="width:100%;"/>
-                                        </h:panelGroup>
+                                                <div class="am-field">
+                                                    <label>
+                                                        <i class="fa fa-calendar-day"/> Dia da semana <span class="req">*</span>
 
-                                        <h:panelGroup layout="block" styleClass="k">
-                                            <h:outputText value="Slot (min)"/><h:outputText value=" *" styleClass="muted"/>
-                                        </h:panelGroup>
-                                        <h:panelGroup layout="block" styleClass="v">
-                                            <p:inputNumber value="#{agendaMedicaBean.formGradeDuracaoMin}"
-                                                           decimalPlaces="0" thousandSeparator=""
-                                                           minValue="5" maxValue="240"
-                                                           styleClass="input-field mono" style="width:100%;"/>
-                                        </h:panelGroup>
-                                    </h:panelGroup>
+                                                    </label>
+                                                    <h:selectOneMenu value="#{agendaMedicaBean.formGradeDiaSemana}"
+                                                                     styleClass="input-field" style="width:100%;"
+                                                                     disabled="#{agendaMedicaBean.formGradeId != null}">
+                                                        <f:selectItem itemLabel="Selecione..." itemValue="#{null}" noSelectionOption="true"/>
+                                                        <f:selectItems value="#{agendaMedicaBean.diasSemana}"
+                                                                       var="d" itemValue="#{d.name()}" itemLabel="#{d.descricao}"/>
+                                                    </h:selectOneMenu>
+                                                    <span class="help">Em qual dia esta faixa se repete toda semana.</span>
+                                                </div>
 
-                                    <div style="display:flex;gap:8px;margin-top:12px;">
-                                        <p:commandButton value="Salvar" icon="fa fa-save" styleClass="btn primary"
-                                                         action="#{agendaMedicaBean.salvarGrade}"
-                                                         update=":formAgenda :msgs" process=":formAgenda"/>
-                                        <p:commandButton value="Limpar" icon="fa fa-eraser" styleClass="btn secondary"
-                                                         action="#{agendaMedicaBean.novaGrade}"
-                                                         update=":formAgenda" process="@this"/>
-                                    </div>
-                                </div>
+                                                <div class="am-field">
+                                                    <label>
+                                                        <i class="fa fa-stopwatch"/> Duração do slot (minutos) <span class="req">*</span>
+
+                                                    </label>
+                                                    <p:inputNumber value="#{agendaMedicaBean.formGradeDuracaoMin}"
+                                                                   decimalPlaces="0" thousandSeparator=""
+                                                                   minValue="5" maxValue="240"
+                                                                   styleClass="input-field mono" style="width:100%;"/>
+                                                    <span class="help">Tempo de cada consulta. O sistema divide a faixa nesse intervalo. <span class="ex">recomendado: 30 min</span></span>
+                                                </div>
+
+                                                <div class="am-field">
+                                                    <label>
+                                                        <i class="fa fa-play" style="color:#15b67e;"/> Horário de início <span class="req">*</span>
+
+                                                    </label>
+                                                    <p:calendar value="#{agendaMedicaBean.formGradeHoraInicio}"
+                                                                pattern="HH:mm" mask="true" timeOnly="true"
+                                                                styleClass="input-field mono" style="width:100%;"/>
+                                                    <span class="help">Quando o médico começa a atender. <span class="ex">ex.: 08:00</span></span>
+                                                </div>
+
+                                                <div class="am-field">
+                                                    <label>
+                                                        <i class="fa fa-stop" style="color:#c62828;"/> Horário de fim <span class="req">*</span>
+
+                                                    </label>
+                                                    <p:calendar value="#{agendaMedicaBean.formGradeHoraFim}"
+                                                                pattern="HH:mm" mask="true" timeOnly="true"
+                                                                styleClass="input-field mono" style="width:100%;"/>
+                                                    <span class="help">Quando o médico encerra; maior que o início. <span class="ex">ex.: 12:00</span></span>
+                                                </div>
+
+                                            </div>
+
+                                            <div class="slot-preview" style="margin-bottom:12px;">
+                                                <i class="fa fa-lightbulb ic"/>
+                                                Exemplo: 08:00–12:00 com slot de 30 min gera <b>&#160;8 horários</b>
+                                            </div>
+
+                                            <div style="display:flex;gap:8px;">
+                                                <p:commandButton value="Salvar" icon="fa fa-save" styleClass="btn primary"
+                                                                 action="#{agendaMedicaBean.salvarGrade}"
+                                                                 update=":formAgenda :growlAgenda :msgs" process=":formAgenda"/>
+                                                <p:commandButton value="Limpar" icon="fa fa-eraser" styleClass="btn secondary"
+                                                                 action="#{agendaMedicaBean.novaGrade}"
+                                                                 update=":formAgenda" process="@this"/>
+                                            </div>
+
+                                            <div class="am-callout warn" style="margin-top:14px;margin-bottom:0;padding:10px 12px;">
+                                                <p style="margin:0;">
+                                                    <i class="fa fa-exclamation-triangle" style="color:#cf9b08;margin-right:6px;"/>
+                                                    Após cadastrar/editar faixas, clique em <b>Gerar slots</b> no topo para materializar os horários no calendário.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                    </p:tab>
+                                </p:accordionPanel>
                             </div>
 
                         </div>
 
                     </p:tab>
 
-                    <p:tab title="Exceções">
+                    <p:tab>
+                        <f:facet name="title">
+                            <span class="tab-title"><i class="fa fa-calendar-times"/> Exceções</span>
+                        </f:facet>
 
-                        <div style="display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start;">
+                        <div class="am-tab-medico-banner warn">
+                            <div class="avatar"><i class="fa fa-calendar-times"/></div>
+                            <div class="info">
+                                <div class="label">
+                                    <i class="fa fa-ban"/> Exceções de atendimento de
+                                </div>
+                                <div class="name">
+                                    #{empty agendaMedicaBean.medicoSelecionado ? 'Nenhum médico selecionado' : 'Dr(a). '.concat(agendaMedicaBean.medicoSelecionado.nomeCompleto)}
+                                </div>
+                                <h:panelGroup layout="block" styleClass="meta"
+                                              rendered="#{not empty agendaMedicaBean.medicoSelecionado}">
+                                    <span class="mono">
+                                        <i class="fa fa-id-badge"/>
+                                        #{agendaMedicaBean.medicoSelecionado.crm != null ? agendaMedicaBean.medicoSelecionado.crm.formatado : 'sem CRM'}
+                                    </span>
+                                    <span class="sep">•</span>
+                                    <span>
+                                        <i class="fa fa-tasks"/>
+                                        #{agendaMedicaBean.excecoes.size()} exceção(ões) registrada(s)
+                                    </span>
+                                </h:panelGroup>
+                            </div>
+                        </div>
+
+                        <div class="tab-intro">
+                            <i class="fa fa-info-circle" style="color:#1565c0;margin-right:4px;"/>
+                            Registre <b>férias, congressos ou bloqueios pontuais</b>.
+                            Slots que cairiam dentro desses períodos <b>não serão gerados</b>.
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 380px;gap:18px;align-items:start;">
 
                             <p:dataTable value="#{agendaMedicaBean.excecoes}" var="e"
                                          emptyMessage="Nenhuma exceção cadastrada."
                                          styleClass="lazy-table" tableStyle="width:100%;">
-                                <p:column headerText="Tipo" style="width:120px;">
+                                <p:column style="width:120px;">
+                                    <f:facet name="header"><i class="fa fa-tag" style="margin-right:6px;color:#7a8694;"/>Tipo</f:facet>
                                     <h:outputText styleClass="chip pendente" value="#{e.tipo.descricao}"/>
                                 </p:column>
-                                <p:column headerText="Início" style="width:170px;" styleClass="mono">
+                                <p:column style="width:170px;" styleClass="mono">
+                                    <f:facet name="header"><i class="fa fa-play" style="margin-right:6px;color:#15b67e;"/>Início</f:facet>
                                     <h:outputText value="#{agendaMedicaBean.formatarData(e.dataInicio)}"/>
                                 </p:column>
-                                <p:column headerText="Fim" style="width:170px;" styleClass="mono">
+                                <p:column style="width:170px;" styleClass="mono">
+                                    <f:facet name="header"><i class="fa fa-stop" style="margin-right:6px;color:#c62828;"/>Fim</f:facet>
                                     <h:outputText value="#{agendaMedicaBean.formatarData(e.dataFim)}"/>
                                 </p:column>
-                                <p:column headerText="Motivo">
+                                <p:column>
+                                    <f:facet name="header"><i class="fa fa-comment" style="margin-right:6px;color:#7a8694;"/>Motivo</f:facet>
                                     <h:outputText value="#{e.motivo != null ? e.motivo : '—'}"/>
                                 </p:column>
-                                <p:column headerText="Ações" style="width:90px;" styleClass="center-align">
-                                    <p:commandButton icon="fa fa-trash" styleClass="btn icon-btn danger" title="Remover"
+                                <p:column style="width:90px;" styleClass="center-align">
+                                    <f:facet name="header"><i class="fa fa-cog"/></f:facet>
+                                    <p:commandButton icon="fa fa-trash" styleClass="btn icon-btn danger"
+                                                     title="Remover exceção"
                                                      action="#{agendaMedicaBean.removerExcecao(e.id)}"
-                                                     update=":formAgenda :msgs" process="@this"/>
+                                                     update=":formAgenda :growlAgenda :msgs" process="@this">
+                                        <p:confirm header="Remover exceção"
+                                                   message="Deseja realmente remover esta exceção? Os slots no período poderão voltar a ser gerados."
+                                                   icon="fa fa-exclamation-triangle"/>
+                                    </p:commandButton>
                                 </p:column>
                             </p:dataTable>
 
                             <div>
                                 <div class="am-form-card">
-                                    <h4><i class="fa fa-calendar-xmark" style="color:#cf9b08;"/> Nova exceção</h4>
+                                    <h4><i class="fa fa-calendar-times" style="color:#cf9b08;"/> Nova exceção</h4>
+                                    <div class="sub">Bloqueia a geração de slots no período informado.</div>
 
-                                    <h:panelGroup layout="block" styleClass="note" style="margin-bottom:10px;font-size:12.5px;">
-                                        <h:outputText value="Slots dentro do período da exceção não serão gerados."/>
-                                    </h:panelGroup>
+                                    <div class="am-field">
+                                        <label>
+                                            <i class="fa fa-tag"/> Tipo <span class="req">*</span>
 
-                                    <h:panelGroup layout="block" styleClass="kv">
-                                        <h:panelGroup layout="block" styleClass="k">
-                                            <h:outputText value="Tipo"/><h:outputText value=" *" styleClass="muted"/>
-                                        </h:panelGroup>
-                                        <h:panelGroup layout="block" styleClass="v">
-                                            <h:selectOneMenu value="#{agendaMedicaBean.formExcTipo}"
-                                                             styleClass="input-field" style="width:100%;">
-                                                <f:selectItems value="#{agendaMedicaBean.tiposExcecao}"
-                                                               var="t" itemValue="#{t.valor}" itemLabel="#{t.descricao}"/>
-                                            </h:selectOneMenu>
-                                        </h:panelGroup>
-
-                                        <h:panelGroup layout="block" styleClass="k">
-                                            <h:outputText value="Início"/><h:outputText value=" *" styleClass="muted"/>
-                                        </h:panelGroup>
-                                        <h:panelGroup layout="block" styleClass="v">
-                                            <p:calendar value="#{agendaMedicaBean.formExcInicio}"
-                                                        pattern="dd/MM/yyyy HH:mm" mask="true" showTime="true"
-                                                        navigator="true" styleClass="input-field mono" style="width:100%;"/>
-                                        </h:panelGroup>
-
-                                        <h:panelGroup layout="block" styleClass="k">
-                                            <h:outputText value="Fim"/><h:outputText value=" *" styleClass="muted"/>
-                                        </h:panelGroup>
-                                        <h:panelGroup layout="block" styleClass="v">
-                                            <p:calendar value="#{agendaMedicaBean.formExcFim}"
-                                                        pattern="dd/MM/yyyy HH:mm" mask="true" showTime="true"
-                                                        navigator="true" styleClass="input-field mono" style="width:100%;"/>
-                                        </h:panelGroup>
-
-                                        <h:panelGroup layout="block" styleClass="k">
-                                            <h:outputText value="Motivo"/><h:outputText value=" (opc.)" styleClass="muted"/>
-                                        </h:panelGroup>
-                                        <h:panelGroup layout="block" styleClass="v">
-                                            <h:inputText value="#{agendaMedicaBean.formExcMotivo}"
-                                                         styleClass="input-field" style="width:100%;" maxlength="300"
-                                                         placeholder="Ex.: Congresso, férias"/>
-                                        </h:panelGroup>
-                                    </h:panelGroup>
-
-                                    <div style="margin-top:12px;">
-                                        <p:commandButton value="Cadastrar" icon="fa fa-plus" styleClass="btn primary"
-                                                         action="#{agendaMedicaBean.salvarExcecao}"
-                                                         update=":formAgenda :msgs" process=":formAgenda"/>
+                                        </label>
+                                        <h:selectOneMenu value="#{agendaMedicaBean.formExcTipo}"
+                                                         styleClass="input-field" style="width:100%;">
+                                            <f:selectItems value="#{agendaMedicaBean.tiposExcecao}"
+                                                           var="t" itemValue="#{t.valor}" itemLabel="#{t.descricao}"/>
+                                        </h:selectOneMenu>
+                                        <span class="help">Férias, bloqueio operacional ou evento externo.</span>
                                     </div>
+
+                                    <div class="am-field">
+                                        <label>
+                                            <i class="fa fa-play" style="color:#15b67e;"/> Início <span class="req">*</span>
+
+                                        </label>
+                                        <p:calendar value="#{agendaMedicaBean.formExcInicio}"
+                                                    pattern="dd/MM/yyyy HH:mm" mask="true" showTime="true"
+                                                    navigator="true" styleClass="input-field mono" style="width:100%;"/>
+                                        <span class="help">Data e hora em que o bloqueio começa.</span>
+                                    </div>
+
+                                    <div class="am-field">
+                                        <label>
+                                            <i class="fa fa-stop" style="color:#c62828;"/> Fim <span class="req">*</span>
+
+                                        </label>
+                                        <p:calendar value="#{agendaMedicaBean.formExcFim}"
+                                                    pattern="dd/MM/yyyy HH:mm" mask="true" showTime="true"
+                                                    navigator="true" styleClass="input-field mono" style="width:100%;"/>
+                                        <span class="help">Data e hora em que o bloqueio termina.</span>
+                                    </div>
+
+                                    <div class="am-field">
+                                        <label>
+                                            <i class="fa fa-comment"/> Motivo <span style="color:#7a8694;font-weight:500;">(opcional)</span>
+
+                                        </label>
+                                        <h:inputText value="#{agendaMedicaBean.formExcMotivo}"
+                                                     styleClass="input-field" style="width:100%;" maxlength="300"
+                                                     placeholder="Ex.: Congresso, férias programadas"/>
+                                        <span class="help">Aparece na lista de exceções, para referência.</span>
+                                    </div>
+
+                                    <p:commandButton value="Cadastrar exceção" icon="fa fa-plus" styleClass="btn primary"
+                                                     action="#{agendaMedicaBean.salvarExcecao}"
+                                                     update=":formAgenda :growlAgenda :msgs" process=":formAgenda"/>
                                 </div>
                             </div>
 
@@ -373,11 +873,45 @@
 
                     </p:tab>
 
-                    <p:tab title="Lista de slots">
+                    <p:tab>
+                        <f:facet name="title">
+                            <span class="tab-title"><i class="fa fa-list"/> Lista de slots</span>
+                        </f:facet>
 
-                        <h:panelGroup layout="block" styleClass="note" style="margin-bottom:14px;">
-                            <h:outputText value="Próximos #{agendaMedicaBean.diasVisaoSlots} dias. Para gerar mais, ajuste o campo no topo e clique em 'Gerar slots'."/>
-                        </h:panelGroup>
+                        <div class="am-tab-medico-banner">
+                            <div class="avatar"><i class="fa fa-list"/></div>
+                            <div class="info">
+                                <div class="label">
+                                    <i class="fa fa-clock"/> Slots gerados de
+                                </div>
+                                <div class="name">
+                                    #{empty agendaMedicaBean.medicoSelecionado ? 'Nenhum médico selecionado' : 'Dr(a). '.concat(agendaMedicaBean.medicoSelecionado.nomeCompleto)}
+                                </div>
+                                <h:panelGroup layout="block" styleClass="meta"
+                                              rendered="#{not empty agendaMedicaBean.medicoSelecionado}">
+                                    <span class="mono">
+                                        <i class="fa fa-id-badge"/>
+                                        #{agendaMedicaBean.medicoSelecionado.crm != null ? agendaMedicaBean.medicoSelecionado.crm.formatado : 'sem CRM'}
+                                    </span>
+                                    <span class="sep">•</span>
+                                    <span>
+                                        <i class="fa fa-calendar-day"/>
+                                        Próximos #{agendaMedicaBean.diasVisaoSlots} dias
+                                    </span>
+                                    <span class="sep">•</span>
+                                    <span>
+                                        <i class="fa fa-check-circle"/>
+                                        #{agendaMedicaBean.slotsLivresFuturos} livres futuros
+                                    </span>
+                                </h:panelGroup>
+                            </div>
+                        </div>
+
+                        <div class="tab-intro">
+                            <i class="fa fa-info-circle" style="color:#1565c0;margin-right:4px;"/>
+                            Para alterar o período, ajuste <b>"Dias a gerar"</b> no topo e clique em <b>Gerar slots</b>.
+                            A operação é idempotente — pode rodar várias vezes sem duplicar.
+                        </div>
 
                         <p:dataTable value="#{agendaMedicaBean.slots}" var="s"
                                      rows="20" paginator="true" paginatorPosition="bottom"
@@ -385,13 +919,16 @@
                                      currentPageReportTemplate="{startRecord}–{endRecord} de {totalRecords}"
                                      emptyMessage="Nenhum slot gerado no período."
                                      styleClass="lazy-table" tableStyle="width:100%;">
-                            <p:column headerText="Início" style="width:180px;" styleClass="mono">
+                            <p:column style="width:180px;" styleClass="mono">
+                                <f:facet name="header"><i class="fa fa-play" style="margin-right:6px;color:#15b67e;"/>Início</f:facet>
                                 <h:outputText value="#{agendaMedicaBean.formatarData(s.dataInicio)}"/>
                             </p:column>
-                            <p:column headerText="Fim" style="width:180px;" styleClass="mono">
+                            <p:column style="width:180px;" styleClass="mono">
+                                <f:facet name="header"><i class="fa fa-stop" style="margin-right:6px;color:#c62828;"/>Fim</f:facet>
                                 <h:outputText value="#{agendaMedicaBean.formatarData(s.dataFim)}"/>
                             </p:column>
-                            <p:column headerText="Status" style="width:120px;" styleClass="center-align">
+                            <p:column style="width:120px;" styleClass="center-align">
+                                <f:facet name="header"><i class="fa fa-flag" style="margin-right:6px;color:#7a8694;"/>Status</f:facet>
                                 <h:outputText styleClass="chip #{s.status.valor eq 'LIVRE' ? 'ativo' : (s.status.valor eq 'RESERVADO' ? 'pendente' : 'inativo')}"
                                               value="#{s.status.descricao}"/>
                             </p:column>
@@ -405,24 +942,40 @@
 
         </h:form>
 
+        <p:confirmDialog global="true" showEffect="fade" hideEffect="fade"
+                         styleClass="hsg-dialog">
+            <p:commandButton value="Sim, prosseguir" type="button" icon="fa fa-check"
+                             styleClass="ui-confirmdialog-yes btn primary"
+                             style="margin-right:6px;"/>
+            <p:commandButton value="Cancelar" type="button" icon="fa fa-times"
+                             styleClass="ui-confirmdialog-no btn secondary"/>
+        </p:confirmDialog>
+
         <p:dialog id="dlgTutorial" widgetVar="wDlgTutorial"
                   header="Como configurar a agenda médica"
                   modal="true" resizable="false" closeOnEscape="true"
-                  width="640" styleClass="hsg-dialog">
+                  width="680" styleClass="hsg-dialog">
 
             <div style="padding:6px 4px;">
                 <h:panelGroup layout="block" styleClass="note" style="margin-bottom:14px;">
-                    <h:outputText value="Siga os 3 passos para deixar um médico disponível para agendamento de consultas."/>
+                    <h:outputText value="Siga os 4 passos para deixar um médico disponível para agendamento de consultas."/>
                 </h:panelGroup>
 
-                <ol style="margin:0 0 12px 18px;padding:0;line-height:1.7;">
+                <div class="am-callout info" style="margin-bottom:14px;">
+                    <div class="title"><i class="fa fa-info-circle"/> Conceito</div>
+                    <p><b>Faixa</b> = janela de atendimento no dia.
+                       <b>Slot</b> = subdivisão da faixa pela duração escolhida.
+                       <b>Consulta</b> = paciente reserva um slot livre.</p>
+                    <p><span class="formula">Faixa 08:00–12:00 ÷ 30 min = 8 slots</span></p>
+                </div>
+
+                <ol style="margin:0 0 12px 18px;padding:0;line-height:1.75;">
                     <li>
-                        <b>Selecione o médico</b> no topo da página.
+                        <b>Selecione o médico</b> na barra do topo. Toda a tela passa a refletir esse médico.
                     </li>
                     <li>
-                        <b>Cadastre a grade semanal</b> na aba <i>Grade semanal</i>:
-                        para cada dia da semana defina horário de início, fim e a duração de cada slot
-                        (ex.: Segunda 08:00–12:00, slot de 30min gera 8 horários).
+                        <b>Cadastre as faixas semanais</b> na aba <i>Grade semanal</i>:
+                        para cada dia em que o médico atende, defina horário de início, fim e a duração de cada slot.
                     </li>
                     <li>
                         <b>(Opcional) Registre exceções</b> na aba <i>Exceções</i>: férias, bloqueios ou eventos.
@@ -444,6 +997,134 @@
                 <p:commandButton value="Entendi" icon="fa fa-check" type="button"
                                  onclick="PF('wDlgTutorial').hide();" styleClass="btn primary"/>
             </f:facet>
+        </p:dialog>
+
+        <p:dialog id="dlgBulk" widgetVar="wDlgBulk"
+                  header="Gerar slots em massa"
+                  modal="true" resizable="false" closeOnEscape="true"
+                  width="640" styleClass="hsg-dialog">
+
+            <h:form id="formBulk">
+
+                <div style="padding:6px 4px;">
+
+                    <div class="am-callout info" style="margin-bottom:14px;">
+                        <div class="title"><i class="fa fa-layer-group"/> Geração em lote</div>
+                        <p>Selecione os médicos para os quais deseja materializar slots e o período em dias.
+                           O sistema processa cada médico usando sua própria grade e exceções.</p>
+                        <p>A operação é <b>idempotente</b> — slots já existentes não são duplicados.</p>
+                    </div>
+
+                    <div class="am-field">
+                        <label>Período <span class="req">*</span></label>
+                        <p:inputNumber value="#{agendaMedicaBean.diasGerarBulk}"
+                                       decimalPlaces="0" thousandSeparator=""
+                                       minValue="1" maxValue="180"
+                                       styleClass="input-field mono" style="width:160px;"/>
+                        <span class="help">Quantos dias à frente serão materializados (1 a 180).</span>
+                    </div>
+
+                    <div class="am-field">
+                        <label>
+                            Médicos <span class="req">*</span>
+                            <span style="float:right;font-weight:500;color:#7a8694;">
+                                #{agendaMedicaBean.idsBulkSelecionados.size()} de #{agendaMedicaBean.totalMedicosAtivos} selecionado(s)
+                            </span>
+                        </label>
+
+                        <div class="bulk-actions">
+                            <p:commandButton value="Selecionar todos" icon="fa fa-check-double"
+                                             styleClass="btn secondary"
+                                             action="#{agendaMedicaBean.selecionarTodosMedicosBulk}"
+                                             update="@form" process="@this"/>
+                            <p:commandButton value="Limpar seleção" icon="fa fa-times"
+                                             styleClass="btn secondary"
+                                             action="#{agendaMedicaBean.limparSelecaoBulk}"
+                                             update="@form" process="@this"/>
+                        </div>
+
+                        <div class="bulk-list">
+                            <p:selectManyCheckbox value="#{agendaMedicaBean.idsBulkSelecionados}"
+                                                  layout="pageDirection"
+                                                  converter="javax.faces.Long">
+                                <f:selectItems value="#{agendaMedicaBean.medicos}"
+                                               var="m" itemValue="#{m.id}"
+                                               itemLabel="#{agendaMedicaBean.labelMedicoDropdown(m)}"/>
+                            </p:selectManyCheckbox>
+                        </div>
+                        <span class="help">Marque um ou mais médicos. Selecionar todos atinge os #{agendaMedicaBean.totalMedicosAtivos} médicos ativos.</span>
+                    </div>
+
+                    <div class="bulk-summary">
+                        <i class="fa fa-bolt" style="color:#cf9b08;font-size:18px;"/>
+                        <div>
+                            Vai gerar slots para
+                            <b>#{agendaMedicaBean.idsBulkSelecionados.size()}</b> médico(s)
+                            nos próximos <b>#{agendaMedicaBean.diasGerarBulk}</b> dias.
+                        </div>
+                    </div>
+
+                    <div class="dlg-footer">
+                        <p:commandButton value="Cancelar" icon="fa fa-times" type="button"
+                                         onclick="PF('wDlgBulk').hide();" styleClass="btn secondary"/>
+                        <p:commandButton value="Gerar agora" icon="fa fa-bolt"
+                                         styleClass="btn primary"
+                                         action="#{agendaMedicaBean.gerarSlotsEmMassa}"
+                                         update=":formAgenda :growlAgenda :msgs"
+                                         process="@form"
+                                         oncomplete="if(!args.validationFailed){PF('wDlgBulk').hide();}"
+                                         disabled="#{empty agendaMedicaBean.idsBulkSelecionados}"/>
+                    </div>
+                </div>
+
+            </h:form>
+        </p:dialog>
+
+        <p:dialog id="dlgDetail" widgetVar="wDlgDetail"
+                  header="Detalhes do evento" modal="true" resizable="false"
+                  closeOnEscape="true" width="520" styleClass="hsg-dialog">
+            <h:panelGroup id="dlgDetailContent" layout="block" style="padding:6px 4px;">
+                <h:panelGroup rendered="#{empty agendaMedicaBean.detalheTipo}" layout="block" styleClass="note">
+                    Clique em um evento do calendário para ver detalhes.
+                </h:panelGroup>
+                <h:panelGroup rendered="#{not empty agendaMedicaBean.detalheTipo}" layout="block">
+                    <div class="detalhe-header">
+                        <span class="detalhe-icon #{agendaMedicaBean.detalheCorClasse}">
+                            <i class="fa #{agendaMedicaBean.detalheIcone}"/>
+                        </span>
+                        <div>
+                            <div class="detalhe-titulo">#{agendaMedicaBean.detalheTitulo}</div>
+                            <div class="detalhe-sub">#{agendaMedicaBean.detalheStatus}</div>
+                        </div>
+                    </div>
+
+                    <div class="detalhe-grid">
+                        <div class="dk">Médico</div>
+                        <div class="dv"><b>#{agendaMedicaBean.detalheMedicoNome}</b></div>
+
+                        <h:panelGroup rendered="#{not empty agendaMedicaBean.detalheEspecialidade}">
+                            <div class="dk">Especialidade</div>
+                            <div class="dv">#{agendaMedicaBean.detalheEspecialidade}</div>
+                        </h:panelGroup>
+
+                        <div class="dk">Início</div>
+                        <div class="dv mono">#{agendaMedicaBean.detalheInicio}</div>
+
+                        <div class="dk">Fim</div>
+                        <div class="dv mono">#{agendaMedicaBean.detalheFim}</div>
+
+                        <h:panelGroup rendered="#{not empty agendaMedicaBean.detalheMotivo}">
+                            <div class="dk">Motivo</div>
+                            <div class="dv">#{agendaMedicaBean.detalheMotivo}</div>
+                        </h:panelGroup>
+                    </div>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <div class="dlg-footer">
+                <p:commandButton value="Fechar" icon="fa fa-times" type="button"
+                                 onclick="PF('wDlgDetail').hide();" styleClass="btn primary"/>
+            </div>
         </p:dialog>
 
     </ui:define>

@@ -36,6 +36,15 @@ public interface AgendaMedicaServiceFacade {
     List<AgendaMedicaSlot> listarSlotsPorMedicoPeriodo(Long idMedico,
                                                         LocalDateTime inicio,
                                                         LocalDateTime fim);
+
+    List<AgendaMedicaSlot> listarSlotsPorMedicosPeriodo(List<Long> idsMedicos,
+                                                        LocalDateTime inicio,
+                                                        LocalDateTime fim);
+
+    List<AgendaMedicaExcecao> listarExcecoesPorMedicosVigentes(List<Long> idsMedicos,
+                                                                LocalDateTime inicio,
+                                                                LocalDateTime fim);
+
     long contarSlotsLivresFuturos(Long idMedico);
 
     int gerarSlots(Long idMedico, int diasFrente);

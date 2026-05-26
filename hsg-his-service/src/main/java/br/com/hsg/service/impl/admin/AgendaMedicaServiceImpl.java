@@ -121,11 +121,24 @@ public class AgendaMedicaServiceImpl implements AgendaMedicaServiceFacade {
         if (medico == null) {
             throw new IllegalArgumentException("Médico não encontrado.");
         }
+        validarSobreposicaoExcecao(idMedico, inicio, fim, null);
         AgendaMedicaExcecao e = AgendaMedicaExcecao.criar(medico, inicio, fim, tipo, motivo);
         AgendaMedicaExcecao salva = agendaMedicaExcecaoDAO.salvar(e);
         LOG.info("[AgendaMedicaServiceImpl] Exceção criada: id=" + salva.getId()
                 + ", medico=" + idMedico + ", tipo=" + tipo);
         return salva;
+    }
+
+    private void validarSobreposicaoExcecao(Long idMedico, LocalDateTime inicio,
+                                             LocalDateTime fim, Long idExcluir) {
+        if (inicio == null || fim == null) return;
+        List<AgendaMedicaExcecao> conflitos = agendaMedicaExcecaoDAO.buscarSobreposicao(
+                idMedico, inicio, fim, idExcluir);
+        if (!conflitos.isEmpty()) {
+            AgendaMedicaExcecao c = conflitos.get(0);
+            throw new IllegalStateException("Já existe exceção " + c.getTipo().getDescricao()
+                    + " sobreposta no período (" + c.getDataInicio() + " — " + c.getDataFim() + ").");
+        }
     }
 
     @Override
@@ -138,6 +151,20 @@ public class AgendaMedicaServiceImpl implements AgendaMedicaServiceFacade {
                                                                LocalDateTime inicio,
                                                                LocalDateTime fim) {
         return agendaMedicaSlotDAO.listarPorMedicoPeriodo(idMedico, inicio, fim);
+    }
+
+    @Override
+    public List<AgendaMedicaSlot> listarSlotsPorMedicosPeriodo(List<Long> idsMedicos,
+                                                                LocalDateTime inicio,
+                                                                LocalDateTime fim) {
+        return agendaMedicaSlotDAO.listarPorMedicosPeriodo(idsMedicos, inicio, fim);
+    }
+
+    @Override
+    public List<AgendaMedicaExcecao> listarExcecoesPorMedicosVigentes(List<Long> idsMedicos,
+                                                                       LocalDateTime inicio,
+                                                                       LocalDateTime fim) {
+        return agendaMedicaExcecaoDAO.listarPorMedicosVigentes(idsMedicos, inicio, fim);
     }
 
     @Override
