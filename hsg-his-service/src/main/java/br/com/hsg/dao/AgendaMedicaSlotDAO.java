@@ -34,6 +34,25 @@ public class AgendaMedicaSlotDAO {
                 .getResultList();
     }
 
+    public List<AgendaMedicaSlot> listarPorMedicosPeriodo(List<Long> idsMedicos,
+                                                           LocalDateTime inicio,
+                                                           LocalDateTime fim) {
+        if (idsMedicos == null || idsMedicos.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        return em.createQuery(
+                "SELECT s FROM AgendaMedicaSlot s " +
+                "LEFT JOIN FETCH s.medico m " +
+                "LEFT JOIN FETCH m.especialidade " +
+                "WHERE s.medico.id IN :ids AND s.dataInicio >= :ini AND s.dataInicio < :fim " +
+                "ORDER BY s.dataInicio ASC",
+                AgendaMedicaSlot.class)
+                .setParameter("ids", idsMedicos)
+                .setParameter("ini", inicio)
+                .setParameter("fim", fim)
+                .getResultList();
+    }
+
     public List<AgendaMedicaSlot> listarLivresPorMedicoPeriodo(Long idMedico,
                                                                 LocalDateTime inicio,
                                                                 LocalDateTime fim) {
