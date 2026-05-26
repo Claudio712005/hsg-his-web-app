@@ -683,14 +683,46 @@ FROM alvo a
 JOIN plano_alvo pa ON pa.rn = (a.seq % pa.total);
 
 -- ══════════════════════════════════════════════════════════════════════
--- ── Massa de teste: agenda médica (grades demo) ───────────────────────
+-- ── Massa de teste: agenda médica (grades + exceções demo) ────────────
 -- ══════════════════════════════════════════════════════════════════════
 
--- Atualiza duração padrão de consulta dos médicos demo
+-- Duração padrão de consulta dos médicos demo
 UPDATE hsg.tb_medico SET nr_duracao_consulta_min = 30
 WHERE nr_duracao_consulta_min IS NULL;
 
--- Dr. João Silva (Clínica Médica) — Seg/Qua/Sex 08:00-12:00, slot 30min
+-- ── Especialidades secundárias (N:N, st_principal = 'N') ──────────────
+-- Dr. João (Clínica Médica) → também atende Pediatria
+INSERT INTO hsg.tb_medico_especialidade (id_medico, id_especialidade, st_principal, dt_cadastro)
+SELECT m.id_medico, e.id_especialidade, 'N', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_especialidade e ON e.nm_especialidade = 'Pediatria'
+WHERE cu.nm_usu = 'dr.joao'
+ON CONFLICT (id_medico, id_especialidade) DO NOTHING;
+
+-- Dra. Fernanda (Neurologia) → também atende Clínica Médica
+INSERT INTO hsg.tb_medico_especialidade (id_medico, id_especialidade, st_principal, dt_cadastro)
+SELECT m.id_medico, e.id_especialidade, 'N', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_especialidade e ON e.nm_especialidade = 'Clínica Médica'
+WHERE cu.nm_usu = 'dra.fernanda'
+ON CONFLICT (id_medico, id_especialidade) DO NOTHING;
+
+-- Dr. Carlos (Ortopedia) → também atende Clínica Médica
+INSERT INTO hsg.tb_medico_especialidade (id_medico, id_especialidade, st_principal, dt_cadastro)
+SELECT m.id_medico, e.id_especialidade, 'N', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_especialidade e ON e.nm_especialidade = 'Clínica Médica'
+WHERE cu.nm_usu = 'dr.carlos'
+ON CONFLICT (id_medico, id_especialidade) DO NOTHING;
+
+-- ── Grades semanais (TB_AGENDA_MEDICA) ────────────────────────────────
+-- dow: 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sab, 7=Dom
+
+-- Dr. João Silva (Clínica Médica)
+--   Seg/Qua/Sex manhã 08:00-12:00 (slot 30) + Seg/Qua tarde 14:00-18:00 (slot 30)
 INSERT INTO hsg.tb_agenda_medica (id_medico, nr_dia_semana, hr_inicio, hr_fim, nr_duracao_min, st_ativo, dt_cadastro)
 SELECT m.id_medico, dow, TIME '08:00', TIME '12:00', 30, 'A', NOW()
 FROM hsg.tb_medico m
@@ -698,7 +730,15 @@ JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
 CROSS JOIN (VALUES (1), (3), (5)) AS d(dow)
 WHERE cu.nm_usu = 'dr.joao';
 
--- Dra. Ana Carvalho (Cardiologia) — Ter/Qui 14:00-18:00, slot 40min
+INSERT INTO hsg.tb_agenda_medica (id_medico, nr_dia_semana, hr_inicio, hr_fim, nr_duracao_min, st_ativo, dt_cadastro)
+SELECT m.id_medico, dow, TIME '14:00', TIME '18:00', 30, 'A', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+CROSS JOIN (VALUES (1), (3)) AS d(dow)
+WHERE cu.nm_usu = 'dr.joao';
+
+-- Dra. Ana Carvalho (Cardiologia)
+--   Ter/Qui 14:00-18:00 (slot 40) + Sex 08:00-11:00 (slot 30)
 INSERT INTO hsg.tb_agenda_medica (id_medico, nr_dia_semana, hr_inicio, hr_fim, nr_duracao_min, st_ativo, dt_cadastro)
 SELECT m.id_medico, dow, TIME '14:00', TIME '18:00', 40, 'A', NOW()
 FROM hsg.tb_medico m
@@ -706,10 +746,151 @@ JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
 CROSS JOIN (VALUES (2), (4)) AS d(dow)
 WHERE cu.nm_usu = 'dr.ana';
 
--- Dr. Roberto Mendes (Pediatria) — Seg-Sex 09:00-11:00, slot 20min
+INSERT INTO hsg.tb_agenda_medica (id_medico, nr_dia_semana, hr_inicio, hr_fim, nr_duracao_min, st_ativo, dt_cadastro)
+SELECT m.id_medico, 5, TIME '08:00', TIME '11:00', 30, 'A', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.ana';
+
+-- Dr. Roberto Mendes (Pediatria)
+--   Seg-Sex 09:00-11:00 (slot 20) + Sáb 09:00-12:00 (slot 30)
 INSERT INTO hsg.tb_agenda_medica (id_medico, nr_dia_semana, hr_inicio, hr_fim, nr_duracao_min, st_ativo, dt_cadastro)
 SELECT m.id_medico, dow, TIME '09:00', TIME '11:00', 20, 'A', NOW()
 FROM hsg.tb_medico m
 JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
 CROSS JOIN (VALUES (1), (2), (3), (4), (5)) AS d(dow)
 WHERE cu.nm_usu = 'dr.roberto';
+
+INSERT INTO hsg.tb_agenda_medica (id_medico, nr_dia_semana, hr_inicio, hr_fim, nr_duracao_min, st_ativo, dt_cadastro)
+SELECT m.id_medico, 6, TIME '09:00', TIME '12:00', 30, 'A', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.roberto';
+
+-- Dra. Fernanda Lima (Neurologia)
+--   Ter/Qui manhã 09:00-12:00 (slot 45) + Seg tarde 13:00-17:00 (slot 45)
+INSERT INTO hsg.tb_agenda_medica (id_medico, nr_dia_semana, hr_inicio, hr_fim, nr_duracao_min, st_ativo, dt_cadastro)
+SELECT m.id_medico, dow, TIME '09:00', TIME '12:00', 45, 'A', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+CROSS JOIN (VALUES (2), (4)) AS d(dow)
+WHERE cu.nm_usu = 'dra.fernanda';
+
+INSERT INTO hsg.tb_agenda_medica (id_medico, nr_dia_semana, hr_inicio, hr_fim, nr_duracao_min, st_ativo, dt_cadastro)
+SELECT m.id_medico, 1, TIME '13:00', TIME '17:00', 45, 'A', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dra.fernanda';
+
+-- Dr. Carlos Oliveira (Ortopedia)
+--   Seg/Qua/Sex tarde 14:00-18:00 (slot 30) + Sáb manhã 08:00-12:00 (slot 30)
+INSERT INTO hsg.tb_agenda_medica (id_medico, nr_dia_semana, hr_inicio, hr_fim, nr_duracao_min, st_ativo, dt_cadastro)
+SELECT m.id_medico, dow, TIME '14:00', TIME '18:00', 30, 'A', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+CROSS JOIN (VALUES (1), (3), (5)) AS d(dow)
+WHERE cu.nm_usu = 'dr.carlos';
+
+INSERT INTO hsg.tb_agenda_medica (id_medico, nr_dia_semana, hr_inicio, hr_fim, nr_duracao_min, st_ativo, dt_cadastro)
+SELECT m.id_medico, 6, TIME '08:00', TIME '12:00', 30, 'A', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.carlos';
+
+-- Grade inativada (histórica) para dr.joao — Sáb 09:00-12:00 (não atende mais)
+INSERT INTO hsg.tb_agenda_medica (id_medico, nr_dia_semana, hr_inicio, hr_fim, nr_duracao_min, st_ativo, dt_cadastro)
+SELECT m.id_medico, 6, TIME '09:00', TIME '12:00', 30, 'I', NOW() - INTERVAL '120 days'
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.joao';
+
+-- ── Exceções (TB_AGENDA_MEDICA_EXCECAO) ───────────────────────────────
+-- Cobre passado, presente e futuro; tipos FERIAS / BLOQUEIO / EVENTO
+
+-- Dr. João — férias futuras (7 dias, daqui a 15 dias)
+INSERT INTO hsg.tb_agenda_medica_excecao (id_medico, dt_inicio, dt_fim, ds_motivo, tp_excecao, dt_cadastro)
+SELECT m.id_medico,
+       (CURRENT_DATE + INTERVAL '15 days')::timestamp,
+       (CURRENT_DATE + INTERVAL '22 days')::timestamp,
+       'Férias programadas — viagem em família',
+       'FERIAS', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.joao';
+
+-- Dra. Ana — bloqueio futuro (congresso, 2 dias)
+INSERT INTO hsg.tb_agenda_medica_excecao (id_medico, dt_inicio, dt_fim, ds_motivo, tp_excecao, dt_cadastro)
+SELECT m.id_medico,
+       (CURRENT_DATE + INTERVAL '10 days')::timestamp + TIME '08:00',
+       (CURRENT_DATE + INTERVAL '12 days')::timestamp + TIME '18:00',
+       'Congresso Brasileiro de Cardiologia',
+       'EVENTO', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.ana';
+
+-- Dr. Roberto — evento passado (workshop, 1 dia há 5 dias)
+INSERT INTO hsg.tb_agenda_medica_excecao (id_medico, dt_inicio, dt_fim, ds_motivo, tp_excecao, dt_cadastro)
+SELECT m.id_medico,
+       (CURRENT_DATE - INTERVAL '5 days')::timestamp + TIME '08:00',
+       (CURRENT_DATE - INTERVAL '4 days')::timestamp + TIME '18:00',
+       'Workshop de pediatria neonatal',
+       'EVENTO', NOW() - INTERVAL '20 days'
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.roberto';
+
+-- Dra. Fernanda — férias passadas (já encerradas)
+INSERT INTO hsg.tb_agenda_medica_excecao (id_medico, dt_inicio, dt_fim, ds_motivo, tp_excecao, dt_cadastro)
+SELECT m.id_medico,
+       (CURRENT_DATE - INTERVAL '30 days')::timestamp,
+       (CURRENT_DATE - INTERVAL '25 days')::timestamp,
+       'Recesso de fim de ano',
+       'FERIAS', NOW() - INTERVAL '60 days'
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dra.fernanda';
+
+-- Dra. Fernanda — bloqueio futuro (3 dias)
+INSERT INTO hsg.tb_agenda_medica_excecao (id_medico, dt_inicio, dt_fim, ds_motivo, tp_excecao, dt_cadastro)
+SELECT m.id_medico,
+       (CURRENT_DATE + INTERVAL '40 days')::timestamp,
+       (CURRENT_DATE + INTERVAL '43 days')::timestamp,
+       'Capacitação em neurociência',
+       'BLOQUEIO', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dra.fernanda';
+
+-- Dr. Carlos — bloqueio que começa hoje (1 dia)
+INSERT INTO hsg.tb_agenda_medica_excecao (id_medico, dt_inicio, dt_fim, ds_motivo, tp_excecao, dt_cadastro)
+SELECT m.id_medico,
+       CURRENT_DATE::timestamp + TIME '00:00',
+       CURRENT_DATE::timestamp + TIME '23:59',
+       'Cirurgia agendada — sala 3',
+       'BLOQUEIO', NOW() - INTERVAL '5 days'
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.carlos';
+
+-- Dr. Carlos — férias longas futuras (10 dias)
+INSERT INTO hsg.tb_agenda_medica_excecao (id_medico, dt_inicio, dt_fim, ds_motivo, tp_excecao, dt_cadastro)
+SELECT m.id_medico,
+       (CURRENT_DATE + INTERVAL '60 days')::timestamp,
+       (CURRENT_DATE + INTERVAL '70 days')::timestamp,
+       'Férias regulamentares',
+       'FERIAS', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.carlos';
+
+-- Dr. João — bloqueio curto retroativo (já encerrado)
+INSERT INTO hsg.tb_agenda_medica_excecao (id_medico, dt_inicio, dt_fim, ds_motivo, tp_excecao, dt_cadastro)
+SELECT m.id_medico,
+       (CURRENT_DATE - INTERVAL '10 days')::timestamp + TIME '14:00',
+       (CURRENT_DATE - INTERVAL '10 days')::timestamp + TIME '18:00',
+       'Reunião administrativa',
+       'BLOQUEIO', NOW() - INTERVAL '12 days'
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.joao';

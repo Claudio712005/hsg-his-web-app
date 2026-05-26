@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -54,6 +55,9 @@ public class AgendaMedicaBean implements Serializable {
 
     private int diasGerar = 30;
     private int diasVisaoSlots = 14;
+
+    private List<Long> idsBulkSelecionados = new ArrayList<>();
+    private int diasGerarBulk = 30;
 
     private Long    formGradeId;
     private String  formGradeDiaSemana;
@@ -252,6 +256,78 @@ public class AgendaMedicaBean implements Serializable {
         }
     }
 
+    public void prepararGeracaoEmMassa() {
+        this.idsBulkSelecionados = new ArrayList<>();
+        this.diasGerarBulk = this.diasGerar;
+    }
+
+    public void selecionarTodosMedicosBulk() {
+        this.idsBulkSelecionados = new ArrayList<>();
+        if (medicos != null) {
+            for (Medico m : medicos) {
+                this.idsBulkSelecionados.add(m.getId());
+            }
+        }
+    }
+
+    public void limparSelecaoBulk() {
+        this.idsBulkSelecionados = new ArrayList<>();
+    }
+
+    public void gerarSlotsEmMassa() {
+        if (idsBulkSelecionados == null || idsBulkSelecionados.isEmpty()) {
+            msg(FacesMessage.SEVERITY_WARN, "Selecione ao menos um médico.");
+            return;
+        }
+        int totalSlots = 0;
+        int totalMedicos = 0;
+        int falhas = 0;
+        for (Long id : idsBulkSelecionados) {
+            try {
+                totalSlots += agendaService.gerarSlots(id, diasGerarBulk);
+                totalMedicos++;
+            } catch (Exception ex) {
+                falhas++;
+                LOG.log(Level.WARNING, "[AgendaMedicaBean] Falha ao gerar slots em massa para medico " + id, ex);
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(totalSlots).append(" slot(s) gerado(s) para ")
+          .append(totalMedicos).append(" médico(s) — próximos ")
+          .append(diasGerarBulk).append(" dias.");
+        if (falhas > 0) {
+            sb.append(" ").append(falhas).append(" médico(s) falharam.");
+            msg(FacesMessage.SEVERITY_WARN, sb.toString());
+        } else {
+            msg(FacesMessage.SEVERITY_INFO, sb.toString());
+        }
+        carregarDadosDoMedico();
+    }
+
+    public String labelMedicoDropdown(Medico m) {
+        if (m == null) return "";
+        StringBuilder sb = new StringBuilder("Dr(a). ").append(m.getNomeCompleto());
+        if (m.getCrm() != null) {
+            sb.append(" — ").append(m.getCrm().getFormatado());
+        }
+        if (m.getEspecialidade() != null && m.getEspecialidade().getNome() != null) {
+            sb.append(" • ").append(m.getEspecialidade().getNome());
+        }
+        return sb.toString();
+    }
+
+    public int getTotalMedicosAtivos() {
+        return medicos == null ? 0 : medicos.size();
+    }
+
+    public Medico getMedicoSelecionado() {
+        if (medicoSelecionadoId == null || medicos == null) return null;
+        for (Medico m : medicos) {
+            if (medicoSelecionadoId.equals(m.getId())) return m;
+        }
+        return null;
+    }
+
     public DiaSemana[] getDiasSemana()            { return DiaSemana.values(); }
     public TipoExcecaoAgenda[] getTiposExcecao()  { return TipoExcecaoAgenda.values(); }
 
@@ -314,6 +390,11 @@ public class AgendaMedicaBean implements Serializable {
     public void setFormGradeHoraFim(Date v)               { this.formGradeHoraFim = v; }
     public Integer getFormGradeDuracaoMin()               { return formGradeDuracaoMin; }
     public void setFormGradeDuracaoMin(Integer v)         { this.formGradeDuracaoMin = v; }
+
+    public List<Long> getIdsBulkSelecionados()           { return idsBulkSelecionados; }
+    public void setIdsBulkSelecionados(List<Long> v)     { this.idsBulkSelecionados = v; }
+    public int getDiasGerarBulk()                        { return diasGerarBulk; }
+    public void setDiasGerarBulk(int v)                  { this.diasGerarBulk = v; }
 
     public Date getFormExcInicio()       { return formExcInicio; }
     public void setFormExcInicio(Date v) { this.formExcInicio = v; }
