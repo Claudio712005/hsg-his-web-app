@@ -25,6 +25,18 @@ public class MedicoEspecialidadeDAO {
                 .getResultList();
     }
 
+    public List<br.com.hsg.domain.entity.Medico> listarMedicosPorEspecialidade(Long idEspecialidade) {
+        return em.createQuery(
+                "SELECT DISTINCT m FROM MedicoEspecialidade me " +
+                "JOIN me.medico m " +
+                "WHERE me.especialidade.id = :ide AND m.status = :st " +
+                "ORDER BY m.nome.primeiroNome ASC",
+                br.com.hsg.domain.entity.Medico.class)
+                .setParameter("ide", idEspecialidade)
+                .setParameter("st", br.com.hsg.domain.enums.IndicativoStatus.A)
+                .getResultList();
+    }
+
     public MedicoEspecialidade buscarPrincipal(Long idMedico) {
         try {
             return em.createQuery(

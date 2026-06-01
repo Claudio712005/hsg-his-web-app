@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/templates/paciente/layout.xhtml">
+
+    <ui:define name="title">HSG - Agendar Consulta</ui:define>
+
+    <ui:define name="breadcrumbItems">
+        <h:outputText value="&#187;" styleClass="sep"/>
+        <h:outputText value="Agendar Consulta" style="font-weight:bold;"/>
+    </ui:define>
+
+    <ui:define name="head">
+        <style>
+            .ag-filtros{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:end;}
+            @media (max-width: 820px){ .ag-filtros{grid-template-columns:1fr;} }
+            .ag-filtros .grupo{display:flex;flex-direction:column;gap:5px;min-width:0;}
+            .ag-filtros label{font-size:12px;font-weight:600;color:#3b4350;}
+            .ag-conv-banner{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;
+                background:#e7faf2;border:1px solid #b6ebd5;margin-bottom:18px;font-size:13px;color:#0f8e63;}
+            .ag-conv-banner.sem{background:#f3f4f6;border-color:#e1e3e6;color:#7a8694;}
+            .ag-dia{margin-bottom:18px;}
+            .ag-dia-head{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
+                color:#1f2a37;background:#f7f9fc;border-left:4px solid #1565c0;padding:8px 12px;border-radius:8px;
+                margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+            .ag-dia-head .conta{font-size:11.5px;font-weight:500;color:#7a8694;text-transform:none;letter-spacing:0;
+                background:#fff;border:1px solid #e6e9ef;border-radius:999px;padding:1px 10px;}
+            .ag-horarios{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+            .ag-slot{border:1px solid #e6e9ef;border-radius:10px;padding:12px;background:#fff;text-align:center;}
+            .ag-slot .hora{font-size:18px;font-weight:800;color:#1565c0;font-family:monospace;}
+            .ag-slot .medico{font-size:11.5px;color:#7a8694;margin:4px 0 10px;}
+            .resumo-fin{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;margin:14px 0;}
+            .resumo-fin .k{font-size:12px;color:#7a8694;font-weight:600;text-transform:uppercase;}
+            .resumo-fin .v{font-size:14px;color:#1f2a37;font-weight:600;}
+            .resumo-fin .v.destaque{color:#15b67e;font-size:18px;}
+            .dlg-footer{display:flex;justify-content:flex-end;gap:8px;padding-top:14px;margin-top:14px;border-top:1px solid #eef0f3;}
+        </style>
+    </ui:define>
+
+    <ui:define name="content">
+        <h:form id="formAgendar">
+
+            <p:growl id="msgs" widgetVar="msgs" showDetail="true" life="6000" globalOnly="true"/>
+
+            <h:panelGroup layout="block" styleClass="ag-conv-banner #{consultaBuscaBean.convenioAtivo == null ? 'sem' : ''}">
+                <i class="fa #{consultaBuscaBean.convenioAtivo == null ? 'fa-info-circle' : 'fa-id-card'}" style="font-size:18px;"/>
+                <h:panelGroup rendered="#{consultaBuscaBean.convenioAtivo != null}">
+                    Convênio ativo: <b>#{consultaBuscaBean.convenioAtivo.plano.convenio.nome} — #{consultaBuscaBean.convenioAtivo.plano.nome}</b>.
+                    Você pode agendar pelo convênio (sujeito a carência e copagamento) ou como particular.
+                </h:panelGroup>
+                <h:panelGroup rendered="#{consultaBuscaBean.convenioAtivo == null}">
+                    Você não possui convênio ativo. As consultas serão agendadas como <b>particular</b>.
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="panel" style="margin-bottom:20px;">
+                <h:panelGroup layout="block" styleClass="panel-title">
+                    <i class="fa fa-search panel-icon"/>
+                    <h:outputText value="Buscar horários disponíveis"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="panel-body">
+                    <div class="ag-filtros">
+                        <div class="grupo">
+                            <label>Especialidade *</label>
+                            <h:selectOneMenu value="#{consultaBuscaBean.especialidadeSelecionadaId}"
+                                             converter="javax.faces.Long" styleClass="filter-select" style="width:100%;">
+                                <f:selectItem itemLabel="Selecione..." itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItems value="#{consultaBuscaBean.especialidades}"
+                                               var="e" itemValue="#{e.id}" itemLabel="#{e.nome}"/>
+                                <p:ajax event="change" listener="#{consultaBuscaBean.aoMudarEspecialidade}"
+                                        update="formAgendar"/>
+                            </h:selectOneMenu>
+                        </div>
+                        <div class="grupo">
+                            <label>Médico (opcional)</label>
+                            <h:selectOneMenu value="#{consultaBuscaBean.medicoSelecionadoId}"
+                                             converter="javax.faces.Long" styleClass="filter-select" style="width:100%;"
+                                             disabled="#{empty consultaBuscaBean.medicos}">
+                                <f:selectItem itemLabel="Qualquer médico" itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItems value="#{consultaBuscaBean.medicos}"
+                                               var="m" itemValue="#{m.id}" itemLabel="Dr(a). #{m.nomeCompleto}"/>
+                                <p:ajax event="change" listener="#{consultaBuscaBean.aoMudarMedico}"
+                                        update="formAgendar"/>
+                            </h:selectOneMenu>
+                        </div>
+                    </div>
+                    <div style="margin-top:10px;font-size:12px;color:#7a8694;">
+                        Mostrando horários livres dos próximos #{consultaBuscaBean.diasFrente} dias.
+                    </div>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <h:panelGroup layout="block" styleClass="panel" rendered="#{consultaBuscaBean.buscou}">
+                <h:panelGroup layout="block" styleClass="panel-title">
+                    <i class="fa fa-clock panel-icon"/>
+                    <h:outputText value="Horários livres"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="panel-body">
+
+                    <h:panelGroup layout="block" rendered="#{empty consultaBuscaBean.agenda}" styleClass="note">
+                        Nenhum horário livre encontrado nos próximos #{consultaBuscaBean.diasFrente} dias. Tente outra especialidade ou médico.
+                    </h:panelGroup>
+
+                    <ui:repeat value="#{consultaBuscaBean.agenda}" var="dia">
+                        <div class="ag-dia">
+                            <div class="ag-dia-head">
+                                <i class="fa fa-calendar-day"/>
+                                #{dia.label}
+                                <span class="conta">#{dia.slots.size()} horário(s)</span>
+                            </div>
+                            <div class="ag-horarios">
+                                <ui:repeat value="#{dia.slots}" var="s">
+                                    <div class="ag-slot">
+                                        <div class="hora">#{consultaBuscaBean.formatarHora(s.dataInicio)}</div>
+                                        <div class="medico">Dr(a). #{s.medico.nomeCompleto}</div>
+                                        <p:commandButton value="Agendar" icon="fa fa-calendar-check"
+                                                         styleClass="btn primary" style="width:100%;"
+                                                         action="#{consultaBuscaBean.prepararAgendamento(s)}"
+                                                         update="formAgendar:dlgConfirmar"
+                                                         oncomplete="PF('wDlgConfirmar').show();"
+                                                         process="@this"/>
+                                    </div>
+                                </ui:repeat>
+                            </div>
+                        </div>
+                    </ui:repeat>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <p:dialog id="dlgConfirmar" widgetVar="wDlgConfirmar" header="Confirmar agendamento"
+                      modal="true" resizable="false" width="520" styleClass="hsg-dialog">
+                <h:panelGroup layout="block" rendered="#{consultaBuscaBean.slotSelecionado != null}" style="padding:6px 4px;">
+
+                    <div class="resumo-fin">
+                        <div class="k">Especialidade</div>
+                        <div class="v">#{consultaBuscaBean.nomeEspecialidadeSelecionada()}</div>
+                        <div class="k">Médico</div>
+                        <div class="v">Dr(a). #{consultaBuscaBean.slotSelecionado.medico.nomeCompleto}</div>
+                        <div class="k">Data/Hora</div>
+                        <div class="v">#{consultaBuscaBean.formatarDataHora(consultaBuscaBean.slotSelecionado.dataInicio)}</div>
+                    </div>
+
+                    <h:panelGroup layout="block" rendered="#{consultaBuscaBean.convenioAtivo != null}"
+                                  style="margin:10px 0;">
+                        <p:selectBooleanCheckbox value="#{consultaBuscaBean.usarConvenio}"
+                                                 itemLabel=" Usar convênio">
+                            <p:ajax listener="#{consultaBuscaBean.recalcularFinanceiro}" update="painelFin"/>
+                        </p:selectBooleanCheckbox>
+                    </h:panelGroup>
+
+                    <h:panelGroup id="painelFin" layout="block">
+                        <h:panelGroup rendered="#{consultaBuscaBean.resultado != null}">
+                            <h:panelGroup layout="block" rendered="#{consultaBuscaBean.resultado.emCarencia}"
+                                          styleClass="note" style="background:#fef6e0;border-color:#f3d574;margin-bottom:10px;">
+                                <i class="fa fa-exclamation-triangle" style="color:#cf9b08;margin-right:6px;"/>
+                                #{consultaBuscaBean.resultado.observacao}
+                            </h:panelGroup>
+
+                            <div class="resumo-fin">
+                                <div class="k">Atendimento</div>
+                                <div class="v">#{consultaBuscaBean.resultado.tipoAtendimento}</div>
+                                <div class="k">Valor consulta</div>
+                                <div class="v">R$ #{consultaBuscaBean.resultado.valorConsulta}</div>
+                                <h:panelGroup rendered="#{consultaBuscaBean.resultado.tipoAtendimento == 'CONVENIO'}">
+                                    <div class="k">Cobertura convênio</div>
+                                    <div class="v">R$ #{consultaBuscaBean.resultado.valorCoberturaConvenio}</div>
+                                </h:panelGroup>
+                                <div class="k">Você paga</div>
+                                <div class="v destaque">R$ #{consultaBuscaBean.resultado.valorCopagamento}</div>
+                            </div>
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <div class="dlg-footer">
+                        <p:commandButton value="Cancelar" type="button" icon="fa fa-times"
+                                         styleClass="btn secondary" onclick="PF('wDlgConfirmar').hide();"/>
+                        <p:commandButton value="Confirmar" icon="fa fa-check" styleClass="btn primary"
+                                         action="#{consultaBuscaBean.confirmarAgendamento}"
+                                         update="formAgendar"
+                                         oncomplete="if(!args.validationFailed){PF('wDlgConfirmar').hide();}"
+                                         process="@this"/>
+                    </div>
+                </h:panelGroup>
+            </p:dialog>
+
+        </h:form>
+    </ui:define>
+
+</ui:composition>

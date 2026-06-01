@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/templates/paciente/layout.xhtml">
+
+    <ui:define name="title">HSG - Minhas Consultas</ui:define>
+
+    <ui:define name="breadcrumbItems">
+        <h:outputText value="&#187;" styleClass="sep"/>
+        <h:outputText value="Minhas Consultas" style="font-weight:bold;"/>
+    </ui:define>
+
+    <ui:define name="content">
+        <h:form id="formConsultas">
+
+            <p:growl id="msgs" widgetVar="msgs" showDetail="true" life="6000" globalOnly="true"/>
+
+            <h:panelGroup layout="block" styleClass="panel">
+                <h:panelGroup layout="block" styleClass="panel-title">
+                    <i class="fa fa-calendar-check panel-icon"/>
+                    <h:outputText value="Minhas Consultas"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="panel-body">
+
+                    <p:dataTable value="#{minhasConsultasBean.consultas}" var="c"
+                                 emptyMessage="Você ainda não possui consultas."
+                                 styleClass="lazy-table" tableStyle="width:100%;">
+                        <p:column headerText="Data/Hora" style="width:160px;" styleClass="mono">
+                            <h:outputText value="#{minhasConsultasBean.formatarDataHora(c.dataConsulta)}"/>
+                        </p:column>
+                        <p:column headerText="Médico">
+                            <h:outputText value="Dr(a). #{c.medico.nomeCompleto}"/>
+                        </p:column>
+                        <p:column headerText="Especialidade">
+                            <h:outputText value="#{c.especialidade != null ? c.especialidade.nome : '—'}"/>
+                        </p:column>
+                        <p:column headerText="Atendimento" style="width:110px;">
+                            <h:outputText value="#{c.tipoAtendimento}"/>
+                        </p:column>
+                        <p:column headerText="Você paga" style="width:110px;" styleClass="mono">
+                            <h:outputText value="R$ #{c.valorCopagamento}"/>
+                        </p:column>
+                        <p:column headerText="Status" style="width:110px;" styleClass="center-align">
+                            <h:outputText styleClass="chip #{minhasConsultasBean.chipStatus(c)}" value="#{c.status}"/>
+                        </p:column>
+                        <p:column headerText="Ações" style="width:130px;" styleClass="center-align">
+                            <p:commandButton icon="fa fa-eye" styleClass="btn icon-btn"
+                                             title="Ver detalhes" style="margin-right:4px;"
+                                             action="#{minhasConsultasBean.verDetalhes(c)}"
+                                             update="formConsultas:dlgDetalhe"
+                                             oncomplete="PF('wDlgDetalhe').show();"
+                                             process="@this"/>
+                            <p:commandButton icon="fa fa-times" styleClass="btn icon-btn danger"
+                                             title="Cancelar consulta"
+                                             rendered="#{c.status == 'AGENDADA' or c.status == 'CONFIRMADA'}"
+                                             action="#{minhasConsultasBean.prepararCancelamento(c.id)}"
+                                             update="formConsultas:dlgCancelar"
+                                             oncomplete="PF('wDlgCancelar').show();"
+                                             process="@this"/>
+                        </p:column>
+                    </p:dataTable>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <p:dialog id="dlgDetalhe" widgetVar="wDlgDetalhe" header="Detalhes da consulta"
+                      modal="true" resizable="false" width="480" styleClass="hsg-dialog">
+                <h:panelGroup layout="block" rendered="#{minhasConsultasBean.consultaSelecionada != null}"
+                              style="padding:6px 4px;">
+                    <h:panelGroup layout="block"
+                                  style="display:grid;grid-template-columns:auto 1fr;gap:8px 14px;">
+                        <h:outputText value="Status" style="color:#7a8694;font-weight:600;"/>
+                        <h:outputText styleClass="chip #{minhasConsultasBean.chipStatus(minhasConsultasBean.consultaSelecionada)}"
+                                      value="#{minhasConsultasBean.consultaSelecionada.status}"/>
+
+                        <h:outputText value="Médico" style="color:#7a8694;font-weight:600;"/>
+                        <h:outputText value="Dr(a). #{minhasConsultasBean.consultaSelecionada.medico.nomeCompleto}"/>
+
+                        <h:outputText value="Especialidade" style="color:#7a8694;font-weight:600;"/>
+                        <h:outputText value="#{minhasConsultasBean.consultaSelecionada.especialidade != null ? minhasConsultasBean.consultaSelecionada.especialidade.nome : '—'}"/>
+
+                        <h:outputText value="Data/Hora" style="color:#7a8694;font-weight:600;"/>
+                        <h:outputText value="#{minhasConsultasBean.formatarDataHora(minhasConsultasBean.consultaSelecionada.dataConsulta)}"
+                                      style="font-family:monospace;font-weight:600;"/>
+
+                        <h:outputText value="Atendimento" style="color:#7a8694;font-weight:600;"/>
+                        <h:outputText value="#{minhasConsultasBean.consultaSelecionada.tipoAtendimento}"/>
+
+                        <h:outputText value="Valor consulta" style="color:#7a8694;font-weight:600;"/>
+                        <h:outputText value="R$ #{minhasConsultasBean.consultaSelecionada.valorConsulta}"/>
+
+                        <h:panelGroup rendered="#{minhasConsultasBean.consultaSelecionada.tipoAtendimento == 'CONVENIO'}">
+                            <h:outputText value="Cobertura convênio" style="color:#7a8694;font-weight:600;"/>
+                        </h:panelGroup>
+                        <h:panelGroup rendered="#{minhasConsultasBean.consultaSelecionada.tipoAtendimento == 'CONVENIO'}">
+                            <h:outputText value="R$ #{minhasConsultasBean.consultaSelecionada.valorCoberturaConvenio}"/>
+                        </h:panelGroup>
+
+                        <h:outputText value="Você paga" style="color:#7a8694;font-weight:600;"/>
+                        <h:outputText value="R$ #{minhasConsultasBean.consultaSelecionada.valorCopagamento}"
+                                      style="color:#15b67e;font-weight:700;"/>
+
+                        <h:panelGroup rendered="#{minhasConsultasBean.consultaSelecionada.status == 'CANCELADA'}">
+                            <h:outputText value="Motivo cancel." style="color:#7a8694;font-weight:600;"/>
+                        </h:panelGroup>
+                        <h:panelGroup rendered="#{minhasConsultasBean.consultaSelecionada.status == 'CANCELADA'}">
+                            <h:outputText value="#{minhasConsultasBean.consultaSelecionada.motivoCancelamento}"/>
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <div style="display:flex;justify-content:flex-end;padding-top:14px;margin-top:14px;border-top:1px solid #eef0f3;">
+                        <p:commandButton value="Fechar" type="button" icon="fa fa-check"
+                                         styleClass="btn primary" onclick="PF('wDlgDetalhe').hide();"/>
+                    </div>
+                </h:panelGroup>
+            </p:dialog>
+
+            <p:dialog id="dlgCancelar" widgetVar="wDlgCancelar" header="Cancelar consulta"
+                      modal="true" resizable="false" width="460" styleClass="hsg-dialog">
+                <h:panelGroup layout="block" style="padding:6px 4px;">
+                    <h:panelGroup layout="block" styleClass="note" style="margin-bottom:12px;">
+                        Cancelamento permitido até <b>24h antes</b> da consulta. Informe o motivo.
+                    </h:panelGroup>
+                    <h:inputTextarea value="#{minhasConsultasBean.motivoCancelamento}"
+                                     rows="3" styleClass="input-field" style="width:100%;"
+                                     maxlength="500" placeholder="Motivo do cancelamento"/>
+                    <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:14px;margin-top:14px;border-top:1px solid #eef0f3;">
+                        <p:commandButton value="Voltar" type="button" icon="fa fa-arrow-left"
+                                         styleClass="btn secondary" onclick="PF('wDlgCancelar').hide();"/>
+                        <p:commandButton value="Confirmar cancelamento" icon="fa fa-check"
+                                         styleClass="btn primary"
+                                         action="#{minhasConsultasBean.cancelar}"
+                                         update="formConsultas"
+                                         oncomplete="if(!args.validationFailed){PF('wDlgCancelar').hide();}"
+                                         process="formConsultas:dlgCancelar"/>
+                    </div>
+                </h:panelGroup>
+            </p:dialog>
+
+        </h:form>
+    </ui:define>
+
+</ui:composition>

@@ -682,6 +682,31 @@ SELECT nextval('hsg.seq_solic_conv'), a.id_pac, pa.id_pl_conv,
 FROM alvo a
 JOIN plano_alvo pa ON pa.rn = (a.seq % pa.total);
 
+-- ── Convênios ativos para pacientes nomeados (testes de agendamento) ──
+-- claudio.filho: convênio ativo há 200 dias (carências curtas já liberadas)
+INSERT INTO hsg.tb_pac_conv (id_pac_conv, id_pac, id_pl_conv, nr_cart_hash, nr_cart_enc,
+    nr_cart_masc, dt_validade, tp_titular, id_aprovador, dt_adesao, st_pac_conv, dt_cad_pac_conv)
+SELECT nextval('hsg.seq_pac_conv'), p.id_pac,
+       (SELECT id_pl_conv FROM hsg.tb_pl_conv WHERE st_pl_conv = 'A' ORDER BY id_pl_conv LIMIT 1),
+       md5('cart_claudio'), 'DEV_CART_ENC_CLAUDIO', '****1234',
+       CURRENT_DATE + 365 * INTERVAL '1 day', 'TITULAR',
+       (SELECT id_adm FROM hsg.tb_adm ORDER BY id_adm LIMIT 1),
+       NOW() - 200 * INTERVAL '1 day', 'A', NOW()
+FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+WHERE c.nm_usu = 'claudio.filho';
+
+-- mariana.santos: convênio ativo há 10 dias (procedimentos com carência longa ainda bloqueados)
+INSERT INTO hsg.tb_pac_conv (id_pac_conv, id_pac, id_pl_conv, nr_cart_hash, nr_cart_enc,
+    nr_cart_masc, dt_validade, tp_titular, id_aprovador, dt_adesao, st_pac_conv, dt_cad_pac_conv)
+SELECT nextval('hsg.seq_pac_conv'), p.id_pac,
+       (SELECT id_pl_conv FROM hsg.tb_pl_conv WHERE st_pl_conv = 'A' ORDER BY id_pl_conv DESC LIMIT 1),
+       md5('cart_mariana'), 'DEV_CART_ENC_MARIANA', '****5678',
+       CURRENT_DATE + 365 * INTERVAL '1 day', 'TITULAR',
+       (SELECT id_adm FROM hsg.tb_adm ORDER BY id_adm LIMIT 1),
+       NOW() - 10 * INTERVAL '1 day', 'A', NOW()
+FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+WHERE c.nm_usu = 'mariana.santos';
+
 -- ══════════════════════════════════════════════════════════════════════
 -- ── Massa de teste: agenda médica (grades + exceções demo) ────────────
 -- ══════════════════════════════════════════════════════════════════════
@@ -689,6 +714,27 @@ JOIN plano_alvo pa ON pa.rn = (a.seq % pa.total);
 -- Duração padrão de consulta dos médicos demo
 UPDATE hsg.tb_medico SET nr_duracao_consulta_min = 30
 WHERE nr_duracao_consulta_min IS NULL;
+
+-- Valor de consulta particular por médico demo
+UPDATE hsg.tb_medico m SET nr_valor_consulta = v.valor
+FROM (VALUES
+    ('dr.joao',      200.00),
+    ('dr.ana',       350.00),
+    ('dr.roberto',   220.00),
+    ('dra.fernanda', 400.00),
+    ('dr.carlos',    300.00)
+) AS v(usuario, valor)
+JOIN hsg.tb_conta_usu cu ON cu.nm_usu = v.usuario
+WHERE m.id_conta_usu_medico = cu.id_conta_usu;
+
+UPDATE hsg.tb_medico SET nr_valor_consulta = 250.00 WHERE nr_valor_consulta IS NULL;
+
+-- ── Especialidades principais (N:N, st_principal = 'S') ──────────────
+INSERT INTO hsg.tb_medico_especialidade (id_medico, id_especialidade, st_principal, dt_cadastro)
+SELECT m.id_medico, m.id_especialidade, 'S', NOW()
+FROM hsg.tb_medico m
+WHERE m.id_especialidade IS NOT NULL
+ON CONFLICT (id_medico, id_especialidade) DO NOTHING;
 
 -- ── Especialidades secundárias (N:N, st_principal = 'N') ──────────────
 -- Dr. João (Clínica Médica) → também atende Pediatria
@@ -821,8 +867,8 @@ WHERE cu.nm_usu = 'dr.joao';
 -- Dra. Ana — bloqueio futuro (congresso, 2 dias)
 INSERT INTO hsg.tb_agenda_medica_excecao (id_medico, dt_inicio, dt_fim, ds_motivo, tp_excecao, dt_cadastro)
 SELECT m.id_medico,
-       (CURRENT_DATE + INTERVAL '10 days')::timestamp + TIME '08:00',
-       (CURRENT_DATE + INTERVAL '12 days')::timestamp + TIME '18:00',
+       (CURRENT_DATE + INTERVAL '10 days')::date + TIME '08:00',
+       (CURRENT_DATE + INTERVAL '12 days')::date + TIME '18:00',
        'Congresso Brasileiro de Cardiologia',
        'EVENTO', NOW()
 FROM hsg.tb_medico m
@@ -832,8 +878,8 @@ WHERE cu.nm_usu = 'dr.ana';
 -- Dr. Roberto — evento passado (workshop, 1 dia há 5 dias)
 INSERT INTO hsg.tb_agenda_medica_excecao (id_medico, dt_inicio, dt_fim, ds_motivo, tp_excecao, dt_cadastro)
 SELECT m.id_medico,
-       (CURRENT_DATE - INTERVAL '5 days')::timestamp + TIME '08:00',
-       (CURRENT_DATE - INTERVAL '4 days')::timestamp + TIME '18:00',
+       (CURRENT_DATE - INTERVAL '5 days')::date + TIME '08:00',
+       (CURRENT_DATE - INTERVAL '4 days')::date + TIME '18:00',
        'Workshop de pediatria neonatal',
        'EVENTO', NOW() - INTERVAL '20 days'
 FROM hsg.tb_medico m
@@ -865,8 +911,8 @@ WHERE cu.nm_usu = 'dra.fernanda';
 -- Dr. Carlos — bloqueio que começa hoje (1 dia)
 INSERT INTO hsg.tb_agenda_medica_excecao (id_medico, dt_inicio, dt_fim, ds_motivo, tp_excecao, dt_cadastro)
 SELECT m.id_medico,
-       CURRENT_DATE::timestamp + TIME '00:00',
-       CURRENT_DATE::timestamp + TIME '23:59',
+       CURRENT_DATE + TIME '00:00',
+       CURRENT_DATE + TIME '23:59',
        'Cirurgia agendada — sala 3',
        'BLOQUEIO', NOW() - INTERVAL '5 days'
 FROM hsg.tb_medico m
@@ -887,10 +933,184 @@ WHERE cu.nm_usu = 'dr.carlos';
 -- Dr. João — bloqueio curto retroativo (já encerrado)
 INSERT INTO hsg.tb_agenda_medica_excecao (id_medico, dt_inicio, dt_fim, ds_motivo, tp_excecao, dt_cadastro)
 SELECT m.id_medico,
-       (CURRENT_DATE - INTERVAL '10 days')::timestamp + TIME '14:00',
-       (CURRENT_DATE - INTERVAL '10 days')::timestamp + TIME '18:00',
+       (CURRENT_DATE - INTERVAL '10 days')::date + TIME '14:00',
+       (CURRENT_DATE - INTERVAL '10 days')::date + TIME '18:00',
        'Reunião administrativa',
        'BLOQUEIO', NOW() - INTERVAL '12 days'
 FROM hsg.tb_medico m
 JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
 WHERE cu.nm_usu = 'dr.joao';
+
+-- ══════════════════════════════════════════════════════════════════════
+-- ── Massa de teste: consultas demo (slots materializados + consultas) ─
+-- ══════════════════════════════════════════════════════════════════════
+-- Slots inseridos diretamente (RESERVADO) com a consulta vinculada.
+-- currval() funciona pois o seed roda numa única sessão após o Flyway.
+
+-- Consulta 1: claudio.filho × dr.joao — PARTICULAR, AGENDADA, daqui a 2 dias 08:00
+INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
+SELECT m.id_medico,
+       (CURRENT_DATE + INTERVAL '2 days')::date + TIME '08:00',
+       (CURRENT_DATE + INTERVAL '2 days')::date + TIME '08:30',
+       'RESERVADO', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.joao';
+
+INSERT INTO hsg.tb_consulta (id_paciente, id_medico, id_especialidade, id_agenda_slot,
+    tp_atendimento, st_consulta, dt_consulta, vl_consulta, vl_copagamento, vl_cobertura_convenio, dt_cadastro)
+SELECT (SELECT p.id_pac FROM hsg.tb_pac p
+        JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu WHERE c.nm_usu = 'claudio.filho'),
+       m.id_medico, m.id_especialidade, currval('hsg.seq_agenda_medica_slot'),
+       'PARTICULAR', 'AGENDADA',
+       (CURRENT_DATE + INTERVAL '2 days')::date + TIME '08:00',
+       m.nr_valor_consulta, m.nr_valor_consulta, 0.00, NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.joao';
+
+UPDATE hsg.tb_agenda_medica_slot
+SET id_consulta = currval('hsg.seq_consulta')
+WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
+
+-- Consulta 2: mariana.santos × dr.ana — PARTICULAR, CONFIRMADA, daqui a 3 dias 14:00
+INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
+SELECT m.id_medico,
+       (CURRENT_DATE + INTERVAL '3 days')::date + TIME '14:00',
+       (CURRENT_DATE + INTERVAL '3 days')::date + TIME '14:40',
+       'RESERVADO', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.ana';
+
+INSERT INTO hsg.tb_consulta (id_paciente, id_medico, id_especialidade, id_agenda_slot,
+    tp_atendimento, st_consulta, dt_consulta, vl_consulta, vl_copagamento, vl_cobertura_convenio, dt_cadastro)
+SELECT (SELECT p.id_pac FROM hsg.tb_pac p
+        JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu WHERE c.nm_usu = 'mariana.santos'),
+       m.id_medico, m.id_especialidade, currval('hsg.seq_agenda_medica_slot'),
+       'PARTICULAR', 'CONFIRMADA',
+       (CURRENT_DATE + INTERVAL '3 days')::date + TIME '14:00',
+       m.nr_valor_consulta, m.nr_valor_consulta, 0.00, NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.ana';
+
+UPDATE hsg.tb_agenda_medica_slot
+SET id_consulta = currval('hsg.seq_consulta')
+WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
+
+-- Consulta 3: claudio.filho × dr.roberto — PARTICULAR, REALIZADA, há 7 dias 09:00
+INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
+SELECT m.id_medico,
+       (CURRENT_DATE - INTERVAL '7 days')::date + TIME '09:00',
+       (CURRENT_DATE - INTERVAL '7 days')::date + TIME '09:20',
+       'RESERVADO', NOW() - INTERVAL '10 days'
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.roberto';
+
+INSERT INTO hsg.tb_consulta (id_paciente, id_medico, id_especialidade, id_agenda_slot,
+    tp_atendimento, st_consulta, dt_consulta, vl_consulta, vl_copagamento, vl_cobertura_convenio, dt_cadastro)
+SELECT (SELECT p.id_pac FROM hsg.tb_pac p
+        JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu WHERE c.nm_usu = 'claudio.filho'),
+       m.id_medico, m.id_especialidade, currval('hsg.seq_agenda_medica_slot'),
+       'PARTICULAR', 'REALIZADA',
+       (CURRENT_DATE - INTERVAL '7 days')::date + TIME '09:00',
+       m.nr_valor_consulta, m.nr_valor_consulta, 0.00, NOW() - INTERVAL '10 days'
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.roberto';
+
+UPDATE hsg.tb_agenda_medica_slot
+SET id_consulta = currval('hsg.seq_consulta')
+WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
+
+-- Consulta 4: claudio.filho × dr.ana — CONVENIO, CONFIRMADA, daqui a 4 dias 14:40
+INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
+SELECT m.id_medico,
+       (CURRENT_DATE + INTERVAL '4 days')::date + TIME '14:40',
+       (CURRENT_DATE + INTERVAL '4 days')::date + TIME '15:20',
+       'RESERVADO', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.ana';
+
+INSERT INTO hsg.tb_consulta (id_paciente, id_medico, id_especialidade, id_agenda_slot,
+    id_paciente_convenio, tp_atendimento, st_consulta, dt_consulta,
+    vl_consulta, vl_copagamento, vl_cobertura_convenio, dt_cadastro)
+SELECT pac.id_pac, m.id_medico, m.id_especialidade, currval('hsg.seq_agenda_medica_slot'),
+       (SELECT pc.id_pac_conv FROM hsg.tb_pac_conv pc WHERE pc.id_pac = pac.id_pac AND pc.st_pac_conv = 'A'
+        ORDER BY pc.id_pac_conv DESC LIMIT 1),
+       'CONVENIO', 'CONFIRMADA',
+       (CURRENT_DATE + INTERVAL '4 days')::date + TIME '14:40',
+       m.nr_valor_consulta,
+       ROUND(m.nr_valor_consulta * 0.30, 2),
+       ROUND(m.nr_valor_consulta * 0.70, 2),
+       NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+CROSS JOIN (SELECT p.id_pac FROM hsg.tb_pac p
+            JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+            WHERE c.nm_usu = 'claudio.filho') pac
+WHERE cu.nm_usu = 'dr.ana';
+
+UPDATE hsg.tb_agenda_medica_slot
+SET id_consulta = currval('hsg.seq_consulta')
+WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
+
+-- Consulta 5: claudio.filho × dr.carlos — PARTICULAR, CANCELADA, daqui a 5 dias 14:00
+INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
+SELECT m.id_medico,
+       (CURRENT_DATE + INTERVAL '5 days')::date + TIME '14:00',
+       (CURRENT_DATE + INTERVAL '5 days')::date + TIME '14:30',
+       'CANCELADO', NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.carlos';
+
+INSERT INTO hsg.tb_consulta (id_paciente, id_medico, id_especialidade, id_agenda_slot,
+    tp_atendimento, st_consulta, dt_consulta, dt_cancelamento, ds_cancelamento,
+    vl_consulta, vl_copagamento, vl_cobertura_convenio, dt_cadastro)
+SELECT pac.id_pac, m.id_medico, m.id_especialidade, currval('hsg.seq_agenda_medica_slot'),
+       'PARTICULAR', 'CANCELADA',
+       (CURRENT_DATE + INTERVAL '5 days')::date + TIME '14:00',
+       NOW(), 'Imprevisto pessoal do paciente.',
+       m.nr_valor_consulta, m.nr_valor_consulta, 0.00, NOW()
+FROM hsg.tb_medico m
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+CROSS JOIN (SELECT p.id_pac FROM hsg.tb_pac p
+            JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+            WHERE c.nm_usu = 'claudio.filho') pac
+WHERE cu.nm_usu = 'dr.carlos';
+
+UPDATE hsg.tb_agenda_medica_slot
+SET id_consulta = currval('hsg.seq_consulta')
+WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
+
+-- ══════════════════════════════════════════════════════════════════════
+-- ── Slots LIVRES materializados (próximos 21 dias) p/ busca do paciente ─
+-- ══════════════════════════════════════════════════════════════════════
+-- Replica a lógica de gerarSlots em SQL: para cada grade ativa, materializa
+-- blocos de nr_duracao_min, pulando exceções e slots já existentes.
+INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
+SELECT g.id_medico,
+       d.dia::date + g.hr_inicio + (mins || ' minutes')::interval,
+       d.dia::date + g.hr_inicio + ((mins + g.nr_duracao_min) || ' minutes')::interval,
+       'LIVRE', NOW()
+FROM hsg.tb_agenda_medica g
+JOIN hsg.tb_medico m ON m.id_medico = g.id_medico AND m.st_medico = 'A'
+CROSS JOIN LATERAL generate_series(CURRENT_DATE, CURRENT_DATE + 29, INTERVAL '1 day') AS d(dia)
+CROSS JOIN LATERAL generate_series(
+        0,
+        (EXTRACT(EPOCH FROM (g.hr_fim - g.hr_inicio)) / 60)::int - g.nr_duracao_min,
+        g.nr_duracao_min) AS mins
+WHERE g.st_ativo = 'A'
+  AND EXTRACT(ISODOW FROM d.dia) = g.nr_dia_semana
+  AND (d.dia::date + g.hr_inicio + (mins || ' minutes')::interval) > NOW()
+  AND NOT EXISTS (
+      SELECT 1 FROM hsg.tb_agenda_medica_excecao e
+      WHERE e.id_medico = g.id_medico
+        AND e.dt_inicio < (d.dia::date + g.hr_inicio + ((mins + g.nr_duracao_min) || ' minutes')::interval)
+        AND e.dt_fim    > (d.dia::date + g.hr_inicio + (mins || ' minutes')::interval)
+  )
+ON CONFLICT (id_medico, dt_inicio) DO NOTHING;
