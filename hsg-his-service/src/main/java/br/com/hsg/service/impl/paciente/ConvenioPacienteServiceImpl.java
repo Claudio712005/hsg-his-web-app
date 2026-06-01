@@ -147,5 +147,20 @@ public class ConvenioPacienteServiceImpl implements ConvenioPacienteServiceFacad
         s.cancelar();
         solicitacaoConvenioDAO.atualizar(s);
         LOG.info("[ConvenioPacienteServiceImpl] Solicitação cancelada: id=" + idSolicitacao);
+
+        try {
+            String pacienteNome = s.getPaciente().getNomeCompleto();
+            String plano = s.getPlano().getConvenio().getNome() + " — " + s.getPlano().getNome();
+            String msg = "Paciente " + pacienteNome + " cancelou a solicitação de adesão ao plano "
+                    + plano + ".";
+            for (Long idAdmin : adminDAO.listarIdsAtivos()) {
+                notificacaoService.notificar(TipoDestinatarioNotificacao.ADMIN, idAdmin,
+                        "Solicitação de convênio cancelada", msg, TipoNotificacao.INFO,
+                        CategoriaNotificacao.CONVENIO, "/admin/aprovacao-convenios.xhtml");
+            }
+        } catch (Exception ex) {
+            LOG.log(java.util.logging.Level.WARNING,
+                    "[ConvenioPacienteServiceImpl] Falha ao notificar admins do cancelamento", ex);
+        }
     }
 }

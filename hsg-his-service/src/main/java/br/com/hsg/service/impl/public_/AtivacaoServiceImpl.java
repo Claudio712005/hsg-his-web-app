@@ -40,6 +40,7 @@ public class AtivacaoServiceImpl implements AtivacaoServiceFacade {
     @EJB private ContaUsuarioDAO            contaUsuarioDAO;
     @EJB private KeycloakAdminService       keycloakService;
     @EJB private CpfCryptoService           cpfCrypto;
+    @EJB private br.com.hsg.service.impl.notificacao.NotificacaoEmissor emissor;
 
     @Override
     public PreCadastroProfissional validarToken(String token) {
@@ -115,6 +116,14 @@ public class AtivacaoServiceImpl implements AtivacaoServiceFacade {
             preCadastroDAO.atualizar(pre);
 
             LOG.info("[AtivacaoServiceImpl] Cadastro concluído para: " + emailCorp);
+
+            String tipoLabel = pre.isMedico() ? "Médico" : "Enfermeiro";
+            if (emissor != null) emissor.emitirParaTodosAdmins(
+                    "Profissional ativado",
+                    tipoLabel + " " + pre.getNome() + " concluiu o cadastro e já pode acessar o sistema.",
+                    br.com.hsg.domain.enums.TipoNotificacao.SUCESSO,
+                    br.com.hsg.domain.enums.CategoriaNotificacao.SISTEMA,
+                    "/admin/pre-cadastro-profissional.xhtml");
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "[AtivacaoServiceImpl] Falha ao persistir após criação KC. Compensando usuário: " + keycloakId, e);

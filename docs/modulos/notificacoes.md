@@ -87,6 +87,15 @@ Mapeamento atual das ações que disparam notificações in-app. As notificaçõ
 | Solicitar adesão a convênio | `ConvenioPacienteServiceImpl.solicitarConvenio` | Todos os admins ativos | INFO | CONVENIO | `/admin/aprovacao-convenios.xhtml` |
 | Aprovar convênio | `AprovacaoConvenioServiceImpl.aprovar` | Paciente | SUCESSO | CONVENIO | `/paciente/meu-convenio.xhtml` |
 | Rejeitar convênio | `AprovacaoConvenioServiceImpl.rejeitar` | Paciente | ALERTA | CONVENIO | `/paciente/meu-convenio.xhtml` |
+| Cancelar solicitação de convênio (paciente) | `ConvenioPacienteServiceImpl.cancelarSolicitacao` | Todos os admins ativos | INFO | CONVENIO | `/admin/aprovacao-convenios.xhtml` |
+| Informar alergia | `AlergiaServiceImpl.informarAlergia` | Paciente | INFO | SISTEMA | — |
+| Informar alergia | `AlergiaServiceImpl.informarAlergia` | Todos os admins ativos | ALERTA | SISTEMA | — |
+| Aprovar alergia | `AlergiaServiceImpl.aprovarAlergia` | Paciente | SUCESSO | SISTEMA | — |
+| Rejeitar alergia | `AlergiaServiceImpl.rejeitarAlergia` | Paciente | ALERTA | SISTEMA | — |
+| Excluir alergia | `AlergiaServiceImpl.excluirAlergia` | Paciente | INFO | SISTEMA | — |
+| Solicitar atualização cadastral/endereço/clínica | `SolicitacaoAtualizacaoServiceImpl.solicitar*` | Todos os admins ativos | INFO | SISTEMA | — |
+| Cancelar solicitação de atualização (admin/clínica) | `SolicitacaoAtualizacaoServiceImpl.cancelarSolicitacao` | Paciente | ALERTA | SISTEMA | — |
+| Ativação de profissional (conclusão de cadastro) | `AtivacaoServiceImpl.ativarCadastro` | Todos os admins ativos | SUCESSO | SISTEMA | `/admin/pre-cadastro-profissional.xhtml` |
 
 Pontos a observar:
 

@@ -10,7 +10,11 @@ import br.com.hsg.domain.enums.AcaoAlergia;
 import br.com.hsg.domain.enums.GravidadeAlergia;
 import br.com.hsg.domain.enums.StatusAlergia;
 import br.com.hsg.domain.enums.TipoAlergia;
+import br.com.hsg.domain.enums.CategoriaNotificacao;
+import br.com.hsg.domain.enums.TipoDestinatarioNotificacao;
+import br.com.hsg.domain.enums.TipoNotificacao;
 import br.com.hsg.service.facade.paciente.AlergiaServiceFacade;
+import br.com.hsg.service.impl.notificacao.NotificacaoEmissor;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -23,6 +27,7 @@ public class AlergiaServiceImpl implements AlergiaServiceFacade {
     @EJB private AlergiaDAO          alergiaDAO;
     @EJB private AlergiaHistoricoDAO historicoDAO;
     @EJB private PacienteDAO         pacienteDAO;
+    @EJB private NotificacaoEmissor  emissor;
 
     @Override
     public void informarAlergia(
@@ -56,14 +61,32 @@ public class AlergiaServiceImpl implements AlergiaServiceFacade {
 
         alergiaDAO.salvar(alergia);
         historicoDAO.salvar(AlergiaHistorico.registrar(alergia, idCadastrador, AcaoAlergia.CRIADA));
+
+        String pacienteNome = paciente.getNomeCompleto();
+        if (emissor != null) emissor.emitir(TipoDestinatarioNotificacao.PACIENTE, paciente.getId(),
+                "Nova alergia registrada",
+                "A alergia '" + alergia.getNome() + "' foi registrada no seu prontuário e aguarda aprovação.",
+                TipoNotificacao.INFO, CategoriaNotificacao.SISTEMA, null);
+        if (emissor != null) emissor.emitirParaTodosAdmins(
+                "Alergia aguardando aprovação",
+                "Paciente " + pacienteNome + " registrou alergia '" + alergia.getNome()
+                        + "' (gravidade " + alergia.getGravidadeAlergia() + ").",
+                TipoNotificacao.ALERTA, CategoriaNotificacao.SISTEMA, null);
     }
 
     @Override
     public void excluirAlergia(Long alergiaId, Long idUsuario) {
         Alergia alergia = requererAlergia(alergiaId);
         alergia.validarExclusao();
+        Long idPaciente = alergia.getPaciente() != null ? alergia.getPaciente().getId() : null;
+        String nomeAlergia = alergia.getNome();
         historicoDAO.salvar(AlergiaHistorico.registrar(alergia, idUsuario, AcaoAlergia.EXCLUIDA));
         alergiaDAO.excluir(alergia);
+
+        if (emissor != null) emissor.emitir(TipoDestinatarioNotificacao.PACIENTE, idPaciente,
+                "Alergia removida",
+                "A alergia '" + nomeAlergia + "' foi removida do seu prontuário.",
+                TipoNotificacao.INFO, CategoriaNotificacao.SISTEMA, null);
     }
 
     @Override
@@ -98,6 +121,13 @@ public class AlergiaServiceImpl implements AlergiaServiceFacade {
         alergia.aprovar(idAprovador, observacao);
         alergiaDAO.atualizar(alergia);
         historicoDAO.salvar(AlergiaHistorico.registrar(alergia, idAprovador, AcaoAlergia.APROVADA));
+
+        if (alergia.getPaciente() != null) {
+            if (emissor != null) emissor.emitir(TipoDestinatarioNotificacao.PACIENTE, alergia.getPaciente().getId(),
+                    "Alergia aprovada",
+                    "A alergia '" + alergia.getNome() + "' foi validada pela equipe e consta oficialmente no seu prontuário.",
+                    TipoNotificacao.SUCESSO, CategoriaNotificacao.SISTEMA, null);
+        }
     }
 
     @Override
@@ -106,6 +136,15 @@ public class AlergiaServiceImpl implements AlergiaServiceFacade {
         alergia.rejeitar(idAprovador, observacao);
         alergiaDAO.atualizar(alergia);
         historicoDAO.salvar(AlergiaHistorico.registrar(alergia, idAprovador, AcaoAlergia.REJEITADA));
+
+        if (alergia.getPaciente() != null) {
+            String motivoTxt = (observacao != null && !observacao.trim().isEmpty())
+                    ? " Motivo: " + observacao : "";
+            if (emissor != null) emissor.emitir(TipoDestinatarioNotificacao.PACIENTE, alergia.getPaciente().getId(),
+                    "Alergia não validada",
+                    "A alergia '" + alergia.getNome() + "' foi rejeitada pela equipe clínica." + motivoTxt,
+                    TipoNotificacao.ALERTA, CategoriaNotificacao.SISTEMA, null);
+        }
     }
 
     @Override
