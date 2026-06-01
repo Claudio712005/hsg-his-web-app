@@ -47,6 +47,40 @@ public class ConsultaDAO {
                 .getResultList();
     }
 
+    public List<Consulta> listarProximasPorPaciente(Long idPaciente, LocalDateTime agora, int limite) {
+        return em.createQuery(
+                "SELECT c FROM Consulta c " +
+                "LEFT JOIN FETCH c.medico m " +
+                "LEFT JOIN FETCH m.especialidade " +
+                "LEFT JOIN FETCH c.slot " +
+                "WHERE c.paciente.id = :idp AND c.dataConsulta >= :agora " +
+                "AND c.status IN :ativas " +
+                "ORDER BY c.dataConsulta ASC",
+                Consulta.class)
+                .setParameter("idp", idPaciente)
+                .setParameter("agora", agora)
+                .setParameter("ativas", Arrays.asList(StatusConsulta.AGENDADA, StatusConsulta.CONFIRMADA))
+                .setMaxResults(limite)
+                .getResultList();
+    }
+
+    public List<Consulta> listarProximasPorMedico(Long idMedico, LocalDateTime agora, int limite) {
+        return em.createQuery(
+                "SELECT c FROM Consulta c " +
+                "LEFT JOIN FETCH c.paciente " +
+                "LEFT JOIN FETCH c.especialidade " +
+                "LEFT JOIN FETCH c.slot " +
+                "WHERE c.medico.id = :idm AND c.dataConsulta >= :agora " +
+                "AND c.status IN :ativas " +
+                "ORDER BY c.dataConsulta ASC",
+                Consulta.class)
+                .setParameter("idm", idMedico)
+                .setParameter("agora", agora)
+                .setParameter("ativas", Arrays.asList(StatusConsulta.AGENDADA, StatusConsulta.CONFIRMADA))
+                .setMaxResults(limite)
+                .getResultList();
+    }
+
     public long contarFuturasAtivasPorPaciente(Long idPaciente, LocalDateTime agora) {
         return em.createQuery(
                 "SELECT COUNT(c) FROM Consulta c " +
@@ -57,6 +91,22 @@ public class ConsultaDAO {
                 .setParameter("agora", agora)
                 .setParameter("ativas", Arrays.asList(StatusConsulta.AGENDADA, StatusConsulta.CONFIRMADA))
                 .getSingleResult();
+    }
+
+    public List<Consulta> listarPendentesAteLimite(LocalDateTime limite) {
+        return em.createQuery(
+                "SELECT c FROM Consulta c " +
+                "LEFT JOIN FETCH c.medico m " +
+                "LEFT JOIN FETCH c.paciente p " +
+                "LEFT JOIN FETCH c.slot " +
+                "WHERE c.dataConsulta < :lim " +
+                "AND c.status IN :pendentes " +
+                "ORDER BY c.dataConsulta ASC",
+                Consulta.class)
+                .setParameter("lim", limite)
+                .setParameter("pendentes",
+                        Arrays.asList(StatusConsulta.AGENDADA, StatusConsulta.CONFIRMADA))
+                .getResultList();
     }
 
     public Consulta salvar(Consulta c) {

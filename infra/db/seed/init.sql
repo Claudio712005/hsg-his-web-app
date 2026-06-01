@@ -1114,3 +1114,207 @@ WHERE g.st_ativo = 'A'
         AND e.dt_fim    > (d.dia::date + g.hr_inicio + (mins || ' minutes')::interval)
   )
 ON CONFLICT (id_medico, dt_inicio) DO NOTHING;
+
+-- ══════════════════════════════════════════════════════════════════════
+-- ── Massa de teste: notificações in-app (V28) ─────────────────────────
+-- ══════════════════════════════════════════════════════════════════════
+-- Distribui notificações entre os perfis para validar a tela.
+-- dt_expiracao = dt_criacao + 40 dias.
+
+-- claudio.filho (PACIENTE)
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'PACIENTE', p.id_pac,
+    'Consulta agendada',
+    'Sua consulta com Dr(a). João Silva foi marcada para daqui a 2 dias às 08:00.',
+    '/paciente/minhas-consultas.xhtml', 'SUCESSO', 'CONSULTA', 'N',
+    NOW() - INTERVAL '1 hour', NOW() - INTERVAL '1 hour' + INTERVAL '40 days'
+FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+WHERE c.nm_usu = 'claudio.filho';
+
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'PACIENTE', p.id_pac,
+    'Convênio aprovado',
+    'Sua adesão ao plano foi aprovada. Já está disponível para uso em consultas eletivas.',
+    '/paciente/meu-convenio.xhtml', 'SUCESSO', 'CONVENIO', 'S',
+    NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days' + INTERVAL '40 days'
+FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+WHERE c.nm_usu = 'claudio.filho';
+
+UPDATE hsg.tb_notificacao SET dt_leitura = NOW() - INTERVAL '1 day'
+WHERE id_notificacao = currval('hsg.seq_notificacao');
+
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'PACIENTE', p.id_pac,
+    'Lembrete: consulta amanhã',
+    'Você tem uma consulta agendada para amanhã. Chegue 15 minutos antes para conferência de carteirinha.',
+    '/paciente/minhas-consultas.xhtml', 'INFO', 'CONSULTA', 'N',
+    NOW() - INTERVAL '3 hours', NOW() - INTERVAL '3 hours' + INTERVAL '40 days'
+FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+WHERE c.nm_usu = 'claudio.filho';
+
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'PACIENTE', p.id_pac,
+    'Consulta marcada como falta',
+    'Sua consulta com Dr(a). Roberto Mendes do dia 7 dias atrás foi marcada como falta. Em caso de dúvida procure a recepção.',
+    '/paciente/minhas-consultas.xhtml', 'INFO', 'CONSULTA', 'N',
+    NOW() - INTERVAL '5 days', NOW() - INTERVAL '5 days' + INTERVAL '40 days'
+FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+WHERE c.nm_usu = 'claudio.filho';
+
+-- mariana.santos (PACIENTE)
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'PACIENTE', p.id_pac,
+    'Convênio em carência',
+    'Você possui procedimentos do plano em período de carência. Consulte detalhes na tela do seu convênio.',
+    '/paciente/meu-convenio.xhtml', 'ALERTA', 'CONVENIO', 'N',
+    NOW() - INTERVAL '6 days', NOW() - INTERVAL '6 days' + INTERVAL '40 days'
+FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+WHERE c.nm_usu = 'mariana.santos';
+
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'PACIENTE', p.id_pac,
+    'Consulta agendada',
+    'Sua consulta com Dra. Ana Carvalho foi marcada para daqui a 3 dias às 14:00.',
+    '/paciente/minhas-consultas.xhtml', 'SUCESSO', 'CONSULTA', 'N',
+    NOW() - INTERVAL '2 hours', NOW() - INTERVAL '2 hours' + INTERVAL '40 days'
+FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+WHERE c.nm_usu = 'mariana.santos';
+
+-- dr.joao (MEDICO)
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'MEDICO', m.id_medico,
+    'Nova consulta agendada',
+    'Paciente Cláudio Filho marcou consulta para daqui a 2 dias às 08:00.',
+    '/clinica/notificacoes.xhtml', 'INFO', 'CONSULTA', 'N',
+    NOW() - INTERVAL '1 hour', NOW() - INTERVAL '1 hour' + INTERVAL '40 days'
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu c ON c.id_conta_usu = m.id_conta_usu_medico
+WHERE c.nm_usu = 'dr.joao';
+
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'MEDICO', m.id_medico,
+    'Consulta cancelada pelo paciente',
+    'Paciente Mariana Santos cancelou a consulta de 5 dias atrás às 14:00. Motivo: imprevisto pessoal.',
+    '/clinica/notificacoes.xhtml', 'ALERTA', 'CONSULTA', 'N',
+    NOW() - INTERVAL '4 days', NOW() - INTERVAL '4 days' + INTERVAL '40 days'
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu c ON c.id_conta_usu = m.id_conta_usu_medico
+WHERE c.nm_usu = 'dr.joao';
+
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'MEDICO', m.id_medico,
+    'Faixa de exceção registrada',
+    'Sua exceção de FÉRIAS programada (daqui a 15 dias) foi registrada pela administração.',
+    NULL, 'INFO', 'AGENDA', 'S',
+    NOW() - INTERVAL '7 days', NOW() - INTERVAL '7 days' + INTERVAL '40 days'
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu c ON c.id_conta_usu = m.id_conta_usu_medico
+WHERE c.nm_usu = 'dr.joao';
+
+UPDATE hsg.tb_notificacao SET dt_leitura = NOW() - INTERVAL '5 days'
+WHERE id_notificacao = currval('hsg.seq_notificacao');
+
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'MEDICO', m.id_medico,
+    'Manutenção programada do sistema',
+    'O HSG HIS terá manutenção neste sábado, das 02:00 às 04:00. Durante esse período o portal ficará indisponível.',
+    NULL, 'INFO', 'SISTEMA', 'N',
+    NOW() - INTERVAL '12 hours', NOW() - INTERVAL '12 hours' + INTERVAL '40 days'
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu c ON c.id_conta_usu = m.id_conta_usu_medico
+WHERE c.nm_usu = 'dr.joao';
+
+-- dr.ana (MEDICO)
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'MEDICO', m.id_medico,
+    'Consulta marcada como falta',
+    'A consulta com Mariana Santos do dia 10 dias atrás foi marcada como falta pelo sistema. Ajuste manualmente se foi realizada.',
+    '/clinica/notificacoes.xhtml', 'ALERTA', 'CONSULTA', 'N',
+    NOW() - INTERVAL '10 days', NOW() - INTERVAL '10 days' + INTERVAL '40 days'
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu c ON c.id_conta_usu = m.id_conta_usu_medico
+WHERE c.nm_usu = 'dr.ana';
+
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'MEDICO', m.id_medico,
+    'Nova consulta agendada',
+    'Paciente Mariana Santos marcou consulta para daqui a 3 dias às 14:00.',
+    '/clinica/notificacoes.xhtml', 'INFO', 'CONSULTA', 'N',
+    NOW() - INTERVAL '2 hours', NOW() - INTERVAL '2 hours' + INTERVAL '40 days'
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu c ON c.id_conta_usu = m.id_conta_usu_medico
+WHERE c.nm_usu = 'dr.ana';
+
+-- enf.lucas (ENFERMEIRO)
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'ENFERMEIRO', e.id_enfer,
+    'Treinamento obrigatório',
+    'Treinamento de protocolos de UTI agendado para próxima semana. Acesse o portal de capacitação para confirmar presença.',
+    NULL, 'ALERTA', 'SISTEMA', 'N',
+    NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day' + INTERVAL '40 days'
+FROM hsg.tb_enfer e JOIN hsg.tb_conta_usu c ON c.id_conta_usu = e.id_conta_usu_enfer
+WHERE c.nm_usu = 'enf.lucas';
+
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'ENFERMEIRO', e.id_enfer,
+    'Boas-vindas ao HSG HIS',
+    'Seu acesso ao portal foi liberado. Em caso de dúvidas procure a coordenação.',
+    NULL, 'INFO', 'SISTEMA', 'S',
+    NOW() - INTERVAL '8 days', NOW() - INTERVAL '8 days' + INTERVAL '40 days'
+FROM hsg.tb_enfer e JOIN hsg.tb_conta_usu c ON c.id_conta_usu = e.id_conta_usu_enfer
+WHERE c.nm_usu = 'enf.lucas';
+
+UPDATE hsg.tb_notificacao SET dt_leitura = NOW() - INTERVAL '7 days'
+WHERE id_notificacao = currval('hsg.seq_notificacao');
+
+-- admin.hsg (ADMIN)
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'ADMIN', a.id_adm,
+    'Nova solicitação de convênio',
+    'Paciente Mariana Santos solicitou adesão ao plano Premium. Avaliar dados da carteirinha e aprovar/rejeitar.',
+    '/admin/aprovacao-convenios.xhtml', 'INFO', 'CONVENIO', 'N',
+    NOW() - INTERVAL '30 minutes', NOW() - INTERVAL '30 minutes' + INTERVAL '40 days'
+FROM hsg.tb_adm a JOIN hsg.tb_conta_usu c ON c.id_conta_usu = a.id_conta_usu_adm
+WHERE c.nm_usu = 'admin.hsg';
+
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'ADMIN', a.id_adm,
+    'Pré-cadastros profissionais pendentes',
+    '3 pré-cadastros aguardam aprovação. Acesse a tela de pré-cadastro para revisar.',
+    '/admin/pre-cadastro-profissional.xhtml', 'ALERTA', 'SISTEMA', 'N',
+    NOW() - INTERVAL '6 hours', NOW() - INTERVAL '6 hours' + INTERVAL '40 days'
+FROM hsg.tb_adm a JOIN hsg.tb_conta_usu c ON c.id_conta_usu = a.id_conta_usu_adm
+WHERE c.nm_usu = 'admin.hsg';
+
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'ADMIN', a.id_adm,
+    'Geração de slots em massa concluída',
+    '342 slot(s) gerado(s) para 5 médico(s) — próximos 30 dias.',
+    '/admin/agenda-medica.xhtml', 'SUCESSO', 'AGENDA', 'S',
+    NOW() - INTERVAL '15 hours', NOW() - INTERVAL '15 hours' + INTERVAL '40 days'
+FROM hsg.tb_adm a JOIN hsg.tb_conta_usu c ON c.id_conta_usu = a.id_conta_usu_adm
+WHERE c.nm_usu = 'admin.hsg';
+
+UPDATE hsg.tb_notificacao SET dt_leitura = NOW() - INTERVAL '14 hours'
+WHERE id_notificacao = currval('hsg.seq_notificacao');
+
+INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
+    ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
+SELECT 'ADMIN', a.id_adm,
+    'Falha no envio de e-mail',
+    'Envio de e-mail de aprovação de convênio falhou para 1 paciente nas últimas 24h. A aprovação foi mantida; verifique logs do MailService.',
+    NULL, 'ERRO', 'SISTEMA', 'N',
+    NOW() - INTERVAL '20 hours', NOW() - INTERVAL '20 hours' + INTERVAL '40 days'
+FROM hsg.tb_adm a JOIN hsg.tb_conta_usu c ON c.id_conta_usu = a.id_conta_usu_adm
+WHERE c.nm_usu = 'admin.hsg';

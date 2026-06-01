@@ -29,4 +29,12 @@ public class AdminDAO {
     public long contarTotal() {
         return em.createQuery("SELECT COUNT(a) FROM Admin a", Long.class).getSingleResult();
     }
+
+    public List<Long> listarIdsAtivos() {
+        return em.createQuery(
+                "SELECT a.id FROM Admin a WHERE a.status = :st",
+                Long.class)
+                .setParameter("st", br.com.hsg.domain.enums.IndicativoStatus.A)
+                .getResultList();
+    }
 }

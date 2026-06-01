@@ -6,8 +6,12 @@ import br.com.hsg.dao.SolicitacaoConvenioDAO;
 import br.com.hsg.domain.entity.PacienteConvenio;
 import br.com.hsg.domain.entity.RegraCobertura;
 import br.com.hsg.domain.entity.SolicitacaoConvenio;
+import br.com.hsg.domain.enums.CategoriaNotificacao;
+import br.com.hsg.domain.enums.TipoDestinatarioNotificacao;
+import br.com.hsg.domain.enums.TipoNotificacao;
 import br.com.hsg.service.crypto.CarteirinhaCryptoService;
 import br.com.hsg.service.facade.admin.AprovacaoConvenioServiceFacade;
+import br.com.hsg.service.facade.notificacao.NotificacaoServiceFacade;
 import br.com.hsg.service.mail.MailService;
 
 import javax.ejb.EJB;
@@ -30,6 +34,7 @@ public class AprovacaoConvenioServiceImpl implements AprovacaoConvenioServiceFac
     @EJB private RegraCoberturaDAO      regraCoberturaDAO;
     @EJB private CarteirinhaCryptoService carteirinhaCrypto;
     @EJB private MailService            mailService;
+    @EJB private NotificacaoServiceFacade notificacaoService;
 
     @Override
     public SolicitacaoConvenio buscarPorId(Long id) {
@@ -87,6 +92,7 @@ public class AprovacaoConvenioServiceImpl implements AprovacaoConvenioServiceFac
                 + ", paciente=" + s.getPaciente().getId());
 
         notificarAprovacao(s);
+        notificarInApp(s, true, null);
     }
 
     @Override
@@ -100,6 +106,26 @@ public class AprovacaoConvenioServiceImpl implements AprovacaoConvenioServiceFac
         LOG.info("[AprovacaoConvenioServiceImpl] Solicitação rejeitada: id=" + idSolicitacao);
 
         notificarRejeicao(s);
+        notificarInApp(s, false, motivoRejeicao);
+    }
+
+    private void notificarInApp(SolicitacaoConvenio s, boolean aprovada, String motivo) {
+        try {
+            String plano = s.getPlano().getConvenio().getNome() + " — " + s.getPlano().getNome();
+            String titulo = aprovada ? "Convênio aprovado" : "Convênio rejeitado";
+            String msg = aprovada
+                    ? "Sua adesão ao plano " + plano + " foi aprovada. Já está disponível para uso."
+                    : "Sua adesão ao plano " + plano + " foi rejeitada. Motivo: " + motivo;
+            notificacaoService.notificar(
+                    TipoDestinatarioNotificacao.PACIENTE, s.getPaciente().getId(),
+                    titulo, msg,
+                    aprovada ? TipoNotificacao.SUCESSO : TipoNotificacao.ALERTA,
+                    CategoriaNotificacao.CONVENIO,
+                    "/paciente/meu-convenio.xhtml");
+        } catch (Exception ex) {
+            LOG.log(Level.WARNING,
+                    "[AprovacaoConvenioServiceImpl] Falha ao notificar paciente in-app", ex);
+        }
     }
 
     private void notificarAprovacao(SolicitacaoConvenio s) {

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <style>
+        .home-paineis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+        @media (max-width: 980px){ .home-paineis{grid-template-columns:1fr;} }
+        .hp-card{border:1px solid #c8c8c8;background:#fff;display:flex;flex-direction:column;border-radius:2px;}
+        .hp-head{padding:6px 10px;border-bottom:1px solid #c8c8c8;display:flex;align-items:center;gap:8px;
+            background:linear-gradient(#f8f8f8,#e4e4e4);font-weight:bold;font-size:12px;color:#333;}
+        .hp-head .panel-icon{color:#1f3a68;font-size:14px;}
+        .hp-head .panel-icon.notif{color:#7a1b14;}
+        .hp-head .verTodos{margin-left:auto;font-size:11px;color:#1f3a68;text-decoration:none;font-weight:normal;}
+        .hp-head .verTodos:hover{text-decoration:underline;}
+        .hp-body{padding:8px;flex:1;display:flex;flex-direction:column;gap:4px;}
+        .hp-empty{padding:16px 10px;text-align:center;color:#666;font-size:12px;background:#fafafa;
+            border:1px dashed #c8c8c8;border-radius:2px;}
+        .hp-item{padding:6px 8px;border:1px solid #c8c8c8;display:flex;gap:8px;
+            align-items:flex-start;background:#fff;border-radius:2px;}
+        .hp-item.nova{border-left:3px solid #1f3a68;background:#f6f9fd;}
+        .hp-item .ic-mini{width:20px;height:20px;border:1px solid #c8c8c8;display:flex;align-items:center;
+            justify-content:center;color:#fff;font-size:10px;flex:0 0 auto;border-radius:2px;}
+        .hp-item .ic-mini.info{background:#1f3a68;border-color:#15294a;}
+        .hp-item .ic-mini.sucesso{background:#1e6b22;border-color:#13491b;}
+        .hp-item .ic-mini.alerta{background:#8a4b00;border-color:#5d3300;}
+        .hp-item .ic-mini.erro{background:#c0392b;border-color:#7a1b14;}
+        .hp-item .body{flex:1;min-width:0;}
+        .hp-item .body .t{font-size:12px;font-weight:bold;color:#333;}
+        .hp-item .body .m{font-size:11.5px;color:#555;line-height:1.35;margin-top:1px;
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+        .hp-item .body .meta{font-size:11px;color:#666;margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;}
+        .hp-item .body .meta .mono{font-family:monospace;font-weight:bold;color:#333;}
+        .hp-item .acts{display:flex;gap:3px;flex:0 0 auto;}
+        .hp-item .acts .btn{padding:2px 8px;font-size:11px;}
+    </style>
+
+    <div class="home-paineis">
+
+        <div class="hp-card">
+            <div class="hp-head">
+                <i class="fa fa-calendar-check panel-icon"/>
+                <span>PRÓXIMAS CONSULTAS</span>
+                <a href="#{request.contextPath}#{homePainelBean.linkVerTodasConsultas}"
+                   class="verTodos" rendered="#{homePainelBean.paciente}">Ver todas &#8250;</a>
+            </div>
+            <div class="hp-body">
+                <h:panelGroup rendered="#{empty homePainelBean.proximasConsultas}" layout="block" styleClass="hp-empty">
+                    Você não possui consultas agendadas.
+                </h:panelGroup>
+
+                <h:form id="formHomeConsultas">
+                    <ui:repeat value="#{homePainelBean.proximasConsultas}" var="c">
+                        <div class="hp-item">
+                            <div class="ic-mini info"><i class="fa fa-calendar-day"/></div>
+                            <div class="body">
+                                <div class="t">
+                                    <h:panelGroup rendered="#{homePainelBean.paciente}">
+                                        Dr(a). #{c.medico.nomeCompleto}
+                                    </h:panelGroup>
+                                    <h:panelGroup rendered="#{homePainelBean.medicoLogado}">
+                                        #{c.paciente.nomeCompleto}
+                                    </h:panelGroup>
+                                </div>
+                                <div class="meta">
+                                    <span class="mono">
+                                        <i class="fa fa-clock"/>
+                                        #{homePainelBean.formatarDataHora(c.dataConsulta)}
+                                    </span>
+                                    <h:outputText styleClass="chip #{homePainelBean.chipStatusConsulta(c)}"
+                                                  value="#{c.status}"/>
+                                    <span rendered="#{c.especialidade != null}">
+                                        <i class="fa fa-stethoscope"/> #{c.especialidade.nome}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="acts">
+                                <h:panelGroup rendered="#{homePainelBean.paciente}">
+                                    <p:commandButton icon="fa fa-times" title="Cancelar"
+                                                     styleClass="btn icon-btn danger"
+                                                     rendered="#{homePainelBean.podeCancelar(c)}"
+                                                     action="#{homePainelBean.cancelarConsulta(c.id)}"
+                                                     update="formHomeConsultas"
+                                                     process="@this">
+                                        <p:confirm header="Cancelar consulta"
+                                                   message="Confirmar cancelamento desta consulta?"
+                                                   icon="fa fa-exclamation-triangle"/>
+                                    </p:commandButton>
+                                </h:panelGroup>
+                            </div>
+                        </div>
+                    </ui:repeat>
+                </h:form>
+            </div>
+        </div>
+
+        <div class="hp-card">
+            <div class="hp-head">
+                <i class="fa fa-bell panel-icon notif"/>
+                <span>ÚLTIMAS NOTIFICAÇÕES</span>
+                <a href="#{request.contextPath}#{homePainelBean.linkVerTodasNotificacoes}"
+                   class="verTodos">Ver todas &#8250;</a>
+            </div>
+            <div class="hp-body">
+                <h:panelGroup rendered="#{empty homePainelBean.ultimasNotificacoes}" layout="block" styleClass="hp-empty">
+                    Você não possui notificações recentes.
+                </h:panelGroup>
+
+                <h:form id="formHomeNotif">
+                    <ui:repeat value="#{homePainelBean.ultimasNotificacoes}" var="n">
+                        <div class="hp-item #{not n.lida ? 'nova' : ''}">
+                            <div class="ic-mini #{n.tipo.name().toLowerCase()}">
+                                <h:outputText value="i" rendered="#{n.tipo == 'INFO'}"/>
+                                <i class="fa fa-check"   rendered="#{n.tipo == 'SUCESSO'}"/>
+                                <i class="fa fa-exclamation" rendered="#{n.tipo == 'ALERTA'}"/>
+                                <i class="fa fa-times"   rendered="#{n.tipo == 'ERRO'}"/>
+                            </div>
+                            <div class="body">
+                                <div class="t">#{n.titulo}</div>
+                                <div class="m">#{n.mensagem}</div>
+                                <div class="meta">
+                                    <span><i class="fa fa-clock"/> #{homePainelBean.formatarDataHora(n.dataCriacao)}</span>
+                                    <span>#{n.categoria.descricao}</span>
+                                </div>
+                            </div>
+                            <div class="acts">
+                                <p:commandButton icon="fa fa-check" title="Marcar lida"
+                                                 styleClass="btn icon-btn"
+                                                 rendered="#{not n.lida}"
+                                                 action="#{homePainelBean.marcarNotificacaoLida(n.id)}"
+                                                 update="formHomeNotif" process="@this"/>
+                            </div>
+                        </div>
+                    </ui:repeat>
+                </h:form>
+            </div>
+        </div>
+
+    </div>
+
+</ui:composition>
