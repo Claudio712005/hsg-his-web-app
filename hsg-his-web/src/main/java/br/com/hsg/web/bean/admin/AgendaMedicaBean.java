@@ -541,10 +541,6 @@ public class AgendaMedicaBean implements Serializable {
         FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(severity, mensagem, null));
     }
 
-    /**
-     * Extrai a mensagem útil do throwable. EJB envolve RuntimeException em EJBException;
-     * percorre a cadeia de causes até achar IllegalArgument/IllegalState com mensagem.
-     */
     private String extrairMensagem(Throwable t, String fallback) {
         Throwable cur = t;
         int guard = 0;

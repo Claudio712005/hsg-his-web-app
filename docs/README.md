@@ -18,9 +18,19 @@ A documentação existe para:
 
 ---
 
+## 1.1 Módulos documentados
+
+- Agendamento de consultas:
+  - Visão do módulo: `modulos/agendamento.md`
+  - Regras de negócio: `regras/regras-negocio-agendamento.md`
+  - Modelo de dados: `dominio/modelo-agendamento.md`
+  - Telas: `telas/` (`admin-agenda-medica.md`, `paciente-agendar-consulta.md`, `paciente-minhas-consultas.md`)
+
+---
+
 ## 2. Estrutura da Documentação
 
-### 📁 Requisitos
+### Requisitos
 
 Contém o escopo funcional do sistema organizado por MVPs.
 

@@ -22,6 +22,20 @@
         <div class="menu-group open">
             <div class="menu-header">
                 <i class="fas fa-angle-right chev"></i>
+                <i class="fas fa-calendar-check"></i>
+                Consultas
+            </div>
+            <div class="menu-items">
+                <a href="#{request.contextPath}/paciente/agendar-consulta.xhtml"
+                   class="#{request.servletPath eq '/paciente/agendar-consulta.xhtml' ? 'active' : ''}">Agendar Consulta</a>
+                <a href="#{request.contextPath}/paciente/minhas-consultas.xhtml"
+                   class="#{request.servletPath eq '/paciente/minhas-consultas.xhtml' ? 'active' : ''}">Minhas Consultas</a>
+            </div>
+        </div>
+
+        <div class="menu-group open">
+            <div class="menu-header">
+                <i class="fas fa-angle-right chev"></i>
                 <i class="fas fa-user"></i>
                 Meus Dados
             </div>

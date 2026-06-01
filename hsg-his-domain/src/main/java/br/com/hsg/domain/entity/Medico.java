@@ -62,6 +62,10 @@ public class Medico {
     private Especialidade especialidade;
 
     @Getter
+    @Column(name = "NR_VALOR_CONSULTA", precision = 10, scale = 2)
+    private java.math.BigDecimal valorConsulta;
+
+    @Getter
     @Convert(converter = IndicativoStatusConverter.class)
     @Column(name = "ST_MEDICO", nullable = false, length = 1)
     private IndicativoStatus status;

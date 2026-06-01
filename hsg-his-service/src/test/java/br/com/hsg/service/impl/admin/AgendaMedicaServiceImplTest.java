@@ -171,6 +171,57 @@ public class AgendaMedicaServiceImplTest {
         verify(agendaMedicaSlotDAO, never()).salvar(any());
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void inativarGrade_deveLancarQuandoGradeNaoEncontrada() {
+        when(agendaMedicaDAO.buscarPorId(99L)).thenReturn(null);
+        service.inativarGrade(99L);
+    }
+
+    @Test
+    public void inativarGrade_deveChamarInativarEPersist() {
+        AgendaMedica grade = mock(AgendaMedica.class);
+        when(agendaMedicaDAO.buscarPorId(5L)).thenReturn(grade);
+
+        service.inativarGrade(5L);
+
+        verify(grade).inativar();
+        verify(agendaMedicaDAO).atualizar(grade);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void ativarGrade_deveLancarQuandoGradeNaoEncontrada() {
+        when(agendaMedicaDAO.buscarPorId(99L)).thenReturn(null);
+        service.ativarGrade(99L);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void ativarGrade_deveRevalidarSobreposicao() {
+        AgendaMedica grade = mock(AgendaMedica.class);
+        Medico m = mock(Medico.class);
+        when(m.getId()).thenReturn(1L);
+        when(grade.getMedico()).thenReturn(m);
+        when(grade.getDiaSemana()).thenReturn(DiaSemana.SEGUNDA);
+        when(grade.getHoraInicio()).thenReturn(LocalTime.of(8, 0));
+        when(grade.getHoraFim()).thenReturn(LocalTime.of(12, 0));
+        when(agendaMedicaDAO.buscarPorId(5L)).thenReturn(grade);
+        when(agendaMedicaDAO.buscarSobreposicao(eq(1L), eq(DiaSemana.SEGUNDA), any(), any(), eq(5L)))
+                .thenReturn(Collections.singletonList(mock(AgendaMedica.class)));
+
+        service.ativarGrade(5L);
+    }
+
+    @Test
+    public void removerExcecao_deveDelegarAoDao() {
+        service.removerExcecao(7L);
+        verify(agendaMedicaExcecaoDAO).remover(7L);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void gerarSlots_deveLancarQuandoMedicoNaoEncontrado() {
+        when(medicoDAO.buscarPorId(99L)).thenReturn(null);
+        service.gerarSlots(99L, 30);
+    }
+
     private AgendaMedica stubGrade(LocalTime ini, LocalTime fim, int duracaoMin) {
         AgendaMedica g = mock(AgendaMedica.class);
         when(g.getDiaSemana()).thenAnswer(inv -> DiaSemana.fromDayOfWeek(java.time.LocalDate.now().getDayOfWeek()));
