@@ -17,7 +17,11 @@
             <a class="item" href="#{request.contextPath}/admin/aprovacao-convenios.xhtml">Aprovações</a>
             <a class="item" href="#{request.contextPath}/admin/relatorio-convenios.xhtml">Relatórios</a>
             <a class="item" href="#{request.contextPath}/admin/agenda-medica.xhtml">Agenda Médica</a>
+            <a class="item" href="#{request.contextPath}/admin/notificacoes.xhtml">Notificações</a>
         </div>
+
+        <ui:include src="/WEB-INF/templates/fragments/sino-notificacoes.xhtml"/>
+
         <div class="user">
             <div class="avatar">
                 #{beanSessao.admin != null ? beanSessao.admin.nomeCompleto.substring(0,1) : 'A'}

@@ -16,4 +16,8 @@ public interface ConsultaServiceFacade {
     void cancelarPeloPaciente(Long idConsulta, Long idPaciente, String motivo);
 
     List<Consulta> listarConsultasPaciente(Long idPaciente);
+
+    List<Consulta> listarProximasPaciente(Long idPaciente, int limite);
+
+    List<Consulta> listarProximasMedico(Long idMedico, int limite);
 }

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <style>
+        .notif-toolbar{display:flex;align-items:center;gap:8px;padding:6px 10px;
+            background:linear-gradient(#f8f8f8,#e4e4e4);border:1px solid #c8c8c8;border-bottom:none;
+            font-size:12px;color:#333;font-weight:bold;flex-wrap:wrap;}
+        .notif-toolbar .badge{font-size:11px;font-weight:bold;color:#fff;background:#1f3a68;
+            padding:1px 6px;border-radius:2px;border:1px solid #15294a;}
+        .notif-toolbar .badge.zero{background:#888;border-color:#666;}
+        .notif-filtros{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#fff;
+            border:1px solid #c8c8c8;border-top:none;margin-bottom:10px;flex-wrap:wrap;}
+        .notif-filtros .grupo{display:flex;align-items:center;gap:5px;font-size:12px;color:#333;}
+        .notif-filtros .busca{flex:1;min-width:220px;display:flex;align-items:center;gap:5px;
+            background:#fff;border:1px solid #c8c8c8;padding:2px 6px;border-radius:2px;}
+        .notif-filtros .busca i{color:#666;font-size:11px;}
+        .notif-filtros .busca input{border:none;outline:none;background:transparent;font-size:12px;width:100%;}
+        .notif-list{display:flex;flex-direction:column;gap:6px;}
+        .notif-card{display:flex;gap:8px;padding:8px 10px;border:1px solid #c8c8c8;background:#fff;
+            position:relative;border-radius:2px;}
+        .notif-card.nova{border-left:3px solid #1f3a68;background:#f6f9fd;}
+        .notif-card .icon{width:24px;height:24px;border:1px solid #c8c8c8;display:flex;align-items:center;
+            justify-content:center;font-size:11px;color:#fff;flex:0 0 auto;border-radius:2px;}
+        .notif-card .icon.info{background:#1f3a68;border-color:#15294a;}
+        .notif-card .icon.sucesso{background:#1e6b22;border-color:#13491b;}
+        .notif-card .icon.alerta{background:#8a4b00;border-color:#5d3300;}
+        .notif-card .icon.erro{background:#c0392b;border-color:#7a1b14;}
+        .notif-card .body{flex:1;min-width:0;}
+        .notif-card .titulo{font-size:12px;font-weight:bold;color:#333;margin-bottom:2px;}
+        .notif-card .msg{font-size:12px;color:#555;line-height:1.4;margin-bottom:4px;white-space:pre-wrap;}
+        .notif-card .meta{font-size:11px;color:#666;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+        .notif-card .meta .cat{background:#eee;border:1px solid #bbb;padding:0 6px;color:#444;border-radius:2px;}
+        .notif-card .acoes{display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex:0 0 auto;}
+        .notif-card .acoes .btn{font-size:11px;padding:2px 8px;}
+    </style>
+
+    <h:form id="formNotificacoes">
+        <p:growl id="msgs" widgetVar="msgs" showDetail="true" life="5000" globalOnly="true"/>
+
+        <h:panelGroup layout="block" styleClass="panel">
+            <h:panelGroup layout="block" styleClass="panel-title">
+                <i class="fa fa-bell panel-icon"/>
+                <h:outputText value="Minhas Notificações"/>
+            </h:panelGroup>
+            <h:panelGroup layout="block" styleClass="panel-body">
+
+                <div class="notif-toolbar">
+                    <i class="fa fa-bell" style="color:#1565c0;"/>
+                    <span>Não lidas</span>
+                    <span class="badge #{notificacoesBean.naoLidas == 0 ? 'zero' : ''}">
+                        #{notificacoesBean.naoLidas}
+                    </span>
+                    <span style="flex:1;"/>
+                    <p:commandButton value="Marcar todas como lidas" icon="fa fa-check-double"
+                                     styleClass="btn secondary"
+                                     action="#{notificacoesBean.marcarTodasComoLidas}"
+                                     update="formNotificacoes" process="@this"
+                                     disabled="#{notificacoesBean.naoLidas == 0}"/>
+                </div>
+
+                <div class="notif-filtros">
+                    <div class="grupo">
+                        <i class="fa fa-filter" style="color:#1565c0;"/>
+                        <h:selectOneMenu value="#{notificacoesBean.filtroLida}" styleClass="filter-select">
+                            <f:selectItem itemValue="TODAS"     itemLabel="Todas"/>
+                            <f:selectItem itemValue="NAO_LIDAS" itemLabel="Não lidas"/>
+                            <f:selectItem itemValue="LIDAS"     itemLabel="Lidas"/>
+                            <p:ajax event="change" listener="#{notificacoesBean.aplicarFiltro}"
+                                    update="formNotificacoes"/>
+                        </h:selectOneMenu>
+                    </div>
+
+                    <div class="busca">
+                        <i class="fa fa-search"/>
+                        <p:inputText value="#{notificacoesBean.termoBusca}"
+                                     placeholder="Buscar por título ou mensagem...">
+                            <p:ajax event="keyup" listener="#{notificacoesBean.aplicarFiltro}"
+                                    update="formNotificacoes" delay="400"/>
+                        </p:inputText>
+                    </div>
+
+                    <p:commandButton value="Limpar" icon="fa fa-times"
+                                     styleClass="btn secondary"
+                                     action="#{notificacoesBean.limparFiltro}"
+                                     update="formNotificacoes" process="@this"
+                                     rendered="#{notificacoesBean.filtroLida ne 'TODAS' or not empty notificacoesBean.termoBusca}"/>
+                </div>
+
+                <h:panelGroup layout="block" rendered="#{empty notificacoesBean.notificacoes}" styleClass="note">
+                    <h:panelGroup rendered="#{notificacoesBean.filtroLida eq 'TODAS' and empty notificacoesBean.termoBusca}">
+                        Você não possui notificações no momento.
+                    </h:panelGroup>
+                    <h:panelGroup rendered="#{notificacoesBean.filtroLida ne 'TODAS' or not empty notificacoesBean.termoBusca}">
+                        Nenhuma notificação encontrada para os filtros aplicados.
+                    </h:panelGroup>
+                </h:panelGroup>
+
+                <div class="notif-list">
+                    <ui:repeat value="#{notificacoesBean.notificacoes}" var="n">
+                        <div class="notif-card #{not n.lida ? 'nova' : ''}">
+                            <div class="icon #{n.tipo.name().toLowerCase()}">
+                                <h:outputText value="i" rendered="#{n.tipo == 'INFO'}"/>
+                                <i class="fa fa-check" rendered="#{n.tipo == 'SUCESSO'}"/>
+                                <i class="fa fa-exclamation" rendered="#{n.tipo == 'ALERTA'}"/>
+                                <i class="fa fa-times" rendered="#{n.tipo == 'ERRO'}"/>
+                            </div>
+                            <div class="body">
+                                <div class="titulo">#{n.titulo}</div>
+                                <div class="msg">#{n.mensagem}</div>
+                                <div class="meta">
+                                    <span class="cat">#{n.categoria.descricao}</span>
+                                    <span>
+                                        <i class="fa fa-clock"/>
+                                        #{notificacoesBean.formatarDataHora(n.dataCriacao)}
+                                    </span>
+                                    <h:panelGroup rendered="#{n.lida}">
+                                        <span>
+                                            <i class="fa fa-check"/> Lida em #{notificacoesBean.formatarDataHora(n.dataLeitura)}
+                                        </span>
+                                    </h:panelGroup>
+                                </div>
+                            </div>
+                            <div class="acoes">
+                                <h:panelGroup rendered="#{not empty n.link}">
+                                    <p:commandLink action="#{notificacoesBean.abrirEMarcar(n)}"
+                                                   ajax="false" process="@this"
+                                                   styleClass="btn primary"
+                                                   style="text-decoration:none;font-size:12px;padding:6px 12px;">
+                                        <i class="fa fa-arrow-right"/> Acessar
+                                    </p:commandLink>
+                                </h:panelGroup>
+                                <p:commandButton icon="fa fa-check" title="Marcar como lida"
+                                                 styleClass="btn icon-btn"
+                                                 rendered="#{not n.lida}"
+                                                 action="#{notificacoesBean.marcarComoLida(n)}"
+                                                 update="formNotificacoes" process="@this"/>
+                            </div>
+                        </div>
+                    </ui:repeat>
+                </div>
+            </h:panelGroup>
+        </h:panelGroup>
+    </h:form>
+
+</ui:composition>

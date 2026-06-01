@@ -13,7 +13,12 @@ import br.com.hsg.domain.entity.PlanoConvenio;
 import br.com.hsg.domain.entity.RegraCobertura;
 import br.com.hsg.domain.entity.SolicitacaoConvenio;
 import br.com.hsg.domain.enums.TipoTitularidade;
+import br.com.hsg.dao.AdminDAO;
+import br.com.hsg.domain.enums.CategoriaNotificacao;
+import br.com.hsg.domain.enums.TipoDestinatarioNotificacao;
+import br.com.hsg.domain.enums.TipoNotificacao;
 import br.com.hsg.service.crypto.CarteirinhaCryptoService;
+import br.com.hsg.service.facade.notificacao.NotificacaoServiceFacade;
 import br.com.hsg.service.facade.paciente.ConvenioPacienteServiceFacade;
 
 import javax.ejb.EJB;
@@ -34,6 +39,8 @@ public class ConvenioPacienteServiceImpl implements ConvenioPacienteServiceFacad
     @EJB private ConvenioDAO            convenioDAO;
     @EJB private RegraCoberturaDAO      regraCoberturaDAO;
     @EJB private CarteirinhaCryptoService carteirinhaCrypto;
+    @EJB private AdminDAO                 adminDAO;
+    @EJB private NotificacaoServiceFacade notificacaoService;
 
     @Override
     public PacienteConvenio buscarConvenioAtivo(Long idPaciente) {
@@ -112,6 +119,20 @@ public class ConvenioPacienteServiceImpl implements ConvenioPacienteServiceFacad
         solicitacaoConvenioDAO.salvar(s);
         LOG.info("[ConvenioPacienteServiceImpl] Solicitação de convênio criada: paciente=" + idPaciente
                 + ", plano=" + idPlano);
+
+        try {
+            String tituloAdmin = "Nova solicitação de convênio";
+            String msgAdmin = "Paciente " + paciente.getNomeCompleto() + " solicitou adesão ao plano "
+                    + plano.getConvenio().getNome() + " — " + plano.getNome() + ".";
+            for (Long idAdmin : adminDAO.listarIdsAtivos()) {
+                notificacaoService.notificar(TipoDestinatarioNotificacao.ADMIN, idAdmin,
+                        tituloAdmin, msgAdmin, TipoNotificacao.INFO,
+                        CategoriaNotificacao.CONVENIO, "/admin/aprovacao-convenios.xhtml");
+            }
+        } catch (Exception ex) {
+            LOG.log(java.util.logging.Level.WARNING,
+                    "[ConvenioPacienteServiceImpl] Falha ao notificar admins", ex);
+        }
     }
 
     @Override

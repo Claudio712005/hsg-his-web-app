@@ -66,6 +66,15 @@ public class MailService {
         enviar(email, assunto, corpo);
     }
 
+    public void enviarFaltaAutomaticaParaMedico(
+            String nomeMedico, String emailMedico,
+            String nomePaciente, String dataConsultaFormatada) {
+
+        String assunto = "Consulta marcada como falta automaticamente — HSG Hospital Information System";
+        String corpo   = montarCorpoFaltaAutomatica(nomeMedico, nomePaciente, dataConsultaFormatada);
+        enviar(emailMedico, assunto, corpo);
+    }
+
     private void enviar(String destinatario, String assunto, String corpo) {
         boolean usandoJndi = (jndiSession != null);
         Session session    = usandoJndi ? jndiSession : buildFallbackSession();
@@ -215,5 +224,61 @@ public class MailService {
             if (v != null && !v.trim().isEmpty()) return v.trim();
         }
         return "";
+    }
+
+    private String montarCorpoFaltaAutomatica(String nomeMedico, String nomePaciente, String dataConsulta) {
+        String portal = BASE_URL + "/clinica/notificacoes.xhtml";
+        return "<html><body style=\"margin:0;padding:0;background:#f5f7fb;\">"
+                + "<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" "
+                + " style=\"background:#f5f7fb;padding:24px 0;\"><tr><td align=\"center\">"
+                + "<table role=\"presentation\" width=\"560\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" "
+                + " style=\"max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden;"
+                + " box-shadow:0 2px 6px rgba(0,0,0,.06);font-family:Arial,Helvetica,sans-serif;color:#1f2a37;\">"
+
+                + "<tr><td style=\"background:#1565c0;color:#ffffff;padding:18px 24px;font-size:14px;"
+                + " font-weight:700;letter-spacing:.3px;\">HSG Hospital Information System</td></tr>"
+
+                + "<tr><td style=\"padding:24px;\">"
+                + "<div style=\"display:inline-block;background:#fef6e0;color:#7a5a00;border:1px solid #f3d574;"
+                + " border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;letter-spacing:.3px;"
+                + " text-transform:uppercase;\">Aviso automático</div>"
+
+                + "<h2 style=\"margin:14px 0 6px;font-size:20px;color:#1f2a37;\">Consulta marcada como falta</h2>"
+                + "<p style=\"margin:0 0 16px;font-size:14px;color:#3b4350;line-height:1.55;\">"
+                + "Dr(a). <b>" + nomeMedico + "</b>, a consulta abaixo permaneceu com status pendente após o "
+                + "horário previsto e foi marcada como <b>FALTOU</b> automaticamente pelo sistema."
+                + "</p>"
+
+                + "<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" "
+                + " style=\"background:#f7f9fc;border:1px solid #e6e9ef;border-radius:10px;margin:8px 0 20px;\">"
+                + "<tr><td style=\"padding:14px 16px;font-size:13px;color:#1f2a37;\">"
+                + "<div style=\"margin-bottom:6px;\"><span style=\"color:#7a8694;font-weight:600;\">Paciente: </span>"
+                + nomePaciente + "</div>"
+                + "<div><span style=\"color:#7a8694;font-weight:600;\">Data/hora: </span>"
+                + "<span style=\"font-family:monospace;font-weight:600;\">" + dataConsulta + "</span></div>"
+                + "</td></tr></table>"
+
+                + "<p style=\"margin:0 0 18px;font-size:13.5px;color:#3b4350;line-height:1.55;\">"
+                + "Se o atendimento foi realizado, ajuste o status diretamente no portal antes que ele afete os "
+                + "indicadores operacionais."
+                + "</p>"
+
+                + "<table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">"
+                + "<tr><td style=\"border-radius:8px;background:#1565c0;\">"
+                + "<a href=\"" + portal + "\" "
+                + " style=\"display:inline-block;padding:10px 18px;color:#ffffff;text-decoration:none;"
+                + " font-size:13px;font-weight:700;letter-spacing:.3px;\">Abrir portal HSG HIS</a>"
+                + "</td></tr></table>"
+
+                + "</td></tr>"
+
+                + "<tr><td style=\"background:#fafbfc;color:#7a8694;font-size:11.5px;padding:14px 24px;"
+                + " border-top:1px solid #eef0f3;\">"
+                + "Este é um e-mail automático. Não responder."
+                + "</td></tr>"
+
+                + "</table>"
+                + "</td></tr></table>"
+                + "</body></html>";
     }
 }

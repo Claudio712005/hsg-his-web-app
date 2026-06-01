@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <style>
+        .sino-wrap{position:relative;display:inline-block;}
+        .sino-link{position:relative;display:inline-flex;align-items:center;justify-content:center;
+            width:26px;height:24px;border:1px solid #c8c8c8;background:linear-gradient(#fff,#ececec);
+            color:#444;text-decoration:none;border-radius:2px;}
+        .sino-link:hover{background:linear-gradient(#f8f8f8,#dcdcdc);color:#1f3a68;}
+        .sino-link i{font-size:11px;}
+        .sino-link.tem-nao-lidas{border-color:#c0392b;color:#c0392b;}
+        .sino-badge{position:absolute;top:-6px;right:-6px;min-width:14px;height:14px;padding:0 3px;
+            background:#c0392b;color:#fff;font-size:9px;font-weight:bold;line-height:1;border-radius:2px;
+            border:1px solid #7a1b14;display:flex;align-items:center;justify-content:center;
+            box-sizing:content-box;}
+    </style>
+
+    <h:form id="formSino" styleClass="sino-wrap">
+        <p:poll interval="30" listener="#{sinoBean.refresh}"
+                update="formSino" autoStart="true"/>
+
+        <a href="#{request.contextPath}#{sinoBean.linkNotificacoes}"
+           class="sino-link #{sinoBean.temNaoLidas ? 'tem-nao-lidas' : ''}"
+           title="Notificações">
+            <i class="fa fa-bell"/>
+            <h:panelGroup rendered="#{sinoBean.temNaoLidas}">
+                <span class="sino-badge">#{sinoBean.contagemRotulo}</span>
+            </h:panelGroup>
+        </a>
+    </h:form>
+
+</ui:composition>

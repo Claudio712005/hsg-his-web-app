@@ -100,6 +100,18 @@ Transições válidas: AGENDADA -> CONFIRMADA -> REALIZADA; AGENDADA/CONFIRMADA 
 LIVRE, RESERVADO, BLOQUEADO, CANCELADO.
 Reserva exige LIVRE. Bloqueio não é permitido em slot RESERVADO (cancelar a consulta antes).
 
+## 8.3 Auto-falta (job agendado)
+
+| ID | Regra | Onde |
+|----|-------|------|
+| AF-01 | Consulta com `status IN (AGENDADA, CONFIRMADA)` e `dataConsulta < agora - 24h` é marcada como `FALTOU`. | `ConsultaAutoFaltaServiceImpl` |
+| AF-02 | Após marcar, e-mail é enviado ao médico informando o ocorrido (orienta a corrigir manualmente caso a consulta tenha sido realizada). | `MailService.enviarFaltaAutomaticaParaMedico` |
+| AF-03 | Médico sem e-mail registrado: consulta ainda é marcada como falta; o envio é pulado e registrado em log. | `ConsultaAutoFaltaServiceImpl` |
+| AF-04 | Falha em uma consulta (ex.: status já final) não interrompe o processamento das demais. | `ConsultaAutoFaltaServiceImpl` |
+| AF-05 | O job roda diariamente às 02:00 (horário do servidor) via `@Schedule` em `ConsultaAutoFaltaTimer`. | `ConsultaAutoFaltaTimer` |
+
+Documentação completa em `docs/modulos/agendamento-schedules.md`.
+
 ## 9. Constantes operacionais
 
 | Constante | Valor | Local |
@@ -111,3 +123,5 @@ Reserva exige LIVRE. Bloqueio não é permitido em slot RESERVADO (cancelar a co
 | Valor padrão da consulta | 250,00 | `ConsultaServiceImpl` |
 | Período de geração de slots | 1 a 180 dias | `AgendaMedicaServiceImpl` |
 | Duração de slot (UI) | 5 a 240 minutos | UI |
+| Tolerância para auto-falta | 24 horas | `ConsultaAutoFaltaServiceImpl` |
+| Execução do job de auto-falta | Diária às 02:00 | `ConsultaAutoFaltaTimer` |

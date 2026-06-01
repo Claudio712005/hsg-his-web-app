@@ -13,7 +13,11 @@ import br.com.hsg.domain.entity.PacienteConvenio;
 import br.com.hsg.domain.entity.RegraCobertura;
 import br.com.hsg.domain.enums.StatusSlotAgenda;
 import br.com.hsg.domain.enums.TipoAtendimentoConsulta;
+import br.com.hsg.domain.enums.CategoriaNotificacao;
+import br.com.hsg.domain.enums.TipoDestinatarioNotificacao;
+import br.com.hsg.domain.enums.TipoNotificacao;
 import br.com.hsg.service.dto.ResultadoFinanceiroConsulta;
+import br.com.hsg.service.facade.notificacao.NotificacaoServiceFacade;
 import br.com.hsg.service.facade.paciente.ConsultaServiceFacade;
 
 import javax.ejb.EJB;
@@ -40,11 +44,15 @@ public class ConsultaServiceImpl implements ConsultaServiceFacade {
     @PersistenceContext(unitName = "defaultPU")
     private EntityManager em;
 
+    private static final java.time.format.DateTimeFormatter FMT_NOTIF =
+            java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
     @EJB private ConsultaDAO          consultaDAO;
     @EJB private AgendaMedicaSlotDAO  agendaMedicaSlotDAO;
     @EJB private PacienteDAO          pacienteDAO;
     @EJB private PacienteConvenioDAO  pacienteConvenioDAO;
     @EJB private RegraCoberturaDAO    regraCoberturaDAO;
+    @EJB private NotificacaoServiceFacade notificacaoService;
 
     @Override
     public ResultadoFinanceiroConsulta simular(Long idPaciente, Long idSlot, boolean usarConvenio) {
@@ -105,7 +113,41 @@ public class ConsultaServiceImpl implements ConsultaServiceFacade {
         LOG.info("[ConsultaServiceImpl] Consulta agendada: id=" + salva.getId()
                 + ", paciente=" + idPaciente + ", slot=" + idSlot
                 + ", tipo=" + fin.resultado.getTipoAtendimento());
+
+        notificarAgendamento(salva);
         return salva;
+    }
+
+    private void notificarAgendamento(Consulta c) {
+        String quando = c.getDataConsulta().format(FMT_NOTIF);
+        String medicoNome = c.getMedico() != null ? c.getMedico().getNomeCompleto() : "—";
+        String pacienteNome = c.getPaciente() != null ? c.getPaciente().getNomeCompleto() : "—";
+
+        notificarSeguro(TipoDestinatarioNotificacao.PACIENTE, c.getPaciente().getId(),
+                "Consulta agendada",
+                "Sua consulta com Dr(a). " + medicoNome + " foi marcada para " + quando + ".",
+                TipoNotificacao.SUCESSO, CategoriaNotificacao.CONSULTA,
+                "/paciente/minhas-consultas.xhtml");
+
+        if (c.getMedico() != null) {
+            notificarSeguro(TipoDestinatarioNotificacao.MEDICO, c.getMedico().getId(),
+                    "Nova consulta agendada",
+                    "Paciente " + pacienteNome + " marcou consulta para " + quando + ".",
+                    TipoNotificacao.INFO, CategoriaNotificacao.CONSULTA,
+                    "/clinica/notificacoes.xhtml");
+        }
+    }
+
+    private void notificarSeguro(TipoDestinatarioNotificacao td, Long idDest,
+                                  String titulo, String msg,
+                                  TipoNotificacao tipo, CategoriaNotificacao cat, String link) {
+        if (idDest == null) return;
+        try {
+            notificacaoService.notificar(td, idDest, titulo, msg, tipo, cat, link);
+        } catch (Exception ex) {
+            LOG.log(java.util.logging.Level.WARNING,
+                    "[ConsultaServiceImpl] Falha ao gerar notificação", ex);
+        }
     }
 
     @Override
@@ -134,11 +176,37 @@ public class ConsultaServiceImpl implements ConsultaServiceFacade {
         }
 
         LOG.info("[ConsultaServiceImpl] Consulta cancelada: id=" + idConsulta + ", paciente=" + idPaciente);
+
+        if (consulta.getMedico() != null) {
+            String quando = consulta.getDataConsulta().format(FMT_NOTIF);
+            String pacienteNome = consulta.getPaciente() != null
+                    ? consulta.getPaciente().getNomeCompleto() : "—";
+            notificarSeguro(TipoDestinatarioNotificacao.MEDICO, consulta.getMedico().getId(),
+                    "Consulta cancelada pelo paciente",
+                    "Paciente " + pacienteNome + " cancelou a consulta de " + quando
+                            + ". Motivo: " + motivo,
+                    TipoNotificacao.ALERTA, CategoriaNotificacao.CONSULTA,
+                    "/clinica/notificacoes.xhtml");
+        }
     }
 
     @Override
     public List<Consulta> listarConsultasPaciente(Long idPaciente) {
         return consultaDAO.listarPorPaciente(idPaciente);
+    }
+
+    @Override
+    public List<Consulta> listarProximasPaciente(Long idPaciente, int limite) {
+        if (idPaciente == null) return java.util.Collections.emptyList();
+        int l = (limite <= 0 || limite > 50) ? 5 : limite;
+        return consultaDAO.listarProximasPorPaciente(idPaciente, LocalDateTime.now(), l);
+    }
+
+    @Override
+    public List<Consulta> listarProximasMedico(Long idMedico, int limite) {
+        if (idMedico == null) return java.util.Collections.emptyList();
+        int l = (limite <= 0 || limite > 50) ? 5 : limite;
+        return consultaDAO.listarProximasPorMedico(idMedico, LocalDateTime.now(), l);
     }
 
     private BigDecimal valorBase(BigDecimal valorMedico) {

@@ -17,6 +17,8 @@
             <div class="item">Ajuda</div>
             <div class="item">Acessibilidade</div>
         </div>
+        <ui:include src="/WEB-INF/templates/fragments/sino-notificacoes.xhtml"/>
+
         <div class="user">
             <div class="avatar">
                 #{beanSessao.paciente != null ? beanSessao.paciente.nomeCompleto.substring(0,1) : '?'}
