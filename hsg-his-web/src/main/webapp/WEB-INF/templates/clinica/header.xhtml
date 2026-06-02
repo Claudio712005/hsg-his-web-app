@@ -71,6 +71,20 @@
                 </div>
             </h:panelGroup>
 
+            <h:panelGroup rendered="#{beanSessao.usuarioClinica.tipo ne 'MEDICO'}">
+                <a class="item" href="#{request.contextPath}/clinica/recepcao-dia.xhtml">
+                    <i class="fa fa-clipboard-list"/>
+                    <h:outputText value=" Recepção"/>
+                </a>
+            </h:panelGroup>
+
+            <h:panelGroup rendered="#{beanSessao.usuarioClinica.tipo eq 'MEDICO'}">
+                <a class="item" href="#{request.contextPath}/clinica/minha-agenda.xhtml">
+                    <i class="fa fa-stethoscope"/>
+                    <h:outputText value=" Minha Agenda"/>
+                </a>
+            </h:panelGroup>
+
             <a class="item" href="#{request.contextPath}/clinica/notificacoes.xhtml">
                 <i class="fa fa-bell"/>
                 <h:outputText value=" Notificações"/>

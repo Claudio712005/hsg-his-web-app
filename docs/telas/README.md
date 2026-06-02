@@ -7,6 +7,8 @@ Descrição funcional das telas do sistema, organizada por perfil. Cada document
 - Administração: [Agenda Médica](admin-agenda-medica.md)
 - Paciente: [Agendar Consulta](paciente-agendar-consulta.md)
 - Paciente: [Minhas Consultas](paciente-minhas-consultas.md)
+- Clínica: [Recepção do Dia](clinica-recepcao-dia.md)
+- Clínica (Médico): [Minha Agenda](clinica-minha-agenda.md)
 
 ## Referências relacionadas
 

@@ -16,7 +16,7 @@ O módulo foi construído em fases incrementais.
 | B | Gestão da agenda médica (admin): grade, exceções, geração de slots | Concluída |
 | C | Busca de horários pelo paciente (somente leitura) | Concluída |
 | D | Agendamento efetivo: reserva atômica, convênio, carência, copagamento, cancelamento | Concluída |
-| E | Gestão clínica (recepção opera a agenda diária) | Pendente |
+| E | Gestão clínica (recepção opera a agenda diária) | Concluída |
 | F | Notificações automáticas (e-mail, lembretes) | Pendente |
 | G | Relatórios e KPIs operacionais | Pendente |
 

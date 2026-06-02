@@ -1318,3 +1318,570 @@ SELECT 'ADMIN', a.id_adm,
     NOW() - INTERVAL '20 hours', NOW() - INTERVAL '20 hours' + INTERVAL '40 days'
 FROM hsg.tb_adm a JOIN hsg.tb_conta_usu c ON c.id_conta_usu = a.id_conta_usu_adm
 WHERE c.nm_usu = 'admin.hsg';
+
+-- ══════════════════════════════════════════════════════════════════════
+-- ── Massa de teste: consultas variadas (Fase E) ───────────────────────
+-- ══════════════════════════════════════════════════════════════════════
+-- Gera consultas distribuídas pelos próximos 7 dias e últimos 5 dias,
+-- cobrindo todos os médicos demo, pacientes variados e múltiplos status.
+
+-- Helper: reaproveita o padrão slot RESERVADO/CANCELADO + consulta + update id_consulta.
+
+-- Consulta 6: claudio.filho × dr.joao — CONFIRMADA, hoje +0d 09:00 (visível na recepção)
+INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
+SELECT m.id_medico, CURRENT_DATE + TIME '09:00', CURRENT_DATE + TIME '09:30',
+       'RESERVADO', NOW()
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.joao' ON CONFLICT (id_medico, dt_inicio) DO NOTHING;
+
+INSERT INTO hsg.tb_consulta (id_paciente, id_medico, id_especialidade, id_agenda_slot,
+    tp_atendimento, st_consulta, dt_consulta, vl_consulta, vl_copagamento, vl_cobertura_convenio, dt_cadastro)
+SELECT pac.id_pac, m.id_medico, m.id_especialidade,
+       (SELECT id_agenda_slot FROM hsg.tb_agenda_medica_slot
+        WHERE id_medico = m.id_medico AND dt_inicio = CURRENT_DATE + TIME '09:00'),
+       'PARTICULAR', 'CONFIRMADA', CURRENT_DATE + TIME '09:00',
+       m.nr_valor_consulta, m.nr_valor_consulta, 0.00, NOW()
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+CROSS JOIN (SELECT p.id_pac FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+            WHERE c.nm_usu = 'claudio.filho') pac
+WHERE cu.nm_usu = 'dr.joao' ON CONFLICT (id_agenda_slot) DO NOTHING;
+
+UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
+WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
+
+-- Consulta 7: mariana.santos × dr.joao — AGENDADA, hoje 10:00
+INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
+SELECT m.id_medico, CURRENT_DATE + TIME '10:00', CURRENT_DATE + TIME '10:30',
+       'RESERVADO', NOW()
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.joao' ON CONFLICT (id_medico, dt_inicio) DO NOTHING;
+
+INSERT INTO hsg.tb_consulta (id_paciente, id_medico, id_especialidade, id_agenda_slot,
+    tp_atendimento, st_consulta, dt_consulta, vl_consulta, vl_copagamento, vl_cobertura_convenio, dt_cadastro)
+SELECT pac.id_pac, m.id_medico, m.id_especialidade,
+       (SELECT id_agenda_slot FROM hsg.tb_agenda_medica_slot
+        WHERE id_medico = m.id_medico AND dt_inicio = CURRENT_DATE + TIME '10:00'),
+       'PARTICULAR', 'AGENDADA', CURRENT_DATE + TIME '10:00',
+       m.nr_valor_consulta, m.nr_valor_consulta, 0.00, NOW()
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+CROSS JOIN (SELECT p.id_pac FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+            WHERE c.nm_usu = 'mariana.santos') pac
+WHERE cu.nm_usu = 'dr.joao' ON CONFLICT (id_agenda_slot) DO NOTHING;
+
+UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
+WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
+
+-- Consulta 8: pedro.oliveira × dr.ana — AGENDADA, +1d 14:00
+INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
+SELECT m.id_medico, (CURRENT_DATE + 1) + TIME '14:00', (CURRENT_DATE + 1) + TIME '14:40',
+       'RESERVADO', NOW()
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.ana' ON CONFLICT (id_medico, dt_inicio) DO NOTHING;
+
+INSERT INTO hsg.tb_consulta (id_paciente, id_medico, id_especialidade, id_agenda_slot,
+    tp_atendimento, st_consulta, dt_consulta, vl_consulta, vl_copagamento, vl_cobertura_convenio, dt_cadastro)
+SELECT pac.id_pac, m.id_medico, m.id_especialidade,
+       (SELECT id_agenda_slot FROM hsg.tb_agenda_medica_slot
+        WHERE id_medico = m.id_medico AND dt_inicio = (CURRENT_DATE + 1) + TIME '14:00'),
+       'PARTICULAR', 'AGENDADA', (CURRENT_DATE + 1) + TIME '14:00',
+       m.nr_valor_consulta, m.nr_valor_consulta, 0.00, NOW()
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+CROSS JOIN (SELECT p.id_pac FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+            WHERE c.nm_usu = 'pedro.oliveira') pac
+WHERE cu.nm_usu = 'dr.ana' ON CONFLICT (id_agenda_slot) DO NOTHING;
+
+UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
+WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
+
+-- Consulta 9: carla.silva × dr.roberto — REALIZADA, há 2 dias 09:20 (com obs clínica)
+INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
+SELECT m.id_medico, (CURRENT_DATE - 2) + TIME '09:20', (CURRENT_DATE - 2) + TIME '09:40',
+       'RESERVADO', NOW() - INTERVAL '4 days'
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.roberto' ON CONFLICT (id_medico, dt_inicio) DO NOTHING;
+
+INSERT INTO hsg.tb_consulta (id_paciente, id_medico, id_especialidade, id_agenda_slot,
+    tp_atendimento, st_consulta, dt_consulta, vl_consulta, vl_copagamento, vl_cobertura_convenio,
+    ds_observacao_clinica, dt_cadastro)
+SELECT pac.id_pac, m.id_medico, m.id_especialidade,
+       (SELECT id_agenda_slot FROM hsg.tb_agenda_medica_slot
+        WHERE id_medico = m.id_medico AND dt_inicio = (CURRENT_DATE - 2) + TIME '09:20'),
+       'PARTICULAR', 'REALIZADA', (CURRENT_DATE - 2) + TIME '09:20',
+       m.nr_valor_consulta, m.nr_valor_consulta, 0.00,
+       'Paciente apresenta quadro leve de gastroenterite, recomendado hidratação e dieta branda por 3 dias.',
+       NOW() - INTERVAL '4 days'
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+CROSS JOIN (SELECT p.id_pac FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+            WHERE c.nm_usu = 'carla.silva') pac
+WHERE cu.nm_usu = 'dr.roberto' ON CONFLICT (id_agenda_slot) DO NOTHING;
+
+UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
+WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
+
+-- Consulta 10: joao.lima × dra.fernanda — FALTOU, ontem 09:00
+INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
+SELECT m.id_medico, (CURRENT_DATE - 1) + TIME '09:00', (CURRENT_DATE - 1) + TIME '09:45',
+       'RESERVADO', NOW() - INTERVAL '3 days'
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dra.fernanda' ON CONFLICT (id_medico, dt_inicio) DO NOTHING;
+
+INSERT INTO hsg.tb_consulta (id_paciente, id_medico, id_especialidade, id_agenda_slot,
+    tp_atendimento, st_consulta, dt_consulta, vl_consulta, vl_copagamento, vl_cobertura_convenio, dt_cadastro)
+SELECT pac.id_pac, m.id_medico, m.id_especialidade,
+       (SELECT id_agenda_slot FROM hsg.tb_agenda_medica_slot
+        WHERE id_medico = m.id_medico AND dt_inicio = (CURRENT_DATE - 1) + TIME '09:00'),
+       'PARTICULAR', 'FALTOU', (CURRENT_DATE - 1) + TIME '09:00',
+       m.nr_valor_consulta, m.nr_valor_consulta, 0.00, NOW() - INTERVAL '3 days'
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+CROSS JOIN (SELECT p.id_pac FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+            WHERE c.nm_usu = 'joao.lima') pac
+WHERE cu.nm_usu = 'dra.fernanda' ON CONFLICT (id_agenda_slot) DO NOTHING;
+
+UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
+WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
+
+-- Consulta 11: beatriz.costa × dr.carlos — AGENDADA, +2d 14:00
+INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
+SELECT m.id_medico, (CURRENT_DATE + 2) + TIME '14:00', (CURRENT_DATE + 2) + TIME '14:30',
+       'RESERVADO', NOW()
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.carlos' ON CONFLICT (id_medico, dt_inicio) DO NOTHING;
+
+INSERT INTO hsg.tb_consulta (id_paciente, id_medico, id_especialidade, id_agenda_slot,
+    tp_atendimento, st_consulta, dt_consulta, vl_consulta, vl_copagamento, vl_cobertura_convenio, dt_cadastro)
+SELECT pac.id_pac, m.id_medico, m.id_especialidade,
+       (SELECT id_agenda_slot FROM hsg.tb_agenda_medica_slot
+        WHERE id_medico = m.id_medico AND dt_inicio = (CURRENT_DATE + 2) + TIME '14:00'),
+       'PARTICULAR', 'AGENDADA', (CURRENT_DATE + 2) + TIME '14:00',
+       m.nr_valor_consulta, m.nr_valor_consulta, 0.00, NOW()
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+CROSS JOIN (SELECT p.id_pac FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+            WHERE c.nm_usu = 'beatriz.costa') pac
+WHERE cu.nm_usu = 'dr.carlos' ON CONFLICT (id_agenda_slot) DO NOTHING;
+
+UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
+WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
+
+-- Consulta 12: mariana.santos × dra.fernanda — REALIZADA, há 3 dias (com obs)
+INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
+SELECT m.id_medico, (CURRENT_DATE - 3) + TIME '10:30', (CURRENT_DATE - 3) + TIME '11:15',
+       'RESERVADO', NOW() - INTERVAL '5 days'
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dra.fernanda' ON CONFLICT (id_medico, dt_inicio) DO NOTHING;
+
+INSERT INTO hsg.tb_consulta (id_paciente, id_medico, id_especialidade, id_agenda_slot,
+    tp_atendimento, st_consulta, dt_consulta, vl_consulta, vl_copagamento, vl_cobertura_convenio,
+    ds_observacao_clinica, dt_cadastro)
+SELECT pac.id_pac, m.id_medico, m.id_especialidade,
+       (SELECT id_agenda_slot FROM hsg.tb_agenda_medica_slot
+        WHERE id_medico = m.id_medico AND dt_inicio = (CURRENT_DATE - 3) + TIME '10:30'),
+       'PARTICULAR', 'REALIZADA', (CURRENT_DATE - 3) + TIME '10:30',
+       m.nr_valor_consulta, m.nr_valor_consulta, 0.00,
+       'Cefaleia tensional. Encaminhado para neurologia ambulatorial. Prescrito analgésico SOS.',
+       NOW() - INTERVAL '5 days'
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+CROSS JOIN (SELECT p.id_pac FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+            WHERE c.nm_usu = 'mariana.santos') pac
+WHERE cu.nm_usu = 'dra.fernanda' ON CONFLICT (id_agenda_slot) DO NOTHING;
+
+UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
+WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
+
+-- Consulta 13: pedro.oliveira × dr.joao — CANCELADA, hoje 11:00 (clínica)
+INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
+SELECT m.id_medico, CURRENT_DATE + TIME '11:00', CURRENT_DATE + TIME '11:30',
+       'CANCELADO', NOW()
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.joao' ON CONFLICT (id_medico, dt_inicio) DO NOTHING;
+
+INSERT INTO hsg.tb_consulta (id_paciente, id_medico, id_especialidade, id_agenda_slot,
+    tp_atendimento, st_consulta, dt_consulta, dt_cancelamento, ds_cancelamento,
+    vl_consulta, vl_copagamento, vl_cobertura_convenio, dt_cadastro)
+SELECT pac.id_pac, m.id_medico, m.id_especialidade,
+       (SELECT id_agenda_slot FROM hsg.tb_agenda_medica_slot
+        WHERE id_medico = m.id_medico AND dt_inicio = CURRENT_DATE + TIME '11:00'),
+       'PARTICULAR', 'CANCELADA', CURRENT_DATE + TIME '11:00',
+       NOW(), 'Cancelado pela clínica - emergência hospitalar.',
+       m.nr_valor_consulta, m.nr_valor_consulta, 0.00, NOW() - INTERVAL '1 day'
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+CROSS JOIN (SELECT p.id_pac FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+            WHERE c.nm_usu = 'pedro.oliveira') pac
+WHERE cu.nm_usu = 'dr.joao' ON CONFLICT (id_agenda_slot) DO NOTHING;
+
+UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
+WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
+
+-- Consulta 14: carla.silva × dr.ana — CONFIRMADA, hoje 15:00
+INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
+SELECT m.id_medico, CURRENT_DATE + TIME '15:00', CURRENT_DATE + TIME '15:40',
+       'RESERVADO', NOW()
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.ana' ON CONFLICT (id_medico, dt_inicio) DO NOTHING;
+
+INSERT INTO hsg.tb_consulta (id_paciente, id_medico, id_especialidade, id_agenda_slot,
+    tp_atendimento, st_consulta, dt_consulta, vl_consulta, vl_copagamento, vl_cobertura_convenio, dt_cadastro)
+SELECT pac.id_pac, m.id_medico, m.id_especialidade,
+       (SELECT id_agenda_slot FROM hsg.tb_agenda_medica_slot
+        WHERE id_medico = m.id_medico AND dt_inicio = CURRENT_DATE + TIME '15:00'),
+       'PARTICULAR', 'CONFIRMADA', CURRENT_DATE + TIME '15:00',
+       m.nr_valor_consulta, m.nr_valor_consulta, 0.00, NOW()
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+CROSS JOIN (SELECT p.id_pac FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+            WHERE c.nm_usu = 'carla.silva') pac
+WHERE cu.nm_usu = 'dr.ana' ON CONFLICT (id_agenda_slot) DO NOTHING;
+
+UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
+WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
+
+-- Consulta 15: beatriz.costa × dr.roberto — REALIZADA, há 1 dia 09:00 (com obs)
+INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
+SELECT m.id_medico, (CURRENT_DATE - 1) + TIME '09:00', (CURRENT_DATE - 1) + TIME '09:20',
+       'RESERVADO', NOW() - INTERVAL '3 days'
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+WHERE cu.nm_usu = 'dr.roberto' ON CONFLICT (id_medico, dt_inicio) DO NOTHING;
+
+INSERT INTO hsg.tb_consulta (id_paciente, id_medico, id_especialidade, id_agenda_slot,
+    tp_atendimento, st_consulta, dt_consulta, vl_consulta, vl_copagamento, vl_cobertura_convenio,
+    ds_observacao_clinica, dt_cadastro)
+SELECT pac.id_pac, m.id_medico, m.id_especialidade,
+       (SELECT id_agenda_slot FROM hsg.tb_agenda_medica_slot
+        WHERE id_medico = m.id_medico AND dt_inicio = (CURRENT_DATE - 1) + TIME '09:00'),
+       'PARTICULAR', 'REALIZADA', (CURRENT_DATE - 1) + TIME '09:00',
+       m.nr_valor_consulta, m.nr_valor_consulta, 0.00,
+       'Acompanhamento pediátrico de rotina. Curva de crescimento dentro do esperado. Vacinação em dia.',
+       NOW() - INTERVAL '3 days'
+FROM hsg.tb_medico m JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+CROSS JOIN (SELECT p.id_pac FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
+            WHERE c.nm_usu = 'beatriz.costa') pac
+WHERE cu.nm_usu = 'dr.roberto' ON CONFLICT (id_agenda_slot) DO NOTHING;
+
+UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
+WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
+
+-- ══════════════════════════════════════════════════════════════════════
+-- ── Massa: histórico de consultas (V30) ───────────────────────────────
+-- ══════════════════════════════════════════════════════════════════════
+-- Cobre todas as transições de status registráveis:
+--   AGENDADA  → CHECK_IN → REALIZADA   (caminho feliz)
+--   AGENDADA  → FALTOU                 (auto-falta sem check-in)
+--   AGENDADA  → CANCELADA              (paciente ou clínica)
+
+-- 1. AGENDADA — para TODAS as consultas (sempre é o primeiro evento)
+INSERT INTO hsg.tb_consulta_historico (id_consulta, tp_acao, id_responsavel, tp_responsavel,
+    ds_observacao, dt_acao)
+SELECT c.id_consulta, 'AGENDADA', c.id_paciente, 'PACIENTE',
+       'Consulta marcada pelo paciente via portal.',
+       c.dt_cadastro
+FROM hsg.tb_consulta c;
+
+-- 2. CHECK_IN — para CONFIRMADA / REALIZADA (enfermeiro registra chegada)
+INSERT INTO hsg.tb_consulta_historico (id_consulta, tp_acao, id_responsavel, tp_responsavel,
+    ds_observacao, dt_acao)
+SELECT c.id_consulta, 'CHECK_IN',
+       (SELECT e.id_enfer FROM hsg.tb_enfer e
+        JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = e.id_conta_usu_enfer
+        WHERE cu.nm_usu = 'enf.maria'),
+       'ENFERMEIRO',
+       'Paciente compareceu à recepção e foi triado.',
+       c.dt_consulta - INTERVAL '15 minutes'
+FROM hsg.tb_consulta c
+WHERE c.st_consulta IN ('CONFIRMADA','REALIZADA');
+
+-- 3. REALIZADA — todas com st_consulta = REALIZADA (médico responsável)
+INSERT INTO hsg.tb_consulta_historico (id_consulta, tp_acao, id_responsavel, tp_responsavel,
+    ds_observacao, dt_acao)
+SELECT c.id_consulta, 'REALIZADA', c.id_medico, 'MEDICO',
+       'Atendimento concluído com observação clínica registrada.',
+       c.dt_consulta + INTERVAL '30 minutes'
+FROM hsg.tb_consulta c
+WHERE c.st_consulta = 'REALIZADA';
+
+-- 4. FALTOU — SISTEMA (cenário auto-falta via scheduler)
+INSERT INTO hsg.tb_consulta_historico (id_consulta, tp_acao, id_responsavel, tp_responsavel,
+    ds_observacao, dt_acao)
+SELECT c.id_consulta, 'FALTOU', NULL, 'SISTEMA',
+       'Auto-falta registrada — paciente não confirmou chegada após 30 min do horário.',
+       c.dt_consulta + INTERVAL '30 minutes'
+FROM hsg.tb_consulta c
+WHERE c.st_consulta = 'FALTOU';
+
+-- 5. CANCELADA pela clínica
+INSERT INTO hsg.tb_consulta_historico (id_consulta, tp_acao, id_responsavel, tp_responsavel,
+    ds_observacao, dt_acao)
+SELECT c.id_consulta, 'CANCELADA', c.id_medico, 'MEDICO',
+       COALESCE(c.ds_cancelamento, 'Cancelada pela clínica.'),
+       c.dt_cancelamento
+FROM hsg.tb_consulta c
+WHERE c.st_consulta = 'CANCELADA'
+  AND c.ds_cancelamento ILIKE '%clínica%';
+
+-- 6. CANCELADA pelo paciente
+INSERT INTO hsg.tb_consulta_historico (id_consulta, tp_acao, id_responsavel, tp_responsavel,
+    ds_observacao, dt_acao)
+SELECT c.id_consulta, 'CANCELADA', c.id_paciente, 'PACIENTE',
+       COALESCE(c.ds_cancelamento, 'Cancelada pelo paciente.'),
+       c.dt_cancelamento
+FROM hsg.tb_consulta c
+WHERE c.st_consulta = 'CANCELADA'
+  AND c.ds_cancelamento NOT ILIKE '%clínica%';
+
+-- ══════════════════════════════════════════════════════════════════════
+-- ── Massa: anotações de consulta (V31) ────────────────────────────────
+-- ══════════════════════════════════════════════════════════════════════
+-- Cobre os três perfis autorizados (MEDICO / ENFERMEIRO / ADMIN).
+-- Regra AN-02: CANCELADA não recebe anotação.
+
+-- ▸ Consulta 3 (dr.roberto × claudio.filho — REALIZADA há 7d)
+INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
+    id_responsavel, tp_responsavel, dt_criacao)
+SELECT c.id_consulta,
+       'Triagem inicial',
+       'PA 130/85 mmHg, FC 78 bpm, T 36,8°C. Paciente queixa-se de dor abdominal leve há 2 dias.',
+       (SELECT e.id_enfer FROM hsg.tb_enfer e
+        JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = e.id_conta_usu_enfer
+        WHERE cu.nm_usu = 'enf.maria'),
+       'ENFERMEIRO',
+       c.dt_consulta - INTERVAL '10 minutes'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.roberto' AND cp.nm_usu = 'claudio.filho'
+  AND c.dt_consulta = (CURRENT_DATE - 7) + TIME '09:00';
+
+INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
+    id_responsavel, tp_responsavel, dt_criacao)
+SELECT c.id_consulta,
+       'Conduta clínica',
+       'Exame físico sem sinais de irritação peritoneal. Solicitado hemograma e USG abdominal. Retorno em 7 dias.',
+       c.id_medico, 'MEDICO',
+       c.dt_consulta + INTERVAL '25 minutes'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.roberto' AND cp.nm_usu = 'claudio.filho'
+  AND c.dt_consulta = (CURRENT_DATE - 7) + TIME '09:00';
+
+-- ▸ Consulta 9 (dr.roberto × carla.silva — REALIZADA há 2d)
+INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
+    id_responsavel, tp_responsavel, dt_criacao)
+SELECT c.id_consulta,
+       'Sinais vitais',
+       'PA 110/70 mmHg, FC 88 bpm, T 37,6°C. Refere náuseas e fezes amolecidas desde ontem.',
+       (SELECT e.id_enfer FROM hsg.tb_enfer e
+        JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = e.id_conta_usu_enfer
+        WHERE cu.nm_usu = 'enf.lucas'),
+       'ENFERMEIRO',
+       c.dt_consulta - INTERVAL '8 minutes'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.roberto' AND cp.nm_usu = 'carla.silva'
+  AND c.dt_consulta = (CURRENT_DATE - 2) + TIME '09:20';
+
+INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
+    id_responsavel, tp_responsavel, dt_criacao)
+SELECT c.id_consulta,
+       'Anamnese',
+       'Quadro compatível com gastroenterite aguda viral. Sem desidratação grave. Tolera líquidos por VO.',
+       c.id_medico, 'MEDICO', c.dt_consulta + INTERVAL '10 minutes'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.roberto' AND cp.nm_usu = 'carla.silva'
+  AND c.dt_consulta = (CURRENT_DATE - 2) + TIME '09:20';
+
+INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
+    id_responsavel, tp_responsavel, dt_criacao)
+SELECT c.id_consulta,
+       'Plano terapêutico',
+       'Hidratação oral, dieta branda por 3 dias, sintomáticos SOS. Retorno se febre > 38,5°C ou sangue nas fezes.',
+       c.id_medico, 'MEDICO', c.dt_consulta + INTERVAL '20 minutes'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.roberto' AND cp.nm_usu = 'carla.silva'
+  AND c.dt_consulta = (CURRENT_DATE - 2) + TIME '09:20';
+
+-- ▸ Consulta 12 (dra.fernanda × mariana.santos — REALIZADA há 3d)
+INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
+    id_responsavel, tp_responsavel, dt_criacao)
+SELECT c.id_consulta,
+       'Triagem',
+       'PA 125/80 mmHg, FC 72 bpm. Refere cefaleia bilateral em peso há 5 dias, pior no final do expediente.',
+       (SELECT e.id_enfer FROM hsg.tb_enfer e
+        JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = e.id_conta_usu_enfer
+        WHERE cu.nm_usu = 'enf.juliana'),
+       'ENFERMEIRO',
+       c.dt_consulta - INTERVAL '12 minutes'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dra.fernanda' AND cp.nm_usu = 'mariana.santos'
+  AND c.dt_consulta = (CURRENT_DATE - 3) + TIME '10:30';
+
+INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
+    id_responsavel, tp_responsavel, dt_criacao)
+SELECT c.id_consulta,
+       'Exame neurológico',
+       'Glasgow 15. Pupilas isocóricas e fotorreagentes. Sem déficit motor ou sensitivo. Força muscular grau V/V.',
+       c.id_medico, 'MEDICO', c.dt_consulta + INTERVAL '15 minutes'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dra.fernanda' AND cp.nm_usu = 'mariana.santos'
+  AND c.dt_consulta = (CURRENT_DATE - 3) + TIME '10:30';
+
+INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
+    id_responsavel, tp_responsavel, dt_criacao)
+SELECT c.id_consulta,
+       'Encaminhamento',
+       'Encaminhado para neurologia ambulatorial para avaliação de cefaleia tensional crônica. Prescrito amitriptilina 25 mg à noite.',
+       c.id_medico, 'MEDICO', c.dt_consulta + INTERVAL '25 minutes'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dra.fernanda' AND cp.nm_usu = 'mariana.santos'
+  AND c.dt_consulta = (CURRENT_DATE - 3) + TIME '10:30';
+
+-- ▸ Consulta 15 (dr.roberto × beatriz.costa — REALIZADA há 1d)
+INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
+    id_responsavel, tp_responsavel, dt_criacao)
+SELECT c.id_consulta,
+       'Triagem pediátrica',
+       'Peso 18,3 kg, altura 110 cm, FC 96 bpm, T 36,5°C. Mãe relata desenvolvimento sem queixas.',
+       (SELECT e.id_enfer FROM hsg.tb_enfer e
+        JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = e.id_conta_usu_enfer
+        WHERE cu.nm_usu = 'enf.camila'),
+       'ENFERMEIRO',
+       c.dt_consulta - INTERVAL '10 minutes'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.roberto' AND cp.nm_usu = 'beatriz.costa'
+  AND c.dt_consulta = (CURRENT_DATE - 1) + TIME '09:00';
+
+INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
+    id_responsavel, tp_responsavel, dt_criacao)
+SELECT c.id_consulta,
+       'Acompanhamento',
+       'Curva de crescimento em P50. Marcos de desenvolvimento adequados para idade. Caderneta vacinal em dia.',
+       c.id_medico, 'MEDICO', c.dt_consulta + INTERVAL '15 minutes'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.roberto' AND cp.nm_usu = 'beatriz.costa'
+  AND c.dt_consulta = (CURRENT_DATE - 1) + TIME '09:00';
+
+-- ▸ Consulta 6 (dr.joao × claudio.filho — CONFIRMADA hoje 09:00) — só triagem
+INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
+    id_responsavel, tp_responsavel, dt_criacao)
+SELECT c.id_consulta,
+       'Triagem',
+       'PA 118/76 mmHg, FC 70 bpm, T 36,4°C. Sem queixas no momento. Aguardando atendimento médico.',
+       (SELECT e.id_enfer FROM hsg.tb_enfer e
+        JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = e.id_conta_usu_enfer
+        WHERE cu.nm_usu = 'enf.maria'),
+       'ENFERMEIRO',
+       c.dt_consulta - INTERVAL '10 minutes'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.joao' AND cp.nm_usu = 'claudio.filho'
+  AND c.dt_consulta = CURRENT_DATE + TIME '09:00';
+
+-- ▸ Consulta 14 (dr.ana × carla.silva — CONFIRMADA hoje 15:00) — triagem + admin
+INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
+    id_responsavel, tp_responsavel, dt_criacao)
+SELECT c.id_consulta,
+       'Triagem',
+       'PA 122/78 mmHg, FC 74 bpm. Refere ansiedade leve antes do atendimento.',
+       (SELECT e.id_enfer FROM hsg.tb_enfer e
+        JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = e.id_conta_usu_enfer
+        WHERE cu.nm_usu = 'enf.juliana'),
+       'ENFERMEIRO',
+       c.dt_consulta - INTERVAL '15 minutes'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.ana' AND cp.nm_usu = 'carla.silva'
+  AND c.dt_consulta = CURRENT_DATE + TIME '15:00';
+
+INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
+    id_responsavel, tp_responsavel, dt_criacao)
+SELECT c.id_consulta,
+       'Observação administrativa',
+       'Carteirinha de convênio validada na recepção. Autorização prévia não necessária para a especialidade.',
+       (SELECT a.id_adm FROM hsg.tb_adm a
+        JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = a.id_conta_usu_adm
+        WHERE cu.nm_usu = 'admin.hsg'),
+       'ADMIN',
+       c.dt_consulta - INTERVAL '20 minutes'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.ana' AND cp.nm_usu = 'carla.silva'
+  AND c.dt_consulta = CURRENT_DATE + TIME '15:00';
+
+-- ▸ Consulta 2 (dr.ana × mariana.santos — CONFIRMADA +3d 14:00)
+INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
+    id_responsavel, tp_responsavel, dt_criacao)
+SELECT c.id_consulta,
+       'Confirmação telefônica',
+       'Paciente confirmou presença por telefone. Solicitou trazer exames laboratoriais recentes.',
+       (SELECT a.id_adm FROM hsg.tb_adm a
+        JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = a.id_conta_usu_adm
+        WHERE cu.nm_usu = 'admin.hsg'),
+       'ADMIN',
+       NOW() - INTERVAL '6 hours'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.ana' AND cp.nm_usu = 'mariana.santos'
+  AND c.dt_consulta = (CURRENT_DATE + 3) + TIME '14:00';
+
+-- ▸ Consulta 4 (dr.ana × claudio.filho — CONFIRMADA convênio +4d 14:40)
+INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
+    id_responsavel, tp_responsavel, dt_criacao)
+SELECT c.id_consulta,
+       'Convênio validado',
+       'Cobertura ativa confirmada com a operadora. Copagamento de 30% aplicável ao paciente.',
+       (SELECT a.id_adm FROM hsg.tb_adm a
+        JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = a.id_conta_usu_adm
+        WHERE cu.nm_usu = 'admin.hsg'),
+       'ADMIN',
+       NOW() - INTERVAL '2 hours'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.ana' AND cp.nm_usu = 'claudio.filho'
+  AND c.dt_consulta = (CURRENT_DATE + 4) + TIME '14:40';

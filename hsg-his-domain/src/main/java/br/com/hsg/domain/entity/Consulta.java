@@ -80,6 +80,10 @@ public class Consulta {
     private BigDecimal valorCoberturaConvenio;
 
     @Getter
+    @Column(name = "DS_OBSERVACAO_CLINICA", length = 1000)
+    private String observacaoClinica;
+
+    @Getter
     @Column(name = "DT_CADASTRO", nullable = false)
     private LocalDateTime dataCadastro;
 
@@ -142,6 +146,21 @@ public class Consulta {
         if (this.status != StatusConsulta.CONFIRMADA && this.status != StatusConsulta.AGENDADA) {
             throw new IllegalStateException("Apenas consultas agendadas ou confirmadas podem ser marcadas como realizadas.");
         }
+        this.status                = StatusConsulta.REALIZADA;
+        this.dataUltimaAtualizacao = LocalDateTime.now();
+    }
+
+    public void marcarRealizadaComObservacao(String observacaoClinica) {
+        if (observacaoClinica == null || observacaoClinica.trim().isEmpty()) {
+            throw new IllegalArgumentException("A observação clínica é obrigatória.");
+        }
+        if (observacaoClinica.length() > 1000) {
+            throw new IllegalArgumentException("A observação clínica deve ter no máximo 1000 caracteres.");
+        }
+        if (this.status != StatusConsulta.CONFIRMADA && this.status != StatusConsulta.AGENDADA) {
+            throw new IllegalStateException("Apenas consultas agendadas ou confirmadas podem ser marcadas como realizadas.");
+        }
+        this.observacaoClinica     = observacaoClinica.trim();
         this.status                = StatusConsulta.REALIZADA;
         this.dataUltimaAtualizacao = LocalDateTime.now();
     }

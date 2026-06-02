@@ -109,6 +109,45 @@ public class ConsultaDAO {
                 .getResultList();
     }
 
+    public List<Consulta> listarDoDia(LocalDateTime inicioDia, LocalDateTime fimDia, Long idMedicoOpcional) {
+        return listarPorPeriodo(inicioDia, fimDia, idMedicoOpcional, null, null, null);
+    }
+
+    public List<Consulta> listarPorPeriodo(LocalDateTime inicio, LocalDateTime fim,
+                                            Long idMedicoOpcional, StatusConsulta statusFiltro,
+                                            String termoPaciente, Long idEspecialidadeOpcional) {
+        StringBuilder jpql = new StringBuilder(
+                "SELECT c FROM Consulta c " +
+                "LEFT JOIN FETCH c.paciente p " +
+                "LEFT JOIN FETCH c.medico m " +
+                "LEFT JOIN FETCH c.especialidade " +
+                "LEFT JOIN FETCH c.slot " +
+                "WHERE c.dataConsulta >= :ini AND c.dataConsulta < :fim");
+        if (idMedicoOpcional != null) {
+            jpql.append(" AND c.medico.id = :idm");
+        }
+        if (idEspecialidadeOpcional != null) {
+            jpql.append(" AND c.especialidade.id = :ide");
+        }
+        if (statusFiltro != null) {
+            jpql.append(" AND c.status = :st");
+        }
+        boolean temTermo = termoPaciente != null && !termoPaciente.trim().isEmpty();
+        if (temTermo) {
+            jpql.append(" AND LOWER(p.nome.primeiroNome) LIKE :termo");
+        }
+        jpql.append(" ORDER BY c.dataConsulta ASC");
+
+        javax.persistence.TypedQuery<Consulta> q = em.createQuery(jpql.toString(), Consulta.class)
+                .setParameter("ini", inicio)
+                .setParameter("fim", fim);
+        if (idMedicoOpcional != null)        q.setParameter("idm", idMedicoOpcional);
+        if (idEspecialidadeOpcional != null) q.setParameter("ide", idEspecialidadeOpcional);
+        if (statusFiltro != null)            q.setParameter("st",  statusFiltro);
+        if (temTermo)                        q.setParameter("termo", "%" + termoPaciente.trim().toLowerCase() + "%");
+        return q.getResultList();
+    }
+
     public Consulta salvar(Consulta c) {
         em.persist(c);
         em.flush();

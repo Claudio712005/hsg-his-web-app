@@ -1,11 +1,15 @@
 package br.com.hsg.service.impl.scheduler;
 
 import br.com.hsg.dao.ConsultaDAO;
+import br.com.hsg.dao.ConsultaHistoricoDAO;
 import br.com.hsg.domain.entity.Consulta;
+import br.com.hsg.domain.entity.ConsultaHistorico;
 import br.com.hsg.domain.entity.Medico;
+import br.com.hsg.domain.enums.AcaoConsulta;
 import br.com.hsg.domain.enums.CategoriaNotificacao;
 import br.com.hsg.domain.enums.TipoDestinatarioNotificacao;
 import br.com.hsg.domain.enums.TipoNotificacao;
+import br.com.hsg.domain.enums.TipoResponsavel;
 import br.com.hsg.service.facade.notificacao.NotificacaoServiceFacade;
 import br.com.hsg.service.facade.scheduler.ConsultaAutoFaltaServiceFacade;
 import br.com.hsg.service.mail.MailService;
@@ -26,6 +30,7 @@ public class ConsultaAutoFaltaServiceImpl implements ConsultaAutoFaltaServiceFac
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @EJB private ConsultaDAO consultaDAO;
+    @EJB private ConsultaHistoricoDAO historicoDAO;
     @EJB private MailService mailService;
     @EJB private NotificacaoServiceFacade notificacaoService;
 
@@ -39,6 +44,7 @@ public class ConsultaAutoFaltaServiceImpl implements ConsultaAutoFaltaServiceFac
             try {
                 c.marcarFalta();
                 consultaDAO.atualizar(c);
+                registrarHistorico(c);
                 notificarMedico(c);
                 notificarInApp(c);
                 processadas++;
@@ -78,6 +84,17 @@ public class ConsultaAutoFaltaServiceImpl implements ConsultaAutoFaltaServiceFac
         } catch (Exception ex) {
             LOG.log(Level.WARNING,
                     "[ConsultaAutoFaltaServiceImpl] Falha ao gerar notificações in-app id=" + c.getId(), ex);
+        }
+    }
+
+    private void registrarHistorico(Consulta c) {
+        try {
+            historicoDAO.salvar(ConsultaHistorico.registrar(
+                    c, AcaoConsulta.FALTOU, null, TipoResponsavel.SISTEMA,
+                    "Auto-falta após 24h de tolerância"));
+        } catch (Exception ex) {
+            LOG.log(Level.WARNING,
+                    "[ConsultaAutoFaltaServiceImpl] Falha ao registrar histórico", ex);
         }
     }
 
