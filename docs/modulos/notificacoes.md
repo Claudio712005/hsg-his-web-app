@@ -96,6 +96,10 @@ Mapeamento atual das ações que disparam notificações in-app. As notificaçõ
 | Solicitar atualização cadastral/endereço/clínica | `SolicitacaoAtualizacaoServiceImpl.solicitar*` | Todos os admins ativos | INFO | SISTEMA | — |
 | Cancelar solicitação de atualização (admin/clínica) | `SolicitacaoAtualizacaoServiceImpl.cancelarSolicitacao` | Paciente | ALERTA | SISTEMA | — |
 | Ativação de profissional (conclusão de cadastro) | `AtivacaoServiceImpl.ativarCadastro` | Todos os admins ativos | SUCESSO | SISTEMA | `/admin/pre-cadastro-profissional.xhtml` |
+| Check-in na recepção | `ConsultaClinicaServiceImpl.confirmarChegada` | Médico | INFO | CONSULTA | `/clinica/minha-agenda.xhtml` |
+| Atendimento concluído | `ConsultaClinicaServiceImpl.marcarRealizadaComObservacao` | Paciente | SUCESSO | CONSULTA | `/paciente/minhas-consultas.xhtml` |
+| Falta marcada pela clínica | `ConsultaClinicaServiceImpl.marcarFaltaPelaClinica` | Paciente | ALERTA | CONSULTA | `/paciente/minhas-consultas.xhtml` |
+| Cancelamento pela clínica | `ConsultaClinicaServiceImpl.cancelarPelaClinica` | Paciente | ALERTA | CONSULTA | `/paciente/minhas-consultas.xhtml` |
 
 Pontos a observar:
 

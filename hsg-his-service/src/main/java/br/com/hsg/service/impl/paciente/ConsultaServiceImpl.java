@@ -48,6 +48,7 @@ public class ConsultaServiceImpl implements ConsultaServiceFacade {
             java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @EJB private ConsultaDAO          consultaDAO;
+    @EJB private br.com.hsg.dao.ConsultaHistoricoDAO consultaHistoricoDAO;
     @EJB private AgendaMedicaSlotDAO  agendaMedicaSlotDAO;
     @EJB private PacienteDAO          pacienteDAO;
     @EJB private PacienteConvenioDAO  pacienteConvenioDAO;
@@ -114,8 +115,27 @@ public class ConsultaServiceImpl implements ConsultaServiceFacade {
                 + ", paciente=" + idPaciente + ", slot=" + idSlot
                 + ", tipo=" + fin.resultado.getTipoAtendimento());
 
+        registrarHistoricoSeguro(salva,
+                br.com.hsg.domain.enums.AcaoConsulta.AGENDADA,
+                idPaciente,
+                br.com.hsg.domain.enums.TipoResponsavel.PACIENTE, null);
+
         notificarAgendamento(salva);
         return salva;
+    }
+
+    private void registrarHistoricoSeguro(Consulta c, br.com.hsg.domain.enums.AcaoConsulta acao,
+                                            Long idResponsavel,
+                                            br.com.hsg.domain.enums.TipoResponsavel tipoResp,
+                                            String observacao) {
+        if (consultaHistoricoDAO == null) return;
+        try {
+            consultaHistoricoDAO.salvar(br.com.hsg.domain.entity.ConsultaHistorico.registrar(
+                    c, acao, idResponsavel, tipoResp, observacao));
+        } catch (Exception ex) {
+            LOG.log(java.util.logging.Level.WARNING,
+                    "[ConsultaServiceImpl] Falha ao registrar histórico", ex);
+        }
     }
 
     private void notificarAgendamento(Consulta c) {
@@ -176,6 +196,11 @@ public class ConsultaServiceImpl implements ConsultaServiceFacade {
         }
 
         LOG.info("[ConsultaServiceImpl] Consulta cancelada: id=" + idConsulta + ", paciente=" + idPaciente);
+
+        registrarHistoricoSeguro(consulta,
+                br.com.hsg.domain.enums.AcaoConsulta.CANCELADA,
+                idPaciente,
+                br.com.hsg.domain.enums.TipoResponsavel.PACIENTE, motivo);
 
         if (consulta.getMedico() != null) {
             String quando = consulta.getDataConsulta().format(FMT_NOTIF);

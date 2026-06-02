@@ -71,17 +71,30 @@ public class NotificacoesBean implements Serializable {
         carregar();
     }
 
-    public String abrirEMarcar(Notificacao n) {
-        try {
-            if (!n.isLida()) {
-                notificacaoService.marcarComoLida(n.getId(), getTipoDestinatario(), getIdDestinatario());
+    public String abrirEMarcar() {
+        javax.faces.context.ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+        java.util.Map<String, String> params = ec.getRequestParameterMap();
+        String idStr = params.get("idNotif");
+        String link  = params.get("linkDestino");
+
+        Long idNotif = null;
+        if (idStr != null && !idStr.isEmpty()) {
+            try { idNotif = Long.valueOf(idStr); }
+            catch (NumberFormatException nfe) {
+                LOG.log(Level.WARNING, "[NotificacoesBean] idNotif inválido: " + idStr, nfe);
             }
-        } catch (Exception ex) {
-            LOG.log(Level.WARNING, "[NotificacoesBean] Falha ao marcar como lida em abertura", ex);
         }
+
+        if (idNotif != null) {
+            try {
+                notificacaoService.marcarComoLida(idNotif, getTipoDestinatario(), getIdDestinatario());
+            } catch (Exception ex) {
+                LOG.log(Level.WARNING, "[NotificacoesBean] Falha ao marcar como lida em abertura", ex);
+            }
+        }
+
         try {
-            javax.faces.context.ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
-            String destino = ec.getRequestContextPath() + (n.getLink() != null ? n.getLink() : "/");
+            String destino = ec.getRequestContextPath() + ((link != null && !link.isEmpty()) ? link : "/");
             ec.redirect(destino);
         } catch (java.io.IOException io) {
             LOG.log(Level.WARNING, "[NotificacoesBean] Falha ao redirecionar para link", io);

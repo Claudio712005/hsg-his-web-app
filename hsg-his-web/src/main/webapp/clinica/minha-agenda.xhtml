@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/templates/clinica/layout.xhtml">
+
+    <ui:define name="title">HSG - Minha Agenda</ui:define>
+
+    <ui:define name="head">
+        <style>
+            .ma-filtros{display:flex;align-items:center;gap:10px;padding:6px 10px;
+                background:linear-gradient(#f8f8f8,#e4e4e4);border:1px solid #c8c8c8;
+                font-size:12px;color:#333;flex-wrap:wrap;}
+            .ma-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));
+                gap:6px;margin:8px 0;}
+            .ma-kpi{border:1px solid #c8c8c8;background:#fff;padding:6px 8px;border-radius:2px;}
+            .ma-kpi .num{font-size:18px;font-weight:bold;color:#1f3a68;font-family:monospace;}
+            .ma-kpi .lbl{font-size:11px;color:#555;}
+            .ma-list{display:flex;flex-direction:column;gap:4px;}
+            .ma-item{display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;
+                padding:8px 10px;border:1px solid #c8c8c8;background:#fff;border-radius:2px;}
+            .ma-item.confirmada{border-left:3px solid #1e6b22;background:#f6fff7;}
+            .ma-item.agendada{border-left:3px solid #1f3a68;}
+            .ma-item.realizada{background:#fafafa;color:#555;}
+            .ma-item.faltou,.ma-item.cancelada{background:#fafafa;color:#777;}
+            .ma-hora{font-family:monospace;font-size:14px;font-weight:bold;color:#1f3a68;}
+            .ma-info .nm{font-weight:bold;font-size:13px;color:#333;}
+            .ma-info .sub{font-size:11.5px;color:#555;margin-top:2px;}
+            .ma-acts{display:flex;gap:4px;}
+            .ma-acts .btn{font-size:11px;padding:2px 8px;}
+            .ma-obs{font-size:11.5px;color:#1e6b22;background:#e5f3e6;border:1px solid #7bb37e;
+                padding:4px 6px;margin-top:4px;border-radius:2px;}
+        </style>
+    </ui:define>
+
+    <ui:define name="content">
+        <h:form id="formAgenda">
+            <p:growl id="msgs" widgetVar="msgs" showDetail="true" life="5000" globalOnly="true"/>
+
+            <h:panelGroup layout="block" styleClass="panel">
+                <h:panelGroup layout="block" styleClass="panel-title">
+                    <i class="fa fa-stethoscope panel-icon"/>
+                    <h:outputText value="Minha agenda"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="panel-body">
+
+                    <div class="ma-filtros">
+                        <label><b>De:</b></label>
+                        <p:calendar value="#{minhaAgendaBean.dataInicio}" pattern="dd/MM/yyyy"
+                                    mask="true" navigator="true" styleClass="input-field"
+                                    style="width:120px;">
+                            <p:ajax event="dateSelect" listener="#{minhaAgendaBean.aoMudarFiltro}"
+                                    update="formAgenda"/>
+                        </p:calendar>
+                        <label><b>Até:</b></label>
+                        <p:calendar value="#{minhaAgendaBean.dataFim}" pattern="dd/MM/yyyy"
+                                    mask="true" navigator="true" styleClass="input-field"
+                                    style="width:120px;">
+                            <p:ajax event="dateSelect" listener="#{minhaAgendaBean.aoMudarFiltro}"
+                                    update="formAgenda"/>
+                        </p:calendar>
+
+                        <p:commandButton value="Hoje" styleClass="btn"
+                                         action="#{minhaAgendaBean.aplicarHoje}"
+                                         update="formAgenda" process="@this"/>
+                        <p:commandButton value="7 dias" styleClass="btn"
+                                         action="#{minhaAgendaBean.aplicarProximos7Dias}"
+                                         update="formAgenda" process="@this"/>
+
+                        <label><b>Status:</b></label>
+                        <h:selectOneMenu value="#{minhaAgendaBean.statusFiltro}"
+                                         styleClass="filter-select" style="min-width:120px;">
+                            <f:selectItem itemValue="TODOS" itemLabel="Todos"/>
+                            <f:selectItems value="#{minhaAgendaBean.statusValues}" var="s"
+                                           itemValue="#{s.name()}" itemLabel="#{s.name()}"/>
+                            <p:ajax event="change" listener="#{minhaAgendaBean.aoMudarFiltro}"
+                                    update="formAgenda"/>
+                        </h:selectOneMenu>
+
+                        <label><b>Paciente:</b></label>
+                        <p:inputText value="#{minhaAgendaBean.termoPaciente}"
+                                     placeholder="Nome..." style="width:130px;">
+                            <p:ajax event="keyup" listener="#{minhaAgendaBean.aoMudarFiltro}"
+                                    update="formAgenda" delay="400"/>
+                        </p:inputText>
+
+                        <p:commandButton value="Limpar" icon="fa fa-times" styleClass="btn"
+                                         action="#{minhaAgendaBean.limparFiltros}"
+                                         update="formAgenda" process="@this"/>
+                    </div>
+
+                    <div class="ma-kpis">
+                        <div class="ma-kpi"><div class="num">#{minhaAgendaBean.totalDia}</div>
+                            <div class="lbl">Total</div></div>
+                        <div class="ma-kpi"><div class="num">#{minhaAgendaBean.totalAgendadas}</div>
+                            <div class="lbl">Aguardando</div></div>
+                        <div class="ma-kpi"><div class="num">#{minhaAgendaBean.totalConfirmadas}</div>
+                            <div class="lbl">Em espera</div></div>
+                        <div class="ma-kpi"><div class="num">#{minhaAgendaBean.totalRealizadas}</div>
+                            <div class="lbl">Realizadas</div></div>
+                        <div class="ma-kpi"><div class="num">#{minhaAgendaBean.totalFaltas}</div>
+                            <div class="lbl">Faltas</div></div>
+                    </div>
+
+                    <h:panelGroup rendered="#{empty minhaAgendaBean.consultas}" layout="block"
+                                  styleClass="note">
+                        Nenhuma consulta para a data selecionada.
+                    </h:panelGroup>
+
+                    <div class="ma-list">
+                        <ui:repeat value="#{minhaAgendaBean.consultas}" var="c">
+                            <div class="ma-item #{c.status.name().toLowerCase()}">
+                                <div class="ma-hora">#{minhaAgendaBean.formatarDataHora(c.dataConsulta)}</div>
+                                <div class="ma-info">
+                                    <div class="nm">#{c.paciente.nomeCompleto}</div>
+                                    <div class="sub">
+                                        <h:outputText value="#{c.especialidade.nome}"
+                                                      rendered="#{c.especialidade != null}"/>
+                                        &#160;
+                                        <h:outputText styleClass="chip #{minhaAgendaBean.chipStatus(c)}"
+                                                      value="#{c.status}"/>
+                                    </div>
+                                    <h:panelGroup rendered="#{c.status == 'REALIZADA' and not empty c.observacaoClinica}">
+                                        <div class="ma-obs">
+                                            <i class="fa fa-notes-medical"/> #{c.observacaoClinica}
+                                        </div>
+                                    </h:panelGroup>
+                                </div>
+                                <div class="ma-acts">
+                                    <p:commandButton value="Atender" icon="fa fa-notes-medical"
+                                                     styleClass="btn primary"
+                                                     rendered="#{minhaAgendaBean.podeRealizar(c)}"
+                                                     action="#{minhaAgendaBean.prepararRealizar(c.id)}"
+                                                     update="formAgenda:dlgAtender"
+                                                     oncomplete="PF('wDlgAtender').show();"
+                                                     process="@this"/>
+                                    <p:commandButton value="Falta" icon="fa fa-user-times"
+                                                     styleClass="btn"
+                                                     rendered="#{minhaAgendaBean.podeMarcarFalta(c)}"
+                                                     action="#{minhaAgendaBean.marcarFalta(c.id)}"
+                                                     update="formAgenda" process="@this"/>
+                                    <p:commandButton value="Anotações" icon="fa fa-comment-medical"
+                                                     styleClass="btn"
+                                                     action="#{minhaAgendaBean.abrirAnotacoes(c)}"
+                                                     update="formAgenda:dlgAnotacoesMA"
+                                                     oncomplete="PF('wDlgAnotacoesMA').show();"
+                                                     process="@this"/>
+                                </div>
+                            </div>
+                        </ui:repeat>
+                    </div>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <p:dialog id="dlgAtender" widgetVar="wDlgAtender" header="Registrar atendimento"
+                      modal="true" resizable="false" width="500" styleClass="hsg-dialog">
+                <h:panelGroup layout="block" style="padding:6px 4px;">
+                    <h:panelGroup layout="block" styleClass="note" style="margin-bottom:8px;">
+                        Registre a observação clínica do atendimento. A consulta será marcada como
+                        <b>REALIZADA</b>.
+                    </h:panelGroup>
+                    <h:inputTextarea value="#{minhaAgendaBean.observacaoClinica}"
+                                     rows="5" styleClass="input-field" style="width:100%;"
+                                     maxlength="1000"
+                                     placeholder="Observação clínica (queixa, exame, conduta)..."/>
+                    <div style="display:flex;justify-content:flex-end;gap:6px;
+                                padding-top:8px;margin-top:8px;border-top:1px solid #c8c8c8;">
+                        <p:commandButton value="Voltar" type="button" icon="fa fa-arrow-left"
+                                         styleClass="btn" onclick="PF('wDlgAtender').hide();"/>
+                        <p:commandButton value="Concluir atendimento" icon="fa fa-check"
+                                         styleClass="btn primary"
+                                         action="#{minhaAgendaBean.marcarRealizada}"
+                                         update="formAgenda"
+                                         oncomplete="if(!args.validationFailed){PF('wDlgAtender').hide();}"
+                                         process="formAgenda:dlgAtender"/>
+                    </div>
+                </h:panelGroup>
+            </p:dialog>
+
+            <p:dialog id="dlgAnotacoesMA" widgetVar="wDlgAnotacoesMA"
+                      header="Anotações e histórico da consulta"
+                      modal="true" resizable="false" width="640" styleClass="hsg-dialog">
+                <h:panelGroup layout="block" rendered="#{minhaAgendaBean.consultaAnotando != null}"
+                              style="padding:6px 4px;">
+
+                    <h:panelGroup layout="block" styleClass="note" style="margin-bottom:8px;">
+                        <b>Paciente:</b> #{minhaAgendaBean.consultaAnotando.paciente.nomeCompleto}
+                        &#160;|&#160;
+                        <b>Data:</b> #{minhaAgendaBean.formatarDataHora(minhaAgendaBean.consultaAnotando.dataConsulta)}
+                        &#160;|&#160;
+                        <b>Status:</b> #{minhaAgendaBean.consultaAnotando.status}
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="panel" style="margin-bottom:10px;">
+                        <h:panelGroup layout="block" styleClass="panel-title">
+                            <i class="fa fa-plus-square panel-icon"/>
+                            <h:outputText value="Nova anotação"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="panel-body">
+                            <div style="display:flex;flex-direction:column;gap:6px;">
+                                <label style="font-size:11.5px;font-weight:bold;color:#333;">Título *</label>
+                                <h:inputText value="#{minhaAgendaBean.anotacaoTitulo}"
+                                             styleClass="input-field" maxlength="200"
+                                             style="width:100%;"/>
+                                <label style="font-size:11.5px;font-weight:bold;color:#333;">Descrição *</label>
+                                <h:inputTextarea value="#{minhaAgendaBean.anotacaoDescricao}"
+                                                 rows="4" styleClass="input-field"
+                                                 style="width:100%;" maxlength="2000"/>
+                                <div style="display:flex;justify-content:flex-end;">
+                                    <p:commandButton value="Salvar anotação" icon="fa fa-save"
+                                                     styleClass="btn primary"
+                                                     action="#{minhaAgendaBean.salvarAnotacao}"
+                                                     update="formAgenda:dlgAnotacoesMA"
+                                                     process="formAgenda:dlgAnotacoesMA"/>
+                                </div>
+                            </div>
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="panel" style="margin-bottom:10px;">
+                        <h:panelGroup layout="block" styleClass="panel-title">
+                            <i class="fa fa-comments panel-icon"/>
+                            <h:outputText value="Anotações (#{minhaAgendaBean.anotacoes.size()})"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="panel-body">
+                            <h:panelGroup rendered="#{empty minhaAgendaBean.anotacoes}"
+                                          styleClass="note">
+                                Nenhuma anotação registrada.
+                            </h:panelGroup>
+                            <ui:repeat value="#{minhaAgendaBean.anotacoes}" var="a">
+                                <div style="border:1px solid #c8c8c8;padding:6px 8px;
+                                            margin-bottom:4px;background:#fff;border-radius:2px;">
+                                    <div style="display:flex;justify-content:space-between;
+                                                font-size:11px;color:#555;margin-bottom:2px;">
+                                        <span><b>#{a.tipoResponsavel.descricao}</b></span>
+                                        <span style="font-family:monospace;">
+                                            #{minhaAgendaBean.formatarDataHora(a.dataCriacao)}
+                                        </span>
+                                    </div>
+                                    <div style="font-size:12.5px;font-weight:bold;color:#333;">
+                                        #{a.titulo}
+                                    </div>
+                                    <div style="font-size:12px;color:#444;white-space:pre-wrap;
+                                                margin-top:2px;">#{a.descricao}</div>
+                                </div>
+                            </ui:repeat>
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="panel">
+                        <h:panelGroup layout="block" styleClass="panel-title">
+                            <i class="fa fa-history panel-icon"/>
+                            <h:outputText value="Histórico de status"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="panel-body">
+                            <ui:repeat value="#{minhaAgendaBean.historicoConsulta}" var="h">
+                                <div style="display:grid;grid-template-columns:120px 100px 1fr;
+                                            gap:8px;font-size:11.5px;padding:3px 6px;
+                                            border-bottom:1px dotted #ddd;">
+                                    <span style="font-family:monospace;color:#1f3a68;">
+                                        #{minhaAgendaBean.formatarDataHora(h.dataAcao)}
+                                    </span>
+                                    <span><b>#{h.acao}</b></span>
+                                    <span>
+                                        <i>#{h.tipoResponsavel.descricao}</i>
+                                        <h:outputText value=" — #{h.observacao}"
+                                                      rendered="#{not empty h.observacao}"/>
+                                    </span>
+                                </div>
+                            </ui:repeat>
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <div style="display:flex;justify-content:flex-end;padding-top:8px;margin-top:8px;
+                                border-top:1px solid #c8c8c8;">
+                        <p:commandButton value="Fechar" type="button" icon="fa fa-times"
+                                         styleClass="btn" onclick="PF('wDlgAnotacoesMA').hide();"/>
+                    </div>
+                </h:panelGroup>
+            </p:dialog>
+
+        </h:form>
+    </ui:define>
+
+</ui:composition>

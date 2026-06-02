@@ -88,6 +88,23 @@ Comportamento de simulação versus agendamento:
 
 Observação: a clínica/administração pode cancelar sem a restrição de 24h (previsto para a Fase E, ainda não implementado).
 
+## 7.1 Atendimento clínico (Fase E)
+
+| ID | Regra | Onde |
+|----|-------|------|
+| AC-01 | Check-in só é permitido em consultas com status `AGENDADA`. | `ConsultaClinicaServiceImpl.confirmarChegada` |
+| AC-02 | Marcar como realizada exige que o usuário seja o médico responsável pela consulta. | `ConsultaClinicaServiceImpl.marcarRealizadaComObservacao` |
+| AC-03 | Observação clínica é obrigatória, com até 1000 caracteres. | Domínio (`Consulta.marcarRealizadaComObservacao`) |
+| AC-04 | Estado de origem para marcar realizada: `AGENDADA` ou `CONFIRMADA`. | Domínio |
+| AC-05 | Falta manual aceita `AGENDADA` ou `CONFIRMADA`. | Domínio (`Consulta.marcarFalta`) |
+| AC-06 | Cancelamento pela clínica exige motivo e libera o slot via lock pessimista. Não há restrição de 24h. | `ConsultaClinicaServiceImpl.cancelarPelaClinica` |
+| AC-07 | Cada ação dispara uma notificação in-app ao perfil oposto da ação (médico ↔ paciente). | `ConsultaClinicaServiceImpl` |
+| AC-08 | **Check-in só pode ser feito por enfermeiro ou administrador.** Médicos e pacientes não podem confirmar chegada. | `ConsultaClinicaServiceImpl.confirmarChegada` |
+| AC-09 | **Médicos só atuam nas próprias consultas.** Marcar falta ou cancelar consulta de outro médico é recusado com `IllegalStateException`. | `ConsultaClinicaServiceImpl.validarMedicoSoNasProprias` |
+| AC-10 | Toda ação é registrada em `tb_consulta_historico` com tipo de responsável (PACIENTE, MEDICO, ENFERMEIRO, ADMIN, SISTEMA), ação, data e observação opcional. Auto-falta usa `SISTEMA`. | `ConsultaClinicaServiceImpl.registrarHistorico` + `ConsultaServiceImpl.registrarHistoricoSeguro` + `ConsultaAutoFaltaServiceImpl.registrarHistorico` |
+| AC-11 | Notificação in-app ao médico no check-in é obrigatória (e-mail não é enviado nesse caso). | `ConsultaClinicaServiceImpl.confirmarChegada` |
+| AC-12 | Falha ao gravar histórico não desfaz a ação principal; apenas registra log WARNING. | Idem |
+
 ## 8. Status
 
 ### 8.1 Status da consulta (`StatusConsulta`)

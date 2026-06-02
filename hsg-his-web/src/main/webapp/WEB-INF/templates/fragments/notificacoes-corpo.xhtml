@@ -127,10 +127,12 @@
                             </div>
                             <div class="acoes">
                                 <h:panelGroup rendered="#{not empty n.link}">
-                                    <p:commandLink action="#{notificacoesBean.abrirEMarcar(n)}"
+                                    <p:commandLink action="#{notificacoesBean.abrirEMarcar}"
                                                    ajax="false" process="@this"
                                                    styleClass="btn primary"
                                                    style="text-decoration:none;font-size:12px;padding:6px 12px;">
+                                        <f:param name="idNotif"     value="#{n.id}"/>
+                                        <f:param name="linkDestino" value="#{n.link}"/>
                                         <i class="fa fa-arrow-right"/> Acessar
                                     </p:commandLink>
                                 </h:panelGroup>
