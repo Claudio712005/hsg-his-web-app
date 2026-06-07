@@ -46,6 +46,11 @@
             <artifactId>url-connection-client</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

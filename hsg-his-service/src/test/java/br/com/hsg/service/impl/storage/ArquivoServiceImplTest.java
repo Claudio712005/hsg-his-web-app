@@ -281,14 +281,48 @@ public class ArquivoServiceImplTest {
         verify(a).inativar();
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void remover_terceiro_naoPodeRemover() {
+    @Test
+    public void remover_enfermeiro_qualquerArquivo_deveInativar() {
         Arquivo a = mock(Arquivo.class);
         when(a.getStatus()).thenReturn(IndicativoStatus.A);
         when(a.getIdResponsavel()).thenReturn(7L);
         when(a.getTipoResponsavel()).thenReturn(TipoResponsavel.MEDICO);
         when(arquivoDAO.buscarPorId(11L)).thenReturn(a);
         service.remover(11L, 33L, TipoResponsavel.ENFERMEIRO);
+        verify(a).inativar();
+    }
+
+    @Test
+    public void remover_medicoResponsavelDaConsulta_deveInativar() {
+        Arquivo a = mock(Arquivo.class);
+        when(a.getStatus()).thenReturn(IndicativoStatus.A);
+        when(a.getIdResponsavel()).thenReturn(33L);
+        when(a.getTipoResponsavel()).thenReturn(TipoResponsavel.ENFERMEIRO);
+        when(a.getIdConsulta()).thenReturn(1L);
+        when(arquivoDAO.buscarPorId(11L)).thenReturn(a);
+        service.remover(11L, 7L, TipoResponsavel.MEDICO);
+        verify(a).inativar();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void remover_medicoDeOutraConsulta_naoPodeRemover() {
+        Arquivo a = mock(Arquivo.class);
+        when(a.getStatus()).thenReturn(IndicativoStatus.A);
+        when(a.getIdResponsavel()).thenReturn(33L);
+        when(a.getTipoResponsavel()).thenReturn(TipoResponsavel.ENFERMEIRO);
+        when(a.getIdConsulta()).thenReturn(1L);
+        when(arquivoDAO.buscarPorId(11L)).thenReturn(a);
+        service.remover(11L, 999L, TipoResponsavel.MEDICO);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void remover_paciente_arquivoDeOutroPerfil_naoPodeRemover() {
+        Arquivo a = mock(Arquivo.class);
+        when(a.getStatus()).thenReturn(IndicativoStatus.A);
+        when(a.getIdResponsavel()).thenReturn(7L);
+        when(a.getTipoResponsavel()).thenReturn(TipoResponsavel.MEDICO);
+        when(arquivoDAO.buscarPorId(11L)).thenReturn(a);
+        service.remover(11L, 100L, TipoResponsavel.PACIENTE);
     }
 
     @Test

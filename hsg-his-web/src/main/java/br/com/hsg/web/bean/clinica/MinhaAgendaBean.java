@@ -4,6 +4,8 @@ import br.com.hsg.domain.entity.Arquivo;
 import br.com.hsg.domain.entity.Consulta;
 import br.com.hsg.domain.enums.StatusConsulta;
 import br.com.hsg.service.facade.clinica.ConsultaClinicaServiceFacade;
+import br.com.hsg.service.facade.clinica.ReceituarioServiceFacade;
+import br.com.hsg.service.facade.clinica.ReceituarioServiceFacade.ItemDTO;
 import br.com.hsg.service.facade.storage.ArquivoServiceFacade;
 import br.com.hsg.web.bean.session.BeanSessao;
 import org.primefaces.model.UploadedFile;
@@ -38,6 +40,7 @@ public class MinhaAgendaBean implements Serializable {
     @Inject private BeanSessao beanSessao;
     @EJB    private ConsultaClinicaServiceFacade clinicaService;
     @EJB    private ArquivoServiceFacade arquivoService;
+    @EJB    private ReceituarioServiceFacade receituarioService;
 
     private Date dataInicio;
     private Date dataFim;
@@ -57,6 +60,25 @@ public class MinhaAgendaBean implements Serializable {
             java.util.Collections.emptyList();
     private java.util.List<Arquivo> anexosConsulta = java.util.Collections.emptyList();
     private UploadedFile uploadedAnexo;
+
+    private br.com.hsg.domain.entity.Receita receitaAtual;
+    private java.util.List<ItemReceitaForm> itensReceita = new java.util.ArrayList<>();
+
+    public static class ItemReceitaForm implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+        private String medicamento;
+        private String posologia;
+        private String observacao;
+        private String cid10;
+        public String getMedicamento()          { return medicamento; }
+        public void setMedicamento(String v)    { this.medicamento = v; }
+        public String getPosologia()            { return posologia; }
+        public void setPosologia(String v)      { this.posologia = v; }
+        public String getObservacao()           { return observacao; }
+        public void setObservacao(String v)     { this.observacao = v; }
+        public String getCid10()                { return cid10; }
+        public void setCid10(String v)          { this.cid10 = v; }
+    }
 
     @PostConstruct
     public void init() {
@@ -119,12 +141,104 @@ public class MinhaAgendaBean implements Serializable {
             this.anotacoes = clinicaService.listarAnotacoes(c.getId());
             this.historicoConsulta = clinicaService.historicoPorConsulta(c.getId());
             this.anexosConsulta = arquivoService.listarPorConsulta(c.getId());
+            this.receitaAtual = receituarioService.buscarPorConsulta(c.getId());
+            this.itensReceita = new java.util.ArrayList<>();
+            if (this.receitaAtual == null) {
+                this.itensReceita.add(new ItemReceitaForm());
+            }
         } catch (Exception ex) {
             LOG.log(Level.WARNING, "[MinhaAgendaBean] Falha ao listar anotações/histórico", ex);
             this.anotacoes = java.util.Collections.emptyList();
             this.historicoConsulta = java.util.Collections.emptyList();
             this.anexosConsulta = java.util.Collections.emptyList();
+            this.receitaAtual = null;
+            this.itensReceita = new java.util.ArrayList<>();
+            this.itensReceita.add(new ItemReceitaForm());
         }
+    }
+
+    public void adicionarItemReceita() {
+        this.itensReceita.add(new ItemReceitaForm());
+    }
+
+    public void removerItemReceita(int idx) {
+        if (idx >= 0 && idx < itensReceita.size()) {
+            itensReceita.remove(idx);
+        }
+        if (itensReceita.isEmpty()) {
+            itensReceita.add(new ItemReceitaForm());
+        }
+    }
+
+    public void emitirReceita() {
+        if (consultaAnotando == null) {
+            msg(FacesMessage.SEVERITY_WARN, "Consulta não selecionada.");
+            return;
+        }
+        try {
+            java.util.List<ItemDTO> itensDTO = new java.util.ArrayList<>();
+            for (ItemReceitaForm f : itensReceita) {
+                if (f.getMedicamento() != null && !f.getMedicamento().trim().isEmpty()) {
+                    itensDTO.add(new ItemDTO(
+                            f.getMedicamento(), f.getPosologia(),
+                            f.getObservacao(), f.getCid10()));
+                }
+            }
+            if (itensDTO.isEmpty()) {
+                msg(FacesMessage.SEVERITY_WARN, "Informe ao menos um medicamento.");
+                return;
+            }
+            this.receitaAtual = receituarioService.emitir(consultaAnotando.getId(),
+                    getMedicoLogadoId(), itensDTO);
+            this.itensReceita = new java.util.ArrayList<>();
+            msg(FacesMessage.SEVERITY_INFO, "Receita emitida.");
+        } catch (Exception ex) {
+            LOG.log(Level.WARNING, "[MinhaAgendaBean] Falha ao emitir receita", ex);
+            msg(FacesMessage.SEVERITY_ERROR, extrairMensagem(ex, "Erro ao emitir receita."));
+        }
+    }
+
+    public void excluirReceita() {
+        if (consultaAnotando == null) {
+            msg(FacesMessage.SEVERITY_WARN, "Consulta não selecionada.");
+            return;
+        }
+        try {
+            receituarioService.excluir(consultaAnotando.getId(), getMedicoLogadoId());
+            this.receitaAtual = null;
+            this.itensReceita = new java.util.ArrayList<>();
+            this.itensReceita.add(new ItemReceitaForm());
+            msg(FacesMessage.SEVERITY_INFO, "Receituário cancelado.");
+        } catch (Exception ex) {
+            LOG.log(Level.WARNING, "[MinhaAgendaBean] Falha ao excluir receita", ex);
+            msg(FacesMessage.SEVERITY_ERROR, extrairMensagem(ex, "Erro ao excluir receita."));
+        }
+    }
+
+    public void prepararReemitir() {
+        this.itensReceita = new java.util.ArrayList<>();
+        if (this.receitaAtual != null) {
+            for (br.com.hsg.domain.entity.ReceitaItem ri : this.receitaAtual.getItens()) {
+                ItemReceitaForm f = new ItemReceitaForm();
+                f.setMedicamento(ri.getMedicamento());
+                f.setPosologia(ri.getPosologia());
+                f.setObservacao(ri.getObservacao());
+                f.setCid10(ri.getCid10());
+                itensReceita.add(f);
+            }
+        }
+        if (itensReceita.isEmpty()) {
+            itensReceita.add(new ItemReceitaForm());
+        }
+        this.receitaAtual = null;
+    }
+
+    public boolean podeEmitirReceita() {
+        if (consultaAnotando == null || consultaAnotando.getStatus() == null) return false;
+        if (consultaAnotando.getMedico() == null
+                || !consultaAnotando.getMedico().getId().equals(getMedicoLogadoId())) return false;
+        return consultaAnotando.getStatus() != StatusConsulta.CANCELADA
+                && consultaAnotando.getStatus() != StatusConsulta.FALTOU;
     }
 
     public String salvarUploadAnexo() {
@@ -204,6 +318,8 @@ public class MinhaAgendaBean implements Serializable {
     public java.util.List<Arquivo> getAnexosConsulta() { return anexosConsulta; }
     public UploadedFile getUploadedAnexo()             { return uploadedAnexo; }
     public void setUploadedAnexo(UploadedFile v)       { this.uploadedAnexo = v; }
+    public br.com.hsg.domain.entity.Receita getReceitaAtual() { return receitaAtual; }
+    public java.util.List<ItemReceitaForm> getItensReceita()  { return itensReceita; }
 
     private Date toDate(LocalDate d) {
         return Date.from(d.atStartOfDay(ZoneId.systemDefault()).toInstant());

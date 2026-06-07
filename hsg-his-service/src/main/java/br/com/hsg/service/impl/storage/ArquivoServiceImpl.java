@@ -160,16 +160,38 @@ public class ArquivoServiceImpl implements ArquivoServiceFacade {
         if (a == null || a.getStatus() != IndicativoStatus.A) {
             throw new IllegalArgumentException("Arquivo não encontrado.");
         }
-        boolean autorOriginal = a.getIdResponsavel().equals(idSolicitante)
-                && a.getTipoResponsavel() == tipoSolicitante;
-        boolean admin = tipoSolicitante == TipoResponsavel.ADMIN;
-        if (!autorOriginal && !admin) {
+        if (!podeRemover(a, idSolicitante, tipoSolicitante)) {
             throw new IllegalStateException("Sem permissão para remover este arquivo.");
         }
         a.inativar();
         arquivoDAO.atualizar(a);
         LOG.log(Level.INFO, "[ArquivoServiceImpl] Arquivo {0} inativado por {1}/{2}",
                 new Object[]{idArquivo, idSolicitante, tipoSolicitante});
+    }
+
+    private boolean podeRemover(Arquivo a, Long idSolic, TipoResponsavel tpSolic) {
+        if (tpSolic == null) return false;
+
+        boolean autorOriginal = a.getIdResponsavel() != null
+                && a.getIdResponsavel().equals(idSolic)
+                && a.getTipoResponsavel() == tpSolic;
+        if (autorOriginal) return true;
+
+        switch (tpSolic) {
+            case ADMIN:
+            case ENFERMEIRO:
+                return true;
+            case MEDICO:
+                if (a.getIdConsulta() != null) {
+                    Consulta c = consultaDAO.buscarPorIdComMedico(a.getIdConsulta());
+                    if (c != null && c.getMedico() != null
+                            && c.getMedico().getId().equals(idSolic)) return true;
+                }
+                return false;
+            case PACIENTE:
+            default:
+                return false;
+        }
     }
 
     private Arquivo persistir(StorageDomain dominio, long ownerId, byte[] payload, String contentType,

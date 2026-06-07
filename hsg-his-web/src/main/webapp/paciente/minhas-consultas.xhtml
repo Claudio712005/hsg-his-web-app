@@ -55,6 +55,14 @@
                                              update="formConsultas:dlgDetalhe"
                                              oncomplete="PF('wDlgDetalhe').show();"
                                              process="@this"/>
+                            <h:panelGroup rendered="#{minhasConsultasBean.temReceita(c)}">
+                                <a href="#{request.contextPath}/receita/pdf?idConsulta=#{c.id}"
+                                   target="_blank" class="btn icon-btn"
+                                   title="Baixar receituário"
+                                   style="margin-right:4px;text-decoration:none;">
+                                    <i class="fa fa-prescription"/>
+                                </a>
+                            </h:panelGroup>
                             <p:commandButton icon="fa fa-paperclip" styleClass="btn icon-btn"
                                              title="Anexar exames" style="margin-right:4px;"
                                              rendered="#{minhasConsultasBean.podeAnexarExame(c)}"

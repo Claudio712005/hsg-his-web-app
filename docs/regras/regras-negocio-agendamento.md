@@ -129,6 +129,22 @@ Reserva exige LIVRE. Bloqueio não é permitido em slot RESERVADO (cancelar a co
 
 Documentação completa em `docs/modulos/agendamento-schedules.md`.
 
+## 8.5 Receituário (módulo prescrição simples)
+
+| ID | Regra | Onde |
+|----|-------|------|
+| RC-01 | Apenas o médico responsável pela consulta emite a receita. | `ReceituarioServiceImpl.emitir` |
+| RC-02 | Consultas com status `CANCELADA` ou `FALTOU` não aceitam receita. | Idem |
+| RC-03 | Mínimo 1 item. `medicamento` (1–300) e `posologia` (1–500) obrigatórios. `observacao` opcional (0–1000). `cid_10` opcional (0–10). | `ReceitaItem.criar` |
+| RC-04 | Reemissão inativa a receita anterior (`st_receita='I'`) e grava nova (auditoria preservada). UNIQUE parcial garante 1 ativa por consulta. | `ReceituarioServiceImpl.emitir` + `V33` index |
+| RC-05 | Download/visualização: ADMIN e ENFERMEIRO sempre. MEDICO só nas próprias. PACIENTE só na própria consulta. | `ReceituarioServiceImpl.autorizar` |
+
+Escopo MVP: **apenas receitas simples**. Prescrições controladas/especiais (notificação Anvisa C1/B1, retenção) seguem fluxo físico pelo médico — aviso fixo na UI deixa explícito.
+
+PDF gerado on-demand (sem persistência de bytes) pelo [`ReceitaPdfBuilder`](../../hsg-his-service/src/main/java/br/com/hsg/service/impl/clinica/ReceitaPdfBuilder.java). Servlet `/receita/pdf?idConsulta=N` aplica RC-05 antes de servir o arquivo.
+
+Documentação completa em [`docs/modulos/receituario.md`](../modulos/receituario.md) e [`docs/dominio/modelo-receita.md`](../dominio/modelo-receita.md).
+
 ## 8.4 Anexos e exames (módulo storage)
 
 | ID | Regra | Onde |

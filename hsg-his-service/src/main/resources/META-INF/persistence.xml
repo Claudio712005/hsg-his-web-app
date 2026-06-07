@@ -32,6 +32,8 @@
         <class>br.com.hsg.domain.entity.ConsultaHistorico</class>
         <class>br.com.hsg.domain.entity.ConsultaAnotacao</class>
         <class>br.com.hsg.domain.entity.Arquivo</class>
+        <class>br.com.hsg.domain.entity.Receita</class>
+        <class>br.com.hsg.domain.entity.ReceitaItem</class>
         <class>br.com.hsg.domain.entity.Notificacao</class>
 
         <properties>

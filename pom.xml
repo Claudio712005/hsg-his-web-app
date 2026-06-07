@@ -38,6 +38,7 @@
         <junit.version>4.13.2</junit.version>
         <lombok.version>1.18.30</lombok.version>
         <aws.sdk.version>2.25.70</aws.sdk.version>
+        <openpdf.version>1.3.30</openpdf.version>
     </properties>
 
     <dependencyManagement>
@@ -49,6 +50,12 @@
                 <version>${aws.sdk.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.librepdf</groupId>
+                <artifactId>openpdf</artifactId>
+                <version>${openpdf.version}</version>
             </dependency>
 
             <dependency>

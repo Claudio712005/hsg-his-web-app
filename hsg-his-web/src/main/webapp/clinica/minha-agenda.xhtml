@@ -187,7 +187,9 @@
 
             <p:dialog id="dlgAnotacoesMA" widgetVar="wDlgAnotacoesMA"
                       header="Anotações e histórico da consulta"
-                      modal="true" resizable="false" width="640" styleClass="hsg-dialog">
+                      modal="true" resizable="false" width="640" height="700"
+                      fitViewport="true" styleClass="hsg-dialog"
+                      contentStyle="max-height:75vh;overflow-y:auto;">
                 <h:panelGroup layout="block" rendered="#{minhaAgendaBean.consultaAnotando != null}"
                               style="padding:6px 4px;">
 
@@ -219,7 +221,8 @@
                                                      styleClass="btn primary"
                                                      action="#{minhaAgendaBean.salvarAnotacao}"
                                                      update=":formAnotacoesAgenda:dlgAnotacoesMA"
-                                                     process=":formAnotacoesAgenda:dlgAnotacoesMA"/>
+                                                     process=":formAnotacoesAgenda:dlgAnotacoesMA"
+                                                     oncomplete="PF('wDlgAnotacoesMA').show();"/>
                                 </div>
                             </div>
                         </h:panelGroup>
@@ -303,9 +306,132 @@
                                                      title="Remover anexo"
                                                      action="#{minhaAgendaBean.removerAnexo(ax.id)}"
                                                      update=":formAnotacoesAgenda:dlgAnotacoesMA"
-                                                     process="@this"/>
+                                                     process="@this"
+                                                     oncomplete="PF('wDlgAnotacoesMA').show();"/>
                                 </div>
                             </ui:repeat>
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="panel" style="margin-bottom:10px;">
+                        <h:panelGroup layout="block" styleClass="panel-title">
+                            <i class="fa fa-prescription panel-icon"/>
+                            <h:outputText value="Receituário"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="panel-body">
+
+                            <h:panelGroup styleClass="note" style="margin-bottom:8px;display:block;
+                                          background:#fff8e1;border-color:#e0c46c;color:#5a4500;">
+                                <i class="fa fa-info-circle" style="margin-right:4px;"/>
+                                Apenas <b>receitas simples</b> podem ser emitidas e baixadas pelo sistema.
+                                Prescrições mais complexas (receitas controladas, especiais, com retenção)
+                                devem ser entregues fisicamente pelo médico na consulta.
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{minhaAgendaBean.receitaAtual != null}">
+                                <div style="border:1px solid #c8c8c8;padding:8px 10px;
+                                            background:#f6f9fd;border-radius:2px;margin-bottom:6px;">
+                                    <div style="display:flex;justify-content:space-between;
+                                                font-size:11.5px;color:#1f3a68;margin-bottom:4px;">
+                                        <b>Receita #{minhaAgendaBean.receitaAtual.id}</b>
+                                        <span style="font-family:monospace;">
+                                            Emitida em #{minhaAgendaBean.formatarDataHora(minhaAgendaBean.receitaAtual.dataEmissao)}
+                                        </span>
+                                    </div>
+                                    <ui:repeat value="#{minhaAgendaBean.receitaAtual.itens}" var="ri">
+                                        <div style="font-size:12px;color:#333;border-top:1px dotted #ddd;
+                                                    padding:4px 0;">
+                                            <b>#{ri.medicamento}</b><br/>
+                                            <span style="color:#555;">Posologia: #{ri.posologia}</span>
+                                            <h:panelGroup rendered="#{not empty ri.observacao}">
+                                                <br/><span style="color:#666;font-style:italic;">
+                                                    Observação: #{ri.observacao}
+                                                </span>
+                                            </h:panelGroup>
+                                            <h:panelGroup rendered="#{not empty ri.cid10}">
+                                                <br/><span style="color:#666;">CID-10: #{ri.cid10}</span>
+                                            </h:panelGroup>
+                                        </div>
+                                    </ui:repeat>
+                                    <div style="margin-top:8px;display:flex;gap:6px;justify-content:flex-end;">
+                                        <a href="#{request.contextPath}/receita/pdf?idConsulta=#{minhaAgendaBean.consultaAnotando.id}"
+                                           target="_blank" class="btn primary"
+                                           style="text-decoration:none;font-size:11.5px;padding:4px 10px;">
+                                            <i class="fa fa-file-pdf"/> Baixar PDF
+                                        </a>
+                                        <p:commandButton value="Reemitir" icon="fa fa-edit"
+                                                         styleClass="btn"
+                                                         rendered="#{minhaAgendaBean.podeEmitirReceita()}"
+                                                         action="#{minhaAgendaBean.prepararReemitir}"
+                                                         update=":formAnotacoesAgenda:dlgAnotacoesMA"
+                                                         process="@this"
+                                                         oncomplete="PF('wDlgAnotacoesMA').show();"/>
+                                        <p:commandButton value="Excluir" icon="fa fa-trash"
+                                                         styleClass="btn"
+                                                         style="background:#fde0e0;border-color:#b94a48;color:#7a1b14;"
+                                                         rendered="#{minhaAgendaBean.podeEmitirReceita()}"
+                                                         action="#{minhaAgendaBean.excluirReceita}"
+                                                         update=":formAnotacoesAgenda:dlgAnotacoesMA"
+                                                         process="@this"
+                                                         oncomplete="PF('wDlgAnotacoesMA').show();"/>
+                                    </div>
+                                </div>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{minhaAgendaBean.receitaAtual == null
+                                                       and minhaAgendaBean.podeEmitirReceita()}">
+                                <ui:repeat value="#{minhaAgendaBean.itensReceita}" var="itf" varStatus="vs">
+                                    <div style="border:1px solid #c8c8c8;padding:8px;
+                                                margin-bottom:6px;background:#fff;border-radius:2px;">
+                                        <div style="display:flex;justify-content:space-between;
+                                                    font-size:11px;color:#666;margin-bottom:4px;">
+                                            Item ##{vs.index + 1}
+                                            <p:commandButton icon="fa fa-times"
+                                                             styleClass="btn icon-btn"
+                                                             style="font-size:11px;"
+                                                             title="Remover item"
+                                                             action="#{minhaAgendaBean.removerItemReceita(vs.index)}"
+                                                             update=":formAnotacoesAgenda:dlgAnotacoesMA"
+                                                             process=":formAnotacoesAgenda:dlgAnotacoesMA"
+                                                             oncomplete="PF('wDlgAnotacoesMA').show();"/>
+                                        </div>
+                                        <label style="font-size:11.5px;font-weight:bold;color:#333;">Medicamento *</label>
+                                        <h:inputText value="#{itf.medicamento}" styleClass="input-field"
+                                                     maxlength="300" style="width:100%;margin-bottom:4px;"/>
+                                        <label style="font-size:11.5px;font-weight:bold;color:#333;">Posologia *</label>
+                                        <h:inputTextarea value="#{itf.posologia}" rows="2"
+                                                         styleClass="input-field" maxlength="500"
+                                                         style="width:100%;margin-bottom:4px;"/>
+                                        <label style="font-size:11.5px;font-weight:bold;color:#333;">Observação</label>
+                                        <h:inputTextarea value="#{itf.observacao}" rows="2"
+                                                         styleClass="input-field" maxlength="1000"
+                                                         style="width:100%;margin-bottom:4px;"/>
+                                        <label style="font-size:11.5px;font-weight:bold;color:#333;">CID-10</label>
+                                        <h:inputText value="#{itf.cid10}" styleClass="input-field"
+                                                     maxlength="10" style="width:100%;"/>
+                                    </div>
+                                </ui:repeat>
+                                <div style="display:flex;justify-content:space-between;margin-top:4px;">
+                                    <p:commandButton value="Adicionar medicamento" icon="fa fa-plus"
+                                                     styleClass="btn"
+                                                     action="#{minhaAgendaBean.adicionarItemReceita}"
+                                                     update=":formAnotacoesAgenda:dlgAnotacoesMA"
+                                                     process=":formAnotacoesAgenda:dlgAnotacoesMA"
+                                                     oncomplete="PF('wDlgAnotacoesMA').show();"/>
+                                    <p:commandButton value="Emitir receituário" icon="fa fa-prescription"
+                                                     styleClass="btn primary"
+                                                     action="#{minhaAgendaBean.emitirReceita}"
+                                                     update=":formAnotacoesAgenda:dlgAnotacoesMA"
+                                                     process=":formAnotacoesAgenda:dlgAnotacoesMA"
+                                                     oncomplete="PF('wDlgAnotacoesMA').show();"/>
+                                </div>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{minhaAgendaBean.receitaAtual == null
+                                                       and not minhaAgendaBean.podeEmitirReceita()}"
+                                          styleClass="note">
+                                Nenhuma receita emitida para essa consulta.
+                            </h:panelGroup>
                         </h:panelGroup>
                     </h:panelGroup>
 

@@ -33,6 +33,13 @@ A documentação existe para:
   - Antivírus + GC (stub): `operacao/storage-antivirus.md`
   - ADRs: `adrs/ADR008-storage-buckets-separados.md`, `adrs/ADR009-path-logico-vs-url.md`
 
+- Receituário médico (prescrição simples):
+  - Visão do módulo: `modulos/receituario.md`
+  - Modelo de dados: `dominio/modelo-receita.md`
+  - Regras RC-* em `regras/regras-negocio-agendamento.md` §8.5
+
+- Brand assets (logo e identidade visual): `branding/brand-assets.md`
+
 ---
 
 ## 2. Estrutura da Documentação

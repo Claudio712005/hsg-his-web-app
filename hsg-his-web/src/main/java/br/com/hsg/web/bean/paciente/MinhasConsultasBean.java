@@ -3,6 +3,7 @@ package br.com.hsg.web.bean.paciente;
 import br.com.hsg.domain.entity.Arquivo;
 import br.com.hsg.domain.entity.Consulta;
 import br.com.hsg.domain.enums.TipoResponsavel;
+import br.com.hsg.service.facade.clinica.ReceituarioServiceFacade;
 import br.com.hsg.service.facade.paciente.ConsultaServiceFacade;
 import br.com.hsg.service.facade.storage.ArquivoServiceFacade;
 import br.com.hsg.web.bean.session.BeanSessao;
@@ -34,6 +35,7 @@ public class MinhasConsultasBean implements Serializable {
     @Inject private BeanSessao beanSessao;
     @EJB    private ConsultaServiceFacade consultaService;
     @EJB    private ArquivoServiceFacade arquivoService;
+    @EJB    private ReceituarioServiceFacade receituarioService;
 
     private List<Consulta> consultas = Collections.emptyList();
 
@@ -110,6 +112,15 @@ public class MinhasConsultasBean implements Serializable {
         } catch (Exception ex) {
             LOG.log(Level.WARNING, "[MinhasConsultasBean] Falha ao remover exame", ex);
             msg(FacesMessage.SEVERITY_ERROR, extrairMensagem(ex, "Erro ao remover exame."));
+        }
+    }
+
+    public boolean temReceita(Consulta c) {
+        if (c == null) return false;
+        try {
+            return receituarioService.buscarPorConsulta(c.getId()) != null;
+        } catch (Exception ex) {
+            return false;
         }
     }
 

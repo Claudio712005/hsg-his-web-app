@@ -1960,3 +1960,92 @@ JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
 JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
 WHERE cu.nm_usu = 'dr.roberto' AND cp.nm_usu = 'beatriz.costa'
   AND c.dt_consulta = (CURRENT_DATE - 1) + TIME '09:00';
+
+-- ══════════════════════════════════════════════════════════════════════
+-- ── Massa: receituário (V33) ──────────────────────────────────────────
+-- ══════════════════════════════════════════════════════════════════════
+-- 3 receitas ATIVAS em consultas REALIZADAS, cada uma com 1-2 itens.
+
+DO $$
+DECLARE
+    v_id_consulta BIGINT;
+    v_id_medico   BIGINT;
+    v_id_receita  BIGINT;
+BEGIN
+    -- Receita 1 — C3 (dr.roberto × claudio.filho, REALIZADA -7d): 2 itens
+    SELECT c.id_consulta, c.id_medico INTO v_id_consulta, v_id_medico
+    FROM hsg.tb_consulta c
+    JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+    JOIN hsg.tb_conta_usu cum ON cum.id_conta_usu = m.id_conta_usu_medico
+    JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+    JOIN hsg.tb_conta_usu cup ON cup.id_conta_usu = p.id_conta_usu
+    WHERE cum.nm_usu = 'dr.roberto' AND cup.nm_usu = 'claudio.filho'
+      AND c.dt_consulta = (CURRENT_DATE - 7) + TIME '09:00';
+
+    IF v_id_consulta IS NOT NULL THEN
+        INSERT INTO hsg.tb_receita (id_consulta, id_medico, dt_emissao, st_receita)
+        VALUES (v_id_consulta, v_id_medico,
+                (CURRENT_DATE - 7) + TIME '09:25', 'A')
+        RETURNING id_receita INTO v_id_receita;
+
+        INSERT INTO hsg.tb_receita_item (id_receita, ds_medicamento, ds_posologia, ds_observacao, ds_cid_10, nr_ordem)
+        VALUES (v_id_receita, 'Dipirona sódica 500mg',
+                '1 comprimido via oral de 6/6 horas',
+                'Suspender em caso de melhora completa dos sintomas.',
+                'R10', 1);
+        INSERT INTO hsg.tb_receita_item (id_receita, ds_medicamento, ds_posologia, ds_observacao, ds_cid_10, nr_ordem)
+        VALUES (v_id_receita, 'Soro de reidratação oral',
+                '1 sachê dissolvido em 1 litro de água, ingerir conforme sede',
+                NULL, NULL, 2);
+    END IF;
+
+    -- Receita 2 — C9 (dr.roberto × carla.silva, REALIZADA -2d): 1 item
+    SELECT c.id_consulta, c.id_medico INTO v_id_consulta, v_id_medico
+    FROM hsg.tb_consulta c
+    JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+    JOIN hsg.tb_conta_usu cum ON cum.id_conta_usu = m.id_conta_usu_medico
+    JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+    JOIN hsg.tb_conta_usu cup ON cup.id_conta_usu = p.id_conta_usu
+    WHERE cum.nm_usu = 'dr.roberto' AND cup.nm_usu = 'carla.silva'
+      AND c.dt_consulta = (CURRENT_DATE - 2) + TIME '09:20';
+
+    IF v_id_consulta IS NOT NULL THEN
+        INSERT INTO hsg.tb_receita (id_consulta, id_medico, dt_emissao, st_receita)
+        VALUES (v_id_consulta, v_id_medico,
+                (CURRENT_DATE - 2) + TIME '09:55', 'A')
+        RETURNING id_receita INTO v_id_receita;
+
+        INSERT INTO hsg.tb_receita_item (id_receita, ds_medicamento, ds_posologia, ds_observacao, ds_cid_10, nr_ordem)
+        VALUES (v_id_receita, 'Sais para reidratação oral (SRO)',
+                '1 sachê após cada evacuação líquida, até 8 sachês/dia',
+                'Manter hidratação por 48-72h. Retornar se sangue nas fezes ou febre alta.',
+                'A09', 1);
+    END IF;
+
+    -- Receita 3 — C12 (dra.fernanda × mariana.santos, REALIZADA -3d): 2 itens
+    SELECT c.id_consulta, c.id_medico INTO v_id_consulta, v_id_medico
+    FROM hsg.tb_consulta c
+    JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+    JOIN hsg.tb_conta_usu cum ON cum.id_conta_usu = m.id_conta_usu_medico
+    JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+    JOIN hsg.tb_conta_usu cup ON cup.id_conta_usu = p.id_conta_usu
+    WHERE cum.nm_usu = 'dra.fernanda' AND cup.nm_usu = 'mariana.santos'
+      AND c.dt_consulta = (CURRENT_DATE - 3) + TIME '10:30';
+
+    IF v_id_consulta IS NOT NULL THEN
+        INSERT INTO hsg.tb_receita (id_consulta, id_medico, dt_emissao, st_receita)
+        VALUES (v_id_consulta, v_id_medico,
+                (CURRENT_DATE - 3) + TIME '11:00', 'A')
+        RETURNING id_receita INTO v_id_receita;
+
+        INSERT INTO hsg.tb_receita_item (id_receita, ds_medicamento, ds_posologia, ds_observacao, ds_cid_10, nr_ordem)
+        VALUES (v_id_receita, 'Amitriptilina 25mg',
+                '1 comprimido via oral, à noite, por 30 dias',
+                'Avaliar resposta em 4 semanas. Pode causar sonolência inicial.',
+                'G44', 1);
+        INSERT INTO hsg.tb_receita_item (id_receita, ds_medicamento, ds_posologia, ds_observacao, ds_cid_10, nr_ordem)
+        VALUES (v_id_receita, 'Paracetamol 750mg',
+                '1 comprimido via oral SOS em caso de dor (máx. 4/dia)',
+                NULL, 'R51', 2);
+    END IF;
+END $$;

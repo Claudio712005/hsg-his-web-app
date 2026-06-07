@@ -9,6 +9,7 @@ import br.com.hsg.web.dto.response.UsuarioClinicaDTO;
 import br.com.hsg.domain.entity.Arquivo;
 import br.com.hsg.service.facade.admin.AgendaMedicaServiceFacade;
 import br.com.hsg.service.facade.clinica.ConsultaClinicaServiceFacade;
+import br.com.hsg.service.facade.clinica.ReceituarioServiceFacade;
 import br.com.hsg.service.facade.paciente.ConsultaBuscaServiceFacade;
 import br.com.hsg.service.facade.storage.ArquivoServiceFacade;
 import br.com.hsg.web.bean.session.BeanSessao;
@@ -46,6 +47,7 @@ public class RecepcaoDiaBean implements Serializable {
     @EJB    private AgendaMedicaServiceFacade agendaService;
     @EJB    private ConsultaBuscaServiceFacade buscaService;
     @EJB    private ArquivoServiceFacade arquivoService;
+    @EJB    private ReceituarioServiceFacade receituarioService;
 
     private Date dataInicio;
     private Date dataFim;
@@ -69,6 +71,7 @@ public class RecepcaoDiaBean implements Serializable {
             java.util.Collections.emptyList();
     private java.util.List<Arquivo> anexosConsulta = java.util.Collections.emptyList();
     private UploadedFile uploadedAnexo;
+    private br.com.hsg.domain.entity.Receita receitaAtual;
 
     @PostConstruct
     public void init() {
@@ -267,11 +270,13 @@ public class RecepcaoDiaBean implements Serializable {
             this.anotacoes = clinicaService.listarAnotacoes(c.getId());
             this.historicoConsulta = clinicaService.historicoPorConsulta(c.getId());
             this.anexosConsulta = arquivoService.listarPorConsulta(c.getId());
+            this.receitaAtual = receituarioService.buscarPorConsulta(c.getId());
         } catch (Exception ex) {
             LOG.log(Level.WARNING, "[RecepcaoDiaBean] Falha ao listar anotações/histórico", ex);
             this.anotacoes = java.util.Collections.emptyList();
             this.historicoConsulta = java.util.Collections.emptyList();
             this.anexosConsulta = java.util.Collections.emptyList();
+            this.receitaAtual = null;
         }
     }
 
@@ -349,6 +354,7 @@ public class RecepcaoDiaBean implements Serializable {
     public java.util.List<Arquivo> getAnexosConsulta() { return anexosConsulta; }
     public UploadedFile getUploadedAnexo()           { return uploadedAnexo; }
     public void setUploadedAnexo(UploadedFile v)     { this.uploadedAnexo = v; }
+    public br.com.hsg.domain.entity.Receita getReceitaAtual() { return receitaAtual; }
 
     public boolean isAcessoPermitido() {
         TipoResponsavel t = getTipoResponsavel();
