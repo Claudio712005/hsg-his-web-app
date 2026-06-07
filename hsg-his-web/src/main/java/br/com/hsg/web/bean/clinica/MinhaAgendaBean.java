@@ -1,9 +1,12 @@
 package br.com.hsg.web.bean.clinica;
 
+import br.com.hsg.domain.entity.Arquivo;
 import br.com.hsg.domain.entity.Consulta;
 import br.com.hsg.domain.enums.StatusConsulta;
 import br.com.hsg.service.facade.clinica.ConsultaClinicaServiceFacade;
+import br.com.hsg.service.facade.storage.ArquivoServiceFacade;
 import br.com.hsg.web.bean.session.BeanSessao;
+import org.primefaces.model.UploadedFile;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -34,6 +37,7 @@ public class MinhaAgendaBean implements Serializable {
 
     @Inject private BeanSessao beanSessao;
     @EJB    private ConsultaClinicaServiceFacade clinicaService;
+    @EJB    private ArquivoServiceFacade arquivoService;
 
     private Date dataInicio;
     private Date dataFim;
@@ -51,6 +55,8 @@ public class MinhaAgendaBean implements Serializable {
             java.util.Collections.emptyList();
     private java.util.List<br.com.hsg.domain.entity.ConsultaHistorico> historicoConsulta =
             java.util.Collections.emptyList();
+    private java.util.List<Arquivo> anexosConsulta = java.util.Collections.emptyList();
+    private UploadedFile uploadedAnexo;
 
     @PostConstruct
     public void init() {
@@ -112,11 +118,60 @@ public class MinhaAgendaBean implements Serializable {
         try {
             this.anotacoes = clinicaService.listarAnotacoes(c.getId());
             this.historicoConsulta = clinicaService.historicoPorConsulta(c.getId());
+            this.anexosConsulta = arquivoService.listarPorConsulta(c.getId());
         } catch (Exception ex) {
             LOG.log(Level.WARNING, "[MinhaAgendaBean] Falha ao listar anotações/histórico", ex);
             this.anotacoes = java.util.Collections.emptyList();
             this.historicoConsulta = java.util.Collections.emptyList();
+            this.anexosConsulta = java.util.Collections.emptyList();
         }
+    }
+
+    public String salvarUploadAnexo() {
+        LOG.info("[MinhaAgendaBean] salvarUploadAnexo invocado.");
+        if (consultaAnotando == null) {
+            msg(FacesMessage.SEVERITY_WARN, "Consulta não selecionada.");
+            return null;
+        }
+        if (uploadedAnexo == null || uploadedAnexo.getContents() == null
+                || uploadedAnexo.getContents().length == 0) {
+            msg(FacesMessage.SEVERITY_WARN, "Selecione um arquivo antes de enviar.");
+            return null;
+        }
+        try {
+            arquivoService.anexarEmConsulta(consultaAnotando.getId(),
+                    uploadedAnexo.getContents(), uploadedAnexo.getContentType(),
+                    uploadedAnexo.getFileName(),
+                    getMedicoLogadoId(), br.com.hsg.domain.enums.TipoResponsavel.MEDICO);
+            msg(FacesMessage.SEVERITY_INFO, "Anexo enviado.");
+            this.anexosConsulta = arquivoService.listarPorConsulta(consultaAnotando.getId());
+            this.uploadedAnexo = null;
+        } catch (Exception ex) {
+            LOG.log(Level.WARNING, "[MinhaAgendaBean] Falha ao anexar arquivo", ex);
+            msg(FacesMessage.SEVERITY_ERROR, extrairMensagem(ex, "Erro ao anexar arquivo."));
+        }
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().setKeepMessages(true);
+        return null;
+    }
+
+    public void removerAnexo(Long idArquivo) {
+        try {
+            arquivoService.remover(idArquivo, getMedicoLogadoId(),
+                    br.com.hsg.domain.enums.TipoResponsavel.MEDICO);
+            msg(FacesMessage.SEVERITY_INFO, "Anexo removido.");
+            if (consultaAnotando != null) {
+                this.anexosConsulta = arquivoService.listarPorConsulta(consultaAnotando.getId());
+            }
+        } catch (Exception ex) {
+            LOG.log(Level.WARNING, "[MinhaAgendaBean] Falha ao remover anexo", ex);
+            msg(FacesMessage.SEVERITY_ERROR, extrairMensagem(ex, "Erro ao remover anexo."));
+        }
+    }
+
+    public String formatarTamanho(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
+        return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
     }
 
     public void salvarAnotacao() {
@@ -146,6 +201,9 @@ public class MinhaAgendaBean implements Serializable {
     public void setAnotacaoDescricao(String v)                     { this.anotacaoDescricao = v; }
     public java.util.List<br.com.hsg.domain.entity.ConsultaAnotacao> getAnotacoes() { return anotacoes; }
     public java.util.List<br.com.hsg.domain.entity.ConsultaHistorico> getHistoricoConsulta() { return historicoConsulta; }
+    public java.util.List<Arquivo> getAnexosConsulta() { return anexosConsulta; }
+    public UploadedFile getUploadedAnexo()             { return uploadedAnexo; }
+    public void setUploadedAnexo(UploadedFile v)       { this.uploadedAnexo = v; }
 
     private Date toDate(LocalDate d) {
         return Date.from(d.atStartOfDay(ZoneId.systemDefault()).toInstant());

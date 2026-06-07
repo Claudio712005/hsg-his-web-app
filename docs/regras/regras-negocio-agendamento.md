@@ -129,6 +129,26 @@ Reserva exige LIVRE. Bloqueio não é permitido em slot RESERVADO (cancelar a co
 
 Documentação completa em `docs/modulos/agendamento-schedules.md`.
 
+## 8.4 Anexos e exames (módulo storage)
+
+| ID | Regra | Onde |
+|----|-------|------|
+| AX-01 | Content-Type deve estar na whitelist (`application/pdf`, `image/jpeg`, `image/png`, `image/webp`) e os magic bytes do arquivo precisam bater com o tipo declarado. | `StorageGuard.validarContentType` + `StorageGuard.validarMagicBytes` |
+| AX-02 | Tamanho do arquivo ≤ `APP_STORAGE_MAX_BYTES` (default 20 MB). | `StorageGuard.validarTamanho` |
+| AX-03 | Médico só pode anexar em consultas/anotações nas quais é o médico responsável. | `ArquivoServiceImpl.anexarEmConsulta` / `anexarEmAnotacao` |
+| AX-04 | Paciente só anexa exame em consulta **própria** e somente em status `AGENDADA` ou `CONFIRMADA`. | `ArquivoServiceImpl.anexarExameEmConsulta` |
+| AX-05 | Consulta com status `CANCELADA` não aceita novos anexos. | `ArquivoServiceImpl.bloquearSeCancelada` |
+| AX-06 | Filename é sanitizado (remove path separators, controle, normaliza acentuação, evita `.` à esquerda). | `StorageGuard.sanitizeFilename` |
+
+Regras de autorização de leitura (download/visualização):
+- `ADMIN` e `ENFERMEIRO`: qualquer arquivo
+- `MEDICO`: só de consultas/anotações próprias
+- `PACIENTE`: só de consultas/exames próprios
+
+Regras de remoção: autor original do upload (mesmo `id_responsavel` + `tp_responsavel`) **ou** `ADMIN`. Remoção é soft-delete (`st_arquivo='I'`), GC físico posterior.
+
+Documentação completa em `docs/modulos/storage-arquivos.md` e `docs/dominio/modelo-arquivo.md`. ADRs relacionadas: [ADR-008 buckets separados](../adrs/ADR008-storage-buckets-separados.md), [ADR-009 path lógico vs URL](../adrs/ADR009-path-logico-vs-url.md).
+
 ## 9. Constantes operacionais
 
 | Constante | Valor | Local |
@@ -142,3 +162,5 @@ Documentação completa em `docs/modulos/agendamento-schedules.md`.
 | Duração de slot (UI) | 5 a 240 minutos | UI |
 | Tolerância para auto-falta | 24 horas | `ConsultaAutoFaltaServiceImpl` |
 | Execução do job de auto-falta | Diária às 02:00 | `ConsultaAutoFaltaTimer` |
+| Tamanho máximo de anexo | 20 MB (configurável) | `APP_STORAGE_MAX_BYTES` |
+| TTL de URL pré-assinada | 15 min (configurável) | `APP_STORAGE_PRESIGN_TTL_MIN` |

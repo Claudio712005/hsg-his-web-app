@@ -37,10 +37,19 @@
 
         <junit.version>4.13.2</junit.version>
         <lombok.version>1.18.30</lombok.version>
+        <aws.sdk.version>2.25.70</aws.sdk.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>${aws.sdk.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
             <dependency>
                 <groupId>javax.persistence</groupId>

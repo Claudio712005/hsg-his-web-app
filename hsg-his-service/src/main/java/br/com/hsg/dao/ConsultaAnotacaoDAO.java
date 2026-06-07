@@ -18,6 +18,11 @@ public class ConsultaAnotacaoDAO {
         return a;
     }
 
+    public ConsultaAnotacao buscarPorId(Long id) {
+        if (id == null) return null;
+        return em.find(ConsultaAnotacao.class, id);
+    }
+
     public List<ConsultaAnotacao> listarPorConsulta(Long idConsulta) {
         return em.createQuery(
                 "SELECT a FROM ConsultaAnotacao a " +

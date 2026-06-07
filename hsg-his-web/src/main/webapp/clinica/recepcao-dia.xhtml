@@ -59,7 +59,8 @@
 
         <h:form id="formRecepcao" rendered="#{recepcaoDiaBean.acessoPermitido}">
 
-            <p:growl id="msgs" widgetVar="msgs" showDetail="true" life="5000" globalOnly="true"/>
+            <p:growl id="msgs" widgetVar="msgs" showDetail="true" life="5000"
+                     globalOnly="true" autoUpdate="true"/>
 
             <h:panelGroup layout="block" styleClass="panel">
                 <h:panelGroup layout="block" styleClass="panel-title">
@@ -191,7 +192,7 @@
                                     <p:commandButton value="Anotações" icon="fa fa-comment-medical"
                                                      styleClass="btn"
                                                      action="#{recepcaoDiaBean.abrirAnotacoes(c)}"
-                                                     update="formRecepcao:dlgAnotacoes"
+                                                     update=":formAnotacoesRecepcao:dlgAnotacoes"
                                                      oncomplete="PF('wDlgAnotacoes').show();"
                                                      process="@this"/>
                                 </div>
@@ -222,6 +223,11 @@
                     </div>
                 </h:panelGroup>
             </p:dialog>
+
+        </h:form>
+
+        <h:form id="formAnotacoesRecepcao" enctype="multipart/form-data"
+                rendered="#{recepcaoDiaBean.acessoPermitido}">
 
             <p:dialog id="dlgAnotacoes" widgetVar="wDlgAnotacoes"
                       header="Anotações e histórico da consulta"
@@ -258,8 +264,8 @@
                                     <p:commandButton value="Salvar anotação" icon="fa fa-save"
                                                      styleClass="btn primary"
                                                      action="#{recepcaoDiaBean.salvarAnotacao}"
-                                                     update="formRecepcao:dlgAnotacoes"
-                                                     process="formRecepcao:dlgAnotacoes"/>
+                                                     update=":formAnotacoesRecepcao:dlgAnotacoes"
+                                                     process=":formAnotacoesRecepcao:dlgAnotacoes"/>
                                 </div>
                             </div>
                         </h:panelGroup>
@@ -290,6 +296,60 @@
                                     </div>
                                     <div style="font-size:12px;color:#444;white-space:pre-wrap;
                                                 margin-top:2px;">#{a.descricao}</div>
+                                </div>
+                            </ui:repeat>
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="panel" style="margin-bottom:10px;">
+                        <h:panelGroup layout="block" styleClass="panel-title">
+                            <i class="fa fa-paperclip panel-icon"/>
+                            <h:outputText value="Anexos (#{recepcaoDiaBean.anexosConsulta.size()})"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="panel-body">
+                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                <p:fileUpload value="#{recepcaoDiaBean.uploadedAnexo}"
+                                              mode="simple" skinSimple="true"
+                                              allowTypes="/(\.|\/)(pdf|jpe?g|png|webp)$/"
+                                              sizeLimit="20971520"
+                                              label="Selecionar PDF/Imagem"
+                                              invalidFileMessage="Tipo não permitido."
+                                              invalidSizeMessage="Tamanho máximo: 20MB."/>
+                                <p:commandButton value="Enviar anexo" icon="fa fa-upload"
+                                                 styleClass="btn primary"
+                                                 action="#{recepcaoDiaBean.salvarUploadAnexo}"
+                                                 ajax="false"/>
+                            </div>
+                            <h:panelGroup rendered="#{empty recepcaoDiaBean.anexosConsulta}"
+                                          styleClass="note" style="margin-top:6px;">
+                                Nenhum anexo registrado para esta consulta.
+                            </h:panelGroup>
+                            <ui:repeat value="#{recepcaoDiaBean.anexosConsulta}" var="ax">
+                                <div style="display:flex;align-items:center;gap:8px;
+                                            border:1px solid #c8c8c8;padding:5px 8px;
+                                            margin-top:4px;background:#fff;border-radius:2px;">
+                                    <i class="fa fa-file" style="color:#1f3a68;"/>
+                                    <div style="flex:1;min-width:0;">
+                                        <div style="font-size:12px;font-weight:bold;color:#333;
+                                                    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                            #{ax.nomeOriginal}
+                                        </div>
+                                        <div style="font-size:11px;color:#666;">
+                                            #{ax.tipoResponsavel.descricao} —
+                                            #{recepcaoDiaBean.formatarDataHora(ax.dataUpload)} —
+                                            #{recepcaoDiaBean.formatarTamanho(ax.tamanhoBytes)}
+                                        </div>
+                                    </div>
+                                    <a href="#{request.contextPath}/download/arquivo?id=#{ax.id}"
+                                       target="_blank" class="btn"
+                                       style="font-size:11px;padding:3px 8px;text-decoration:none;">
+                                        <i class="fa fa-download"/> Baixar
+                                    </a>
+                                    <p:commandButton icon="fa fa-trash" styleClass="btn icon-btn"
+                                                     title="Remover anexo"
+                                                     action="#{recepcaoDiaBean.removerAnexo(ax.id)}"
+                                                     update=":formAnotacoesRecepcao:dlgAnotacoes"
+                                                     process="@this"/>
                                 </div>
                             </ui:repeat>
                         </h:panelGroup>

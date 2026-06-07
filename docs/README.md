@@ -26,6 +26,13 @@ A documentação existe para:
   - Modelo de dados: `dominio/modelo-agendamento.md`
   - Telas: `telas/` (`admin-agenda-medica.md`, `paciente-agendar-consulta.md`, `paciente-minhas-consultas.md`)
 
+- Storage de arquivos (anexos e exames):
+  - Visão do módulo: `modulos/storage-arquivos.md`
+  - Modelo de dados: `dominio/modelo-arquivo.md`
+  - Configuração operacional: `operacao/storage-config.md`
+  - Antivírus + GC (stub): `operacao/storage-antivirus.md`
+  - ADRs: `adrs/ADR008-storage-buckets-separados.md`, `adrs/ADR009-path-logico-vs-url.md`
+
 ---
 
 ## 2. Estrutura da Documentação
