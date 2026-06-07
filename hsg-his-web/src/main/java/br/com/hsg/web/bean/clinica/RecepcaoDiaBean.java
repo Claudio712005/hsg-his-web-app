@@ -6,10 +6,14 @@ import br.com.hsg.domain.entity.Medico;
 import br.com.hsg.domain.enums.StatusConsulta;
 import br.com.hsg.domain.enums.TipoResponsavel;
 import br.com.hsg.web.dto.response.UsuarioClinicaDTO;
+import br.com.hsg.domain.entity.Arquivo;
 import br.com.hsg.service.facade.admin.AgendaMedicaServiceFacade;
 import br.com.hsg.service.facade.clinica.ConsultaClinicaServiceFacade;
+import br.com.hsg.service.facade.clinica.ReceituarioServiceFacade;
 import br.com.hsg.service.facade.paciente.ConsultaBuscaServiceFacade;
+import br.com.hsg.service.facade.storage.ArquivoServiceFacade;
 import br.com.hsg.web.bean.session.BeanSessao;
+import org.primefaces.model.UploadedFile;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -42,6 +46,8 @@ public class RecepcaoDiaBean implements Serializable {
     @EJB    private ConsultaClinicaServiceFacade clinicaService;
     @EJB    private AgendaMedicaServiceFacade agendaService;
     @EJB    private ConsultaBuscaServiceFacade buscaService;
+    @EJB    private ArquivoServiceFacade arquivoService;
+    @EJB    private ReceituarioServiceFacade receituarioService;
 
     private Date dataInicio;
     private Date dataFim;
@@ -63,6 +69,9 @@ public class RecepcaoDiaBean implements Serializable {
             java.util.Collections.emptyList();
     private java.util.List<br.com.hsg.domain.entity.ConsultaHistorico> historicoConsulta =
             java.util.Collections.emptyList();
+    private java.util.List<Arquivo> anexosConsulta = java.util.Collections.emptyList();
+    private UploadedFile uploadedAnexo;
+    private br.com.hsg.domain.entity.Receita receitaAtual;
 
     @PostConstruct
     public void init() {
@@ -260,11 +269,60 @@ public class RecepcaoDiaBean implements Serializable {
         try {
             this.anotacoes = clinicaService.listarAnotacoes(c.getId());
             this.historicoConsulta = clinicaService.historicoPorConsulta(c.getId());
+            this.anexosConsulta = arquivoService.listarPorConsulta(c.getId());
+            this.receitaAtual = receituarioService.buscarPorConsulta(c.getId());
         } catch (Exception ex) {
             LOG.log(Level.WARNING, "[RecepcaoDiaBean] Falha ao listar anotações/histórico", ex);
             this.anotacoes = java.util.Collections.emptyList();
             this.historicoConsulta = java.util.Collections.emptyList();
+            this.anexosConsulta = java.util.Collections.emptyList();
+            this.receitaAtual = null;
         }
+    }
+
+    public String salvarUploadAnexo() {
+        if (consultaAnotando == null) {
+            msg(FacesMessage.SEVERITY_WARN, "Consulta não selecionada.");
+            return null;
+        }
+        if (uploadedAnexo == null || uploadedAnexo.getContents() == null
+                || uploadedAnexo.getContents().length == 0) {
+            msg(FacesMessage.SEVERITY_WARN, "Selecione um arquivo antes de enviar.");
+            return null;
+        }
+        try {
+            arquivoService.anexarEmConsulta(consultaAnotando.getId(),
+                    uploadedAnexo.getContents(), uploadedAnexo.getContentType(),
+                    uploadedAnexo.getFileName(),
+                    getResponsavelId(), getTipoResponsavel());
+            msg(FacesMessage.SEVERITY_INFO, "Anexo enviado.");
+            this.anexosConsulta = arquivoService.listarPorConsulta(consultaAnotando.getId());
+            this.uploadedAnexo = null;
+        } catch (Exception ex) {
+            LOG.log(Level.WARNING, "[RecepcaoDiaBean] Falha ao anexar arquivo", ex);
+            msg(FacesMessage.SEVERITY_ERROR, extrairMensagem(ex, "Erro ao anexar arquivo."));
+        }
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().setKeepMessages(true);
+        return null;
+    }
+
+    public void removerAnexo(Long idArquivo) {
+        try {
+            arquivoService.remover(idArquivo, getResponsavelId(), getTipoResponsavel());
+            msg(FacesMessage.SEVERITY_INFO, "Anexo removido.");
+            if (consultaAnotando != null) {
+                this.anexosConsulta = arquivoService.listarPorConsulta(consultaAnotando.getId());
+            }
+        } catch (Exception ex) {
+            LOG.log(Level.WARNING, "[RecepcaoDiaBean] Falha ao remover anexo", ex);
+            msg(FacesMessage.SEVERITY_ERROR, extrairMensagem(ex, "Erro ao remover anexo."));
+        }
+    }
+
+    public String formatarTamanho(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
+        return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
     }
 
     public void salvarAnotacao() {
@@ -293,6 +351,10 @@ public class RecepcaoDiaBean implements Serializable {
     public void setAnotacaoDescricao(String v)                     { this.anotacaoDescricao = v; }
     public java.util.List<br.com.hsg.domain.entity.ConsultaAnotacao> getAnotacoes() { return anotacoes; }
     public java.util.List<br.com.hsg.domain.entity.ConsultaHistorico> getHistoricoConsulta() { return historicoConsulta; }
+    public java.util.List<Arquivo> getAnexosConsulta() { return anexosConsulta; }
+    public UploadedFile getUploadedAnexo()           { return uploadedAnexo; }
+    public void setUploadedAnexo(UploadedFile v)     { this.uploadedAnexo = v; }
+    public br.com.hsg.domain.entity.Receita getReceitaAtual() { return receitaAtual; }
 
     public boolean isAcessoPermitido() {
         TipoResponsavel t = getTipoResponsavel();

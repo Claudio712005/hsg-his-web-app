@@ -73,6 +73,50 @@ services:
     networks:
       - hsg-network
 
+  minio:
+    image: minio/minio:latest
+    container_name: hsg-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER:     ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - hsg-network
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: hsg-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MC_HOST_local: http://${MINIO_ROOT_USER:-minioadmin}:${MINIO_ROOT_PASSWORD:-minioadmin}@minio:9000
+    entrypoint: >
+      sh -c '
+        set -e;
+        for B in hsg-anexos-cliente hsg-anexos-consulta hsg-anexos-anotacao hsg-exames-consulta; do
+          echo "[minio-init] criando bucket $$B (idempotente)";
+          mc mb --ignore-existing local/$$B;
+          mc anonymous set none local/$$B;
+          mc version enable local/$$B;
+        done;
+        echo "[minio-init] 4 buckets prontos com versionamento. SSE-S3 só em PRD (S3 nativo).";
+      '
+    networks:
+      - hsg-network
+
   keycloak:
     build:
       context: .
@@ -147,6 +191,18 @@ services:
 
       CPF_ENCRYPTION_KEY: "HSG_DEV_ONLY_PLACEHOLDER_32CHAR_"
       CARTEIRINHA_ENCRYPTION_KEY: "HSG_DEV_CART_PLACEHOLDER_32CHARS_"
+
+      APP_STORAGE_ENDPOINT:               ${APP_STORAGE_ENDPOINT:-http://minio:9000}
+      APP_STORAGE_REGION:                 ${APP_STORAGE_REGION:-us-east-1}
+      APP_STORAGE_ACCESS_KEY:             ${APP_STORAGE_ACCESS_KEY:-minioadmin}
+      APP_STORAGE_SECRET_KEY:             ${APP_STORAGE_SECRET_KEY:-minioadmin}
+      APP_STORAGE_PATH_STYLE:             ${APP_STORAGE_PATH_STYLE:-true}
+      APP_STORAGE_PRESIGN_TTL_MIN:        ${APP_STORAGE_PRESIGN_TTL_MIN:-15}
+      APP_STORAGE_MAX_BYTES:              ${APP_STORAGE_MAX_BYTES:-20971520}
+      APP_STORAGE_BUCKET_ANEXO_CLIENTE:   ${APP_STORAGE_BUCKET_ANEXO_CLIENTE:-hsg-anexos-cliente}
+      APP_STORAGE_BUCKET_ANEXO_CONSULTA:  ${APP_STORAGE_BUCKET_ANEXO_CONSULTA:-hsg-anexos-consulta}
+      APP_STORAGE_BUCKET_ANEXO_ANOTACAO:  ${APP_STORAGE_BUCKET_ANEXO_ANOTACAO:-hsg-anexos-anotacao}
+      APP_STORAGE_BUCKET_EXAME_CONSULTA:  ${APP_STORAGE_BUCKET_EXAME_CONSULTA:-hsg-exames-consulta}
     ports:
       - "8180:8080"
     depends_on:
@@ -156,12 +212,16 @@ services:
         condition: service_started
       mailhog:
         condition: service_started
+      minio-init:
+        condition: service_completed_successfully
     networks:
       - hsg-network
 
 volumes:
   postgres_data:
     name: hsg_postgres_data
+  minio_data:
+    name: hsg_minio_data
 
 networks:
   hsg-network:

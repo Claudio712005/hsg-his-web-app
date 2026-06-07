@@ -15,9 +15,10 @@
     </ui:define>
 
     <ui:define name="content">
-        <h:form id="formConsultas">
+        <h:form id="formConsultas" enctype="multipart/form-data">
 
-            <p:growl id="msgs" widgetVar="msgs" showDetail="true" life="6000" globalOnly="true"/>
+            <p:growl id="msgs" widgetVar="msgs" showDetail="true" life="6000"
+                     globalOnly="true" autoUpdate="true"/>
 
             <h:panelGroup layout="block" styleClass="panel">
                 <h:panelGroup layout="block" styleClass="panel-title">
@@ -53,6 +54,21 @@
                                              action="#{minhasConsultasBean.verDetalhes(c)}"
                                              update="formConsultas:dlgDetalhe"
                                              oncomplete="PF('wDlgDetalhe').show();"
+                                             process="@this"/>
+                            <h:panelGroup rendered="#{minhasConsultasBean.temReceita(c)}">
+                                <a href="#{request.contextPath}/receita/pdf?idConsulta=#{c.id}"
+                                   target="_blank" class="btn icon-btn"
+                                   title="Baixar receituário"
+                                   style="margin-right:4px;text-decoration:none;">
+                                    <i class="fa fa-prescription"/>
+                                </a>
+                            </h:panelGroup>
+                            <p:commandButton icon="fa fa-paperclip" styleClass="btn icon-btn"
+                                             title="Anexar exames" style="margin-right:4px;"
+                                             rendered="#{minhasConsultasBean.podeAnexarExame(c)}"
+                                             action="#{minhasConsultasBean.abrirAnexarExame(c)}"
+                                             update=":formExames:dlgExames"
+                                             oncomplete="PF('wDlgExames').show();"
                                              process="@this"/>
                             <p:commandButton icon="fa fa-times" styleClass="btn icon-btn danger"
                                              title="Cancelar consulta"
@@ -140,6 +156,88 @@
                 </h:panelGroup>
             </p:dialog>
 
+        </h:form>
+
+        <h:form id="formExames" enctype="multipart/form-data">
+            <p:dialog id="dlgExames" widgetVar="wDlgExames" header="Anexar exames"
+                      modal="true" resizable="false" width="560" styleClass="hsg-dialog">
+                <h:panelGroup layout="block" rendered="#{minhasConsultasBean.consultaAnexando != null}"
+                              style="padding:6px 4px;">
+                    <h:panelGroup layout="block" styleClass="note" style="margin-bottom:8px;">
+                        Anexe os exames que pretende apresentar na consulta. Formatos aceitos: PDF, JPG, PNG, WebP. Máximo 20MB por arquivo.
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="panel" style="margin-bottom:10px;">
+                        <h:panelGroup layout="block" styleClass="panel-title">
+                            <i class="fa fa-plus-square panel-icon"/>
+                            <h:outputText value="Novo exame"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="panel-body">
+                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                <p:fileUpload value="#{minhasConsultasBean.uploadedExame}"
+                                              mode="simple" skinSimple="true"
+                                              allowTypes="/(\.|\/)(pdf|jpe?g|png|webp)$/"
+                                              sizeLimit="20971520"
+                                              label="Selecionar PDF/Imagem"
+                                              invalidFileMessage="Tipo não permitido."
+                                              invalidSizeMessage="Tamanho máximo: 20MB."/>
+                                <p:commandButton value="Enviar exame" icon="fa fa-upload"
+                                                 styleClass="btn primary"
+                                                 action="#{minhasConsultasBean.salvarUploadExame}"
+                                                 ajax="false"/>
+                            </div>
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="panel">
+                        <h:panelGroup layout="block" styleClass="panel-title">
+                            <i class="fa fa-paperclip panel-icon"/>
+                            <h:outputText value="Exames (#{minhasConsultasBean.exames.size()})"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="panel-body">
+                            <h:panelGroup rendered="#{empty minhasConsultasBean.exames}"
+                                          styleClass="note">
+                                Nenhum exame anexado.
+                            </h:panelGroup>
+                            <ui:repeat value="#{minhasConsultasBean.exames}" var="ex">
+                                <div style="display:flex;align-items:center;gap:8px;
+                                            border:1px solid #c8c8c8;padding:5px 8px;
+                                            margin-top:4px;background:#fff;border-radius:2px;">
+                                    <i class="fa fa-file" style="color:#1f3a68;"/>
+                                    <div style="flex:1;min-width:0;">
+                                        <div style="font-size:12px;font-weight:bold;color:#333;
+                                                    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                            #{ex.nomeOriginal}
+                                        </div>
+                                        <div style="font-size:11px;color:#666;">
+                                            #{ex.tipoResponsavel.descricao} —
+                                            #{minhasConsultasBean.formatarDataHora(ex.dataUpload)} —
+                                            #{minhasConsultasBean.formatarTamanho(ex.tamanhoBytes)}
+                                        </div>
+                                    </div>
+                                    <a href="#{request.contextPath}/download/arquivo?id=#{ex.id}"
+                                       target="_blank" class="btn"
+                                       style="font-size:11px;padding:3px 8px;text-decoration:none;">
+                                        <i class="fa fa-download"/> Baixar
+                                    </a>
+                                    <p:commandButton icon="fa fa-trash" styleClass="btn icon-btn"
+                                                     title="Remover exame"
+                                                     rendered="#{ex.tipoResponsavel == 'PACIENTE'}"
+                                                     action="#{minhasConsultasBean.removerExame(ex.id)}"
+                                                     update=":formExames:dlgExames"
+                                                     process="@this"/>
+                                </div>
+                            </ui:repeat>
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <div style="display:flex;justify-content:flex-end;padding-top:8px;margin-top:8px;
+                                border-top:1px solid #c8c8c8;">
+                        <p:commandButton value="Fechar" type="button" icon="fa fa-times"
+                                         styleClass="btn" onclick="PF('wDlgExames').hide();"/>
+                    </div>
+                </h:panelGroup>
+            </p:dialog>
         </h:form>
     </ui:define>
 

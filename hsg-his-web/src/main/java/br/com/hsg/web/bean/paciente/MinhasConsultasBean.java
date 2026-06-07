@@ -1,8 +1,13 @@
 package br.com.hsg.web.bean.paciente;
 
+import br.com.hsg.domain.entity.Arquivo;
 import br.com.hsg.domain.entity.Consulta;
+import br.com.hsg.domain.enums.TipoResponsavel;
+import br.com.hsg.service.facade.clinica.ReceituarioServiceFacade;
 import br.com.hsg.service.facade.paciente.ConsultaServiceFacade;
+import br.com.hsg.service.facade.storage.ArquivoServiceFacade;
 import br.com.hsg.web.bean.session.BeanSessao;
+import org.primefaces.model.UploadedFile;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -29,6 +34,8 @@ public class MinhasConsultasBean implements Serializable {
 
     @Inject private BeanSessao beanSessao;
     @EJB    private ConsultaServiceFacade consultaService;
+    @EJB    private ArquivoServiceFacade arquivoService;
+    @EJB    private ReceituarioServiceFacade receituarioService;
 
     private List<Consulta> consultas = Collections.emptyList();
 
@@ -36,6 +43,10 @@ public class MinhasConsultasBean implements Serializable {
     private String motivoCancelamento;
 
     private Consulta consultaSelecionada;
+
+    private Consulta consultaAnexando;
+    private List<Arquivo> exames = Collections.emptyList();
+    private UploadedFile uploadedExame;
 
     @PostConstruct
     public void init() {
@@ -52,6 +63,77 @@ public class MinhasConsultasBean implements Serializable {
 
     public void verDetalhes(Consulta c) {
         this.consultaSelecionada = c;
+    }
+
+    public void abrirAnexarExame(Consulta c) {
+        this.consultaAnexando = c;
+        try {
+            this.exames = arquivoService.listarPorConsulta(c.getId());
+        } catch (Exception ex) {
+            LOG.log(Level.WARNING, "[MinhasConsultasBean] Falha ao listar anexos", ex);
+            this.exames = Collections.emptyList();
+        }
+    }
+
+    public String salvarUploadExame() {
+        LOG.info("[MinhasConsultasBean] salvarUploadExame invocado.");
+        if (consultaAnexando == null) {
+            msg(FacesMessage.SEVERITY_WARN, "Consulta não selecionada.");
+            return null;
+        }
+        if (uploadedExame == null || uploadedExame.getContents() == null
+                || uploadedExame.getContents().length == 0) {
+            msg(FacesMessage.SEVERITY_WARN, "Selecione um arquivo antes de enviar.");
+            return null;
+        }
+        try {
+            arquivoService.anexarExameEmConsulta(consultaAnexando.getId(),
+                    uploadedExame.getContents(), uploadedExame.getContentType(),
+                    uploadedExame.getFileName(),
+                    getPacienteId(), TipoResponsavel.PACIENTE);
+            msg(FacesMessage.SEVERITY_INFO, "Exame enviado.");
+            this.exames = arquivoService.listarPorConsulta(consultaAnexando.getId());
+            this.uploadedExame = null;
+        } catch (Exception ex) {
+            LOG.log(Level.WARNING, "[MinhasConsultasBean] Falha ao anexar exame", ex);
+            msg(FacesMessage.SEVERITY_ERROR, extrairMensagem(ex, "Erro ao anexar exame."));
+        }
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().setKeepMessages(true);
+        return null;
+    }
+
+    public void removerExame(Long idArquivo) {
+        try {
+            arquivoService.remover(idArquivo, getPacienteId(), TipoResponsavel.PACIENTE);
+            msg(FacesMessage.SEVERITY_INFO, "Exame removido.");
+            if (consultaAnexando != null) {
+                this.exames = arquivoService.listarPorConsulta(consultaAnexando.getId());
+            }
+        } catch (Exception ex) {
+            LOG.log(Level.WARNING, "[MinhasConsultasBean] Falha ao remover exame", ex);
+            msg(FacesMessage.SEVERITY_ERROR, extrairMensagem(ex, "Erro ao remover exame."));
+        }
+    }
+
+    public boolean temReceita(Consulta c) {
+        if (c == null) return false;
+        try {
+            return receituarioService.buscarPorConsulta(c.getId()) != null;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    public boolean podeAnexarExame(Consulta c) {
+        if (c == null || c.getStatus() == null) return false;
+        return c.getStatus() == br.com.hsg.domain.enums.StatusConsulta.AGENDADA
+                || c.getStatus() == br.com.hsg.domain.enums.StatusConsulta.CONFIRMADA;
+    }
+
+    public String formatarTamanho(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
+        return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
     }
 
     public void prepararCancelamento(Long idConsulta) {
@@ -121,4 +203,8 @@ public class MinhasConsultasBean implements Serializable {
     public String getMotivoCancelamento()           { return motivoCancelamento; }
     public void setMotivoCancelamento(String v)     { this.motivoCancelamento = v; }
     public Consulta getConsultaSelecionada()        { return consultaSelecionada; }
+    public Consulta getConsultaAnexando()           { return consultaAnexando; }
+    public List<Arquivo> getExames()                { return exames; }
+    public UploadedFile getUploadedExame()          { return uploadedExame; }
+    public void setUploadedExame(UploadedFile v)    { this.uploadedExame = v; }
 }

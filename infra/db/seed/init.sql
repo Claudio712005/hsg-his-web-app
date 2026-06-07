@@ -1165,7 +1165,6 @@ SELECT 'PACIENTE', p.id_pac,
 FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
 WHERE c.nm_usu = 'claudio.filho';
 
--- mariana.santos (PACIENTE)
 INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
     ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
 SELECT 'PACIENTE', p.id_pac,
@@ -1186,7 +1185,6 @@ SELECT 'PACIENTE', p.id_pac,
 FROM hsg.tb_pac p JOIN hsg.tb_conta_usu c ON c.id_conta_usu = p.id_conta_usu
 WHERE c.nm_usu = 'mariana.santos';
 
--- dr.joao (MEDICO)
 INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
     ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
 SELECT 'MEDICO', m.id_medico,
@@ -1230,7 +1228,6 @@ SELECT 'MEDICO', m.id_medico,
 FROM hsg.tb_medico m JOIN hsg.tb_conta_usu c ON c.id_conta_usu = m.id_conta_usu_medico
 WHERE c.nm_usu = 'dr.joao';
 
--- dr.ana (MEDICO)
 INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
     ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
 SELECT 'MEDICO', m.id_medico,
@@ -1251,7 +1248,6 @@ SELECT 'MEDICO', m.id_medico,
 FROM hsg.tb_medico m JOIN hsg.tb_conta_usu c ON c.id_conta_usu = m.id_conta_usu_medico
 WHERE c.nm_usu = 'dr.ana';
 
--- enf.lucas (ENFERMEIRO)
 INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
     ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
 SELECT 'ENFERMEIRO', e.id_enfer,
@@ -1275,7 +1271,6 @@ WHERE c.nm_usu = 'enf.lucas';
 UPDATE hsg.tb_notificacao SET dt_leitura = NOW() - INTERVAL '7 days'
 WHERE id_notificacao = currval('hsg.seq_notificacao');
 
--- admin.hsg (ADMIN)
 INSERT INTO hsg.tb_notificacao (tp_destinatario, id_destinatario, ds_titulo, ds_mensagem,
     ds_link, tp_notificacao, tp_categoria, fl_lida, dt_criacao, dt_expiracao)
 SELECT 'ADMIN', a.id_adm,
@@ -1319,15 +1314,6 @@ SELECT 'ADMIN', a.id_adm,
 FROM hsg.tb_adm a JOIN hsg.tb_conta_usu c ON c.id_conta_usu = a.id_conta_usu_adm
 WHERE c.nm_usu = 'admin.hsg';
 
--- ══════════════════════════════════════════════════════════════════════
--- ── Massa de teste: consultas variadas (Fase E) ───────────────────────
--- ══════════════════════════════════════════════════════════════════════
--- Gera consultas distribuídas pelos próximos 7 dias e últimos 5 dias,
--- cobrindo todos os médicos demo, pacientes variados e múltiplos status.
-
--- Helper: reaproveita o padrão slot RESERVADO/CANCELADO + consulta + update id_consulta.
-
--- Consulta 6: claudio.filho × dr.joao — CONFIRMADA, hoje +0d 09:00 (visível na recepção)
 INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
 SELECT m.id_medico, CURRENT_DATE + TIME '09:00', CURRENT_DATE + TIME '09:30',
        'RESERVADO', NOW()
@@ -1349,7 +1335,6 @@ WHERE cu.nm_usu = 'dr.joao' ON CONFLICT (id_agenda_slot) DO NOTHING;
 UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
 WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
 
--- Consulta 7: mariana.santos × dr.joao — AGENDADA, hoje 10:00
 INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
 SELECT m.id_medico, CURRENT_DATE + TIME '10:00', CURRENT_DATE + TIME '10:30',
        'RESERVADO', NOW()
@@ -1371,7 +1356,6 @@ WHERE cu.nm_usu = 'dr.joao' ON CONFLICT (id_agenda_slot) DO NOTHING;
 UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
 WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
 
--- Consulta 8: pedro.oliveira × dr.ana — AGENDADA, +1d 14:00
 INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
 SELECT m.id_medico, (CURRENT_DATE + 1) + TIME '14:00', (CURRENT_DATE + 1) + TIME '14:40',
        'RESERVADO', NOW()
@@ -1393,7 +1377,6 @@ WHERE cu.nm_usu = 'dr.ana' ON CONFLICT (id_agenda_slot) DO NOTHING;
 UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
 WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
 
--- Consulta 9: carla.silva × dr.roberto — REALIZADA, há 2 dias 09:20 (com obs clínica)
 INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
 SELECT m.id_medico, (CURRENT_DATE - 2) + TIME '09:20', (CURRENT_DATE - 2) + TIME '09:40',
        'RESERVADO', NOW() - INTERVAL '4 days'
@@ -1418,7 +1401,6 @@ WHERE cu.nm_usu = 'dr.roberto' ON CONFLICT (id_agenda_slot) DO NOTHING;
 UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
 WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
 
--- Consulta 10: joao.lima × dra.fernanda — FALTOU, ontem 09:00
 INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
 SELECT m.id_medico, (CURRENT_DATE - 1) + TIME '09:00', (CURRENT_DATE - 1) + TIME '09:45',
        'RESERVADO', NOW() - INTERVAL '3 days'
@@ -1440,7 +1422,6 @@ WHERE cu.nm_usu = 'dra.fernanda' ON CONFLICT (id_agenda_slot) DO NOTHING;
 UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
 WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
 
--- Consulta 11: beatriz.costa × dr.carlos — AGENDADA, +2d 14:00
 INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
 SELECT m.id_medico, (CURRENT_DATE + 2) + TIME '14:00', (CURRENT_DATE + 2) + TIME '14:30',
        'RESERVADO', NOW()
@@ -1462,7 +1443,6 @@ WHERE cu.nm_usu = 'dr.carlos' ON CONFLICT (id_agenda_slot) DO NOTHING;
 UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
 WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
 
--- Consulta 12: mariana.santos × dra.fernanda — REALIZADA, há 3 dias (com obs)
 INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
 SELECT m.id_medico, (CURRENT_DATE - 3) + TIME '10:30', (CURRENT_DATE - 3) + TIME '11:15',
        'RESERVADO', NOW() - INTERVAL '5 days'
@@ -1487,7 +1467,6 @@ WHERE cu.nm_usu = 'dra.fernanda' ON CONFLICT (id_agenda_slot) DO NOTHING;
 UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
 WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
 
--- Consulta 13: pedro.oliveira × dr.joao — CANCELADA, hoje 11:00 (clínica)
 INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
 SELECT m.id_medico, CURRENT_DATE + TIME '11:00', CURRENT_DATE + TIME '11:30',
        'CANCELADO', NOW()
@@ -1511,7 +1490,6 @@ WHERE cu.nm_usu = 'dr.joao' ON CONFLICT (id_agenda_slot) DO NOTHING;
 UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
 WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
 
--- Consulta 14: carla.silva × dr.ana — CONFIRMADA, hoje 15:00
 INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
 SELECT m.id_medico, CURRENT_DATE + TIME '15:00', CURRENT_DATE + TIME '15:40',
        'RESERVADO', NOW()
@@ -1533,7 +1511,6 @@ WHERE cu.nm_usu = 'dr.ana' ON CONFLICT (id_agenda_slot) DO NOTHING;
 UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
 WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
 
--- Consulta 15: beatriz.costa × dr.roberto — REALIZADA, há 1 dia 09:00 (com obs)
 INSERT INTO hsg.tb_agenda_medica_slot (id_medico, dt_inicio, dt_fim, st_slot, dt_cadastro)
 SELECT m.id_medico, (CURRENT_DATE - 1) + TIME '09:00', (CURRENT_DATE - 1) + TIME '09:20',
        'RESERVADO', NOW() - INTERVAL '3 days'
@@ -1558,15 +1535,6 @@ WHERE cu.nm_usu = 'dr.roberto' ON CONFLICT (id_agenda_slot) DO NOTHING;
 UPDATE hsg.tb_agenda_medica_slot SET id_consulta = currval('hsg.seq_consulta')
 WHERE id_agenda_slot = currval('hsg.seq_agenda_medica_slot');
 
--- ══════════════════════════════════════════════════════════════════════
--- ── Massa: histórico de consultas (V30) ───────────────────────────────
--- ══════════════════════════════════════════════════════════════════════
--- Cobre todas as transições de status registráveis:
---   AGENDADA  → CHECK_IN → REALIZADA   (caminho feliz)
---   AGENDADA  → FALTOU                 (auto-falta sem check-in)
---   AGENDADA  → CANCELADA              (paciente ou clínica)
-
--- 1. AGENDADA — para TODAS as consultas (sempre é o primeiro evento)
 INSERT INTO hsg.tb_consulta_historico (id_consulta, tp_acao, id_responsavel, tp_responsavel,
     ds_observacao, dt_acao)
 SELECT c.id_consulta, 'AGENDADA', c.id_paciente, 'PACIENTE',
@@ -1574,7 +1542,6 @@ SELECT c.id_consulta, 'AGENDADA', c.id_paciente, 'PACIENTE',
        c.dt_cadastro
 FROM hsg.tb_consulta c;
 
--- 2. CHECK_IN — para CONFIRMADA / REALIZADA (enfermeiro registra chegada)
 INSERT INTO hsg.tb_consulta_historico (id_consulta, tp_acao, id_responsavel, tp_responsavel,
     ds_observacao, dt_acao)
 SELECT c.id_consulta, 'CHECK_IN',
@@ -1587,7 +1554,6 @@ SELECT c.id_consulta, 'CHECK_IN',
 FROM hsg.tb_consulta c
 WHERE c.st_consulta IN ('CONFIRMADA','REALIZADA');
 
--- 3. REALIZADA — todas com st_consulta = REALIZADA (médico responsável)
 INSERT INTO hsg.tb_consulta_historico (id_consulta, tp_acao, id_responsavel, tp_responsavel,
     ds_observacao, dt_acao)
 SELECT c.id_consulta, 'REALIZADA', c.id_medico, 'MEDICO',
@@ -1596,7 +1562,6 @@ SELECT c.id_consulta, 'REALIZADA', c.id_medico, 'MEDICO',
 FROM hsg.tb_consulta c
 WHERE c.st_consulta = 'REALIZADA';
 
--- 4. FALTOU — SISTEMA (cenário auto-falta via scheduler)
 INSERT INTO hsg.tb_consulta_historico (id_consulta, tp_acao, id_responsavel, tp_responsavel,
     ds_observacao, dt_acao)
 SELECT c.id_consulta, 'FALTOU', NULL, 'SISTEMA',
@@ -1605,7 +1570,6 @@ SELECT c.id_consulta, 'FALTOU', NULL, 'SISTEMA',
 FROM hsg.tb_consulta c
 WHERE c.st_consulta = 'FALTOU';
 
--- 5. CANCELADA pela clínica
 INSERT INTO hsg.tb_consulta_historico (id_consulta, tp_acao, id_responsavel, tp_responsavel,
     ds_observacao, dt_acao)
 SELECT c.id_consulta, 'CANCELADA', c.id_medico, 'MEDICO',
@@ -1615,7 +1579,6 @@ FROM hsg.tb_consulta c
 WHERE c.st_consulta = 'CANCELADA'
   AND c.ds_cancelamento ILIKE '%clínica%';
 
--- 6. CANCELADA pelo paciente
 INSERT INTO hsg.tb_consulta_historico (id_consulta, tp_acao, id_responsavel, tp_responsavel,
     ds_observacao, dt_acao)
 SELECT c.id_consulta, 'CANCELADA', c.id_paciente, 'PACIENTE',
@@ -1625,13 +1588,6 @@ FROM hsg.tb_consulta c
 WHERE c.st_consulta = 'CANCELADA'
   AND c.ds_cancelamento NOT ILIKE '%clínica%';
 
--- ══════════════════════════════════════════════════════════════════════
--- ── Massa: anotações de consulta (V31) ────────────────────────────────
--- ══════════════════════════════════════════════════════════════════════
--- Cobre os três perfis autorizados (MEDICO / ENFERMEIRO / ADMIN).
--- Regra AN-02: CANCELADA não recebe anotação.
-
--- ▸ Consulta 3 (dr.roberto × claudio.filho — REALIZADA há 7d)
 INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
     id_responsavel, tp_responsavel, dt_criacao)
 SELECT c.id_consulta,
@@ -1665,7 +1621,6 @@ JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
 WHERE cu.nm_usu = 'dr.roberto' AND cp.nm_usu = 'claudio.filho'
   AND c.dt_consulta = (CURRENT_DATE - 7) + TIME '09:00';
 
--- ▸ Consulta 9 (dr.roberto × carla.silva — REALIZADA há 2d)
 INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
     id_responsavel, tp_responsavel, dt_criacao)
 SELECT c.id_consulta,
@@ -1759,7 +1714,6 @@ JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
 WHERE cu.nm_usu = 'dra.fernanda' AND cp.nm_usu = 'mariana.santos'
   AND c.dt_consulta = (CURRENT_DATE - 3) + TIME '10:30';
 
--- ▸ Consulta 15 (dr.roberto × beatriz.costa — REALIZADA há 1d)
 INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
     id_responsavel, tp_responsavel, dt_criacao)
 SELECT c.id_consulta,
@@ -1792,7 +1746,6 @@ JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
 WHERE cu.nm_usu = 'dr.roberto' AND cp.nm_usu = 'beatriz.costa'
   AND c.dt_consulta = (CURRENT_DATE - 1) + TIME '09:00';
 
--- ▸ Consulta 6 (dr.joao × claudio.filho — CONFIRMADA hoje 09:00) — só triagem
 INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
     id_responsavel, tp_responsavel, dt_criacao)
 SELECT c.id_consulta,
@@ -1811,7 +1764,6 @@ JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
 WHERE cu.nm_usu = 'dr.joao' AND cp.nm_usu = 'claudio.filho'
   AND c.dt_consulta = CURRENT_DATE + TIME '09:00';
 
--- ▸ Consulta 14 (dr.ana × carla.silva — CONFIRMADA hoje 15:00) — triagem + admin
 INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
     id_responsavel, tp_responsavel, dt_criacao)
 SELECT c.id_consulta,
@@ -1848,7 +1800,6 @@ JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
 WHERE cu.nm_usu = 'dr.ana' AND cp.nm_usu = 'carla.silva'
   AND c.dt_consulta = CURRENT_DATE + TIME '15:00';
 
--- ▸ Consulta 2 (dr.ana × mariana.santos — CONFIRMADA +3d 14:00)
 INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
     id_responsavel, tp_responsavel, dt_criacao)
 SELECT c.id_consulta,
@@ -1867,7 +1818,6 @@ JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
 WHERE cu.nm_usu = 'dr.ana' AND cp.nm_usu = 'mariana.santos'
   AND c.dt_consulta = (CURRENT_DATE + 3) + TIME '14:00';
 
--- ▸ Consulta 4 (dr.ana × claudio.filho — CONFIRMADA convênio +4d 14:40)
 INSERT INTO hsg.tb_consulta_anotacao (id_consulta, ds_titulo, ds_descricao,
     id_responsavel, tp_responsavel, dt_criacao)
 SELECT c.id_consulta,
@@ -1885,3 +1835,217 @@ JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
 JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
 WHERE cu.nm_usu = 'dr.ana' AND cp.nm_usu = 'claudio.filho'
   AND c.dt_consulta = (CURRENT_DATE + 4) + TIME '14:40';
+
+INSERT INTO hsg.tb_arquivo (ds_path_logico, ds_dominio, ds_nome_original, ds_content_type,
+    nr_tamanho_bytes, ds_sha256, id_consulta, id_responsavel, tp_responsavel, dt_upload, st_arquivo)
+SELECT '/anexos/consulta/' || c.id_consulta || '/'
+       || TO_CHAR(c.dt_consulta, 'YYYY/MM') || '/seed-receita-c3.pdf',
+       'ANEXO_CONSULTA', 'receita_dipirona.pdf', 'application/pdf',
+       124853,
+       '7d3c8b1f9a2e6c1c4dbe5f7a3c2b0d9e8f1a6b5c4d3e2f1a0b9c8d7e6f5a4b3c',
+       c.id_consulta, c.id_medico, 'MEDICO',
+       c.dt_consulta + INTERVAL '20 minutes', 'A'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.roberto' AND cp.nm_usu = 'claudio.filho'
+  AND c.dt_consulta = (CURRENT_DATE - 7) + TIME '09:00';
+
+INSERT INTO hsg.tb_arquivo (ds_path_logico, ds_dominio, ds_nome_original, ds_content_type,
+    nr_tamanho_bytes, ds_sha256, id_consulta, id_responsavel, tp_responsavel, dt_upload, st_arquivo)
+SELECT '/exames/consulta/' || c.id_consulta || '/'
+       || TO_CHAR(c.dt_consulta - INTERVAL '1 day', 'YYYY/MM') || '/seed-hemograma-c9.pdf',
+       'EXAME_CONSULTA', 'hemograma_completo.pdf', 'application/pdf',
+       287901,
+       'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456',
+       c.id_consulta, c.id_paciente, 'PACIENTE',
+       c.dt_consulta - INTERVAL '1 day', 'A'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.roberto' AND cp.nm_usu = 'carla.silva'
+  AND c.dt_consulta = (CURRENT_DATE - 2) + TIME '09:20';
+
+INSERT INTO hsg.tb_arquivo (ds_path_logico, ds_dominio, ds_nome_original, ds_content_type,
+    nr_tamanho_bytes, ds_sha256, id_anotacao, id_responsavel, tp_responsavel, dt_upload, st_arquivo)
+SELECT '/anexos/anotacao/' || a.id_consulta_anotacao || '/'
+       || TO_CHAR(a.dt_criacao, 'YYYY/MM') || '/seed-prescricao-an.png',
+       'ANEXO_ANOTACAO', 'prescricao_assinada.png', 'image/png',
+       89124,
+       'bbbb1111cccc2222dddd3333eeee4444ffff5555aaaa6666bbbb7777cccc8888',
+       a.id_consulta_anotacao, c.id_medico, 'MEDICO',
+       a.dt_criacao + INTERVAL '5 minutes', 'A'
+FROM hsg.tb_consulta_anotacao a
+JOIN hsg.tb_consulta c ON c.id_consulta = a.id_consulta
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.roberto' AND cp.nm_usu = 'carla.silva'
+  AND a.ds_titulo = 'Plano terapêutico'
+  AND c.dt_consulta = (CURRENT_DATE - 2) + TIME '09:20';
+
+INSERT INTO hsg.tb_arquivo (ds_path_logico, ds_dominio, ds_nome_original, ds_content_type,
+    nr_tamanho_bytes, ds_sha256, id_consulta, id_responsavel, tp_responsavel, dt_upload, st_arquivo)
+SELECT '/anexos/consulta/' || c.id_consulta || '/'
+       || TO_CHAR(c.dt_consulta, 'YYYY/MM') || '/seed-encaminhamento-c12.pdf',
+       'ANEXO_CONSULTA', 'encaminhamento_neuro.pdf', 'application/pdf',
+       156432,
+       'f1e2d3c4b5a6978869574635241302f1e2d3c4b5a6978869574635241302f1e2',
+       c.id_consulta, c.id_medico, 'MEDICO',
+       c.dt_consulta + INTERVAL '30 minutes', 'A'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dra.fernanda' AND cp.nm_usu = 'mariana.santos'
+  AND c.dt_consulta = (CURRENT_DATE - 3) + TIME '10:30';
+
+INSERT INTO hsg.tb_arquivo (ds_path_logico, ds_dominio, ds_nome_original, ds_content_type,
+    nr_tamanho_bytes, ds_sha256, id_consulta, id_responsavel, tp_responsavel, dt_upload, st_arquivo)
+SELECT '/exames/consulta/' || c.id_consulta || '/'
+       || TO_CHAR(NOW() - INTERVAL '1 day', 'YYYY/MM') || '/seed-tomografia-c14.pdf',
+       'EXAME_CONSULTA', 'tomografia_torax.pdf', 'application/pdf',
+       1245876,
+       '00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff',
+       c.id_consulta, c.id_paciente, 'PACIENTE',
+       NOW() - INTERVAL '1 day', 'A'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.ana' AND cp.nm_usu = 'carla.silva'
+  AND c.dt_consulta = CURRENT_DATE + TIME '15:00';
+
+INSERT INTO hsg.tb_arquivo (ds_path_logico, ds_dominio, ds_nome_original, ds_content_type,
+    nr_tamanho_bytes, ds_sha256, id_consulta, id_responsavel, tp_responsavel, dt_upload, st_arquivo)
+SELECT '/exames/consulta/' || c.id_consulta || '/'
+       || TO_CHAR(NOW() - INTERVAL '3 hours', 'YYYY/MM') || '/seed-rx-c6.jpg',
+       'EXAME_CONSULTA', 'radiografia_torax.jpg', 'image/jpeg',
+       452301,
+       '99aabbccdd0011223344556677889900aabbccddee1122334455667788990011',
+       c.id_consulta, c.id_paciente, 'PACIENTE',
+       NOW() - INTERVAL '3 hours', 'A'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.joao' AND cp.nm_usu = 'claudio.filho'
+  AND c.dt_consulta = CURRENT_DATE + TIME '09:00';
+
+INSERT INTO hsg.tb_arquivo (ds_path_logico, ds_dominio, ds_nome_original, ds_content_type,
+    nr_tamanho_bytes, ds_sha256, id_consulta, id_responsavel, tp_responsavel, dt_upload, st_arquivo)
+SELECT '/anexos/consulta/' || c.id_consulta || '/'
+       || TO_CHAR(c.dt_consulta, 'YYYY/MM') || '/seed-atestado-c15.pdf',
+       'ANEXO_CONSULTA', 'atestado_acompanhamento.pdf', 'application/pdf',
+       67234,
+       'cafe0babe1234567890fedcba9876543210cafe0babe1234567890fedcba9876',
+       c.id_consulta,
+       (SELECT e.id_enfer FROM hsg.tb_enfer e
+        JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = e.id_conta_usu_enfer
+        WHERE cu.nm_usu = 'enf.camila'),
+       'ENFERMEIRO',
+       c.dt_consulta + INTERVAL '40 minutes', 'A'
+FROM hsg.tb_consulta c
+JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+JOIN hsg.tb_conta_usu cu ON cu.id_conta_usu = m.id_conta_usu_medico
+JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+JOIN hsg.tb_conta_usu cp ON cp.id_conta_usu = p.id_conta_usu
+WHERE cu.nm_usu = 'dr.roberto' AND cp.nm_usu = 'beatriz.costa'
+  AND c.dt_consulta = (CURRENT_DATE - 1) + TIME '09:00';
+
+-- ══════════════════════════════════════════════════════════════════════
+-- ── Massa: receituário (V33) ──────────────────────────────────────────
+-- ══════════════════════════════════════════════════════════════════════
+-- 3 receitas ATIVAS em consultas REALIZADAS, cada uma com 1-2 itens.
+
+DO $$
+DECLARE
+    v_id_consulta BIGINT;
+    v_id_medico   BIGINT;
+    v_id_receita  BIGINT;
+BEGIN
+    -- Receita 1 — C3 (dr.roberto × claudio.filho, REALIZADA -7d): 2 itens
+    SELECT c.id_consulta, c.id_medico INTO v_id_consulta, v_id_medico
+    FROM hsg.tb_consulta c
+    JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+    JOIN hsg.tb_conta_usu cum ON cum.id_conta_usu = m.id_conta_usu_medico
+    JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+    JOIN hsg.tb_conta_usu cup ON cup.id_conta_usu = p.id_conta_usu
+    WHERE cum.nm_usu = 'dr.roberto' AND cup.nm_usu = 'claudio.filho'
+      AND c.dt_consulta = (CURRENT_DATE - 7) + TIME '09:00';
+
+    IF v_id_consulta IS NOT NULL THEN
+        INSERT INTO hsg.tb_receita (id_consulta, id_medico, dt_emissao, st_receita)
+        VALUES (v_id_consulta, v_id_medico,
+                (CURRENT_DATE - 7) + TIME '09:25', 'A')
+        RETURNING id_receita INTO v_id_receita;
+
+        INSERT INTO hsg.tb_receita_item (id_receita, ds_medicamento, ds_posologia, ds_observacao, ds_cid_10, nr_ordem)
+        VALUES (v_id_receita, 'Dipirona sódica 500mg',
+                '1 comprimido via oral de 6/6 horas',
+                'Suspender em caso de melhora completa dos sintomas.',
+                'R10', 1);
+        INSERT INTO hsg.tb_receita_item (id_receita, ds_medicamento, ds_posologia, ds_observacao, ds_cid_10, nr_ordem)
+        VALUES (v_id_receita, 'Soro de reidratação oral',
+                '1 sachê dissolvido em 1 litro de água, ingerir conforme sede',
+                NULL, NULL, 2);
+    END IF;
+
+    -- Receita 2 — C9 (dr.roberto × carla.silva, REALIZADA -2d): 1 item
+    SELECT c.id_consulta, c.id_medico INTO v_id_consulta, v_id_medico
+    FROM hsg.tb_consulta c
+    JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+    JOIN hsg.tb_conta_usu cum ON cum.id_conta_usu = m.id_conta_usu_medico
+    JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+    JOIN hsg.tb_conta_usu cup ON cup.id_conta_usu = p.id_conta_usu
+    WHERE cum.nm_usu = 'dr.roberto' AND cup.nm_usu = 'carla.silva'
+      AND c.dt_consulta = (CURRENT_DATE - 2) + TIME '09:20';
+
+    IF v_id_consulta IS NOT NULL THEN
+        INSERT INTO hsg.tb_receita (id_consulta, id_medico, dt_emissao, st_receita)
+        VALUES (v_id_consulta, v_id_medico,
+                (CURRENT_DATE - 2) + TIME '09:55', 'A')
+        RETURNING id_receita INTO v_id_receita;
+
+        INSERT INTO hsg.tb_receita_item (id_receita, ds_medicamento, ds_posologia, ds_observacao, ds_cid_10, nr_ordem)
+        VALUES (v_id_receita, 'Sais para reidratação oral (SRO)',
+                '1 sachê após cada evacuação líquida, até 8 sachês/dia',
+                'Manter hidratação por 48-72h. Retornar se sangue nas fezes ou febre alta.',
+                'A09', 1);
+    END IF;
+
+    -- Receita 3 — C12 (dra.fernanda × mariana.santos, REALIZADA -3d): 2 itens
+    SELECT c.id_consulta, c.id_medico INTO v_id_consulta, v_id_medico
+    FROM hsg.tb_consulta c
+    JOIN hsg.tb_medico m ON m.id_medico = c.id_medico
+    JOIN hsg.tb_conta_usu cum ON cum.id_conta_usu = m.id_conta_usu_medico
+    JOIN hsg.tb_pac p ON p.id_pac = c.id_paciente
+    JOIN hsg.tb_conta_usu cup ON cup.id_conta_usu = p.id_conta_usu
+    WHERE cum.nm_usu = 'dra.fernanda' AND cup.nm_usu = 'mariana.santos'
+      AND c.dt_consulta = (CURRENT_DATE - 3) + TIME '10:30';
+
+    IF v_id_consulta IS NOT NULL THEN
+        INSERT INTO hsg.tb_receita (id_consulta, id_medico, dt_emissao, st_receita)
+        VALUES (v_id_consulta, v_id_medico,
+                (CURRENT_DATE - 3) + TIME '11:00', 'A')
+        RETURNING id_receita INTO v_id_receita;
+
+        INSERT INTO hsg.tb_receita_item (id_receita, ds_medicamento, ds_posologia, ds_observacao, ds_cid_10, nr_ordem)
+        VALUES (v_id_receita, 'Amitriptilina 25mg',
+                '1 comprimido via oral, à noite, por 30 dias',
+                'Avaliar resposta em 4 semanas. Pode causar sonolência inicial.',
+                'G44', 1);
+        INSERT INTO hsg.tb_receita_item (id_receita, ds_medicamento, ds_posologia, ds_observacao, ds_cid_10, nr_ordem)
+        VALUES (v_id_receita, 'Paracetamol 750mg',
+                '1 comprimido via oral SOS em caso de dor (máx. 4/dia)',
+                NULL, 'R51', 2);
+    END IF;
+END $$;
