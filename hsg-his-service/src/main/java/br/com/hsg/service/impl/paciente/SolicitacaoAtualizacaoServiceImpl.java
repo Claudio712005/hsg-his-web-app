@@ -28,6 +28,7 @@ public class SolicitacaoAtualizacaoServiceImpl implements SolicitacaoAtualizacao
     @EJB private PacienteDAO               pacienteDAO;
     @EJB private EnderecoDAO               enderecoDAO;
     @EJB private PainelPacienteDAO         painelDAO;
+    @EJB private br.com.hsg.service.impl.notificacao.NotificacaoEmissor emissor;
 
     @Override
     public void solicitarAtualizacaoCadastral(
@@ -48,6 +49,13 @@ public class SolicitacaoAtualizacaoServiceImpl implements SolicitacaoAtualizacao
         solicitacaoDAO.salvar(
                 SolicitacaoAtualizacao.solicitarCadastral(paciente, novoNome, novoEmail, novoTel, motivo)
         );
+
+        if (emissor != null) emissor.emitirParaTodosAdmins(
+                "Nova solicitação de atualização cadastral",
+                "Paciente " + paciente.getNomeCompleto() + " solicitou atualização de dados cadastrais.",
+                br.com.hsg.domain.enums.TipoNotificacao.INFO,
+                br.com.hsg.domain.enums.CategoriaNotificacao.SISTEMA,
+                "/admin/aprovacao-convenios.xhtml");
     }
 
     @Override
@@ -67,6 +75,12 @@ public class SolicitacaoAtualizacaoServiceImpl implements SolicitacaoAtualizacao
                         motivo
                 )
         );
+
+        if (emissor != null) emissor.emitirParaTodosAdmins(
+                "Nova solicitação de atualização de endereço",
+                "Paciente " + paciente.getNomeCompleto() + " solicitou atualização de endereço.",
+                br.com.hsg.domain.enums.TipoNotificacao.INFO,
+                br.com.hsg.domain.enums.CategoriaNotificacao.SISTEMA, null);
     }
 
     @Override
@@ -93,6 +107,12 @@ public class SolicitacaoAtualizacaoServiceImpl implements SolicitacaoAtualizacao
                         motivo
                 )
         );
+
+        if (emissor != null) emissor.emitirParaTodosAdmins(
+                "Nova solicitação de atualização de dados clínicos",
+                "Paciente " + paciente.getNomeCompleto() + " solicitou atualização de dados clínicos (peso/altura/tipo sanguíneo).",
+                br.com.hsg.domain.enums.TipoNotificacao.INFO,
+                br.com.hsg.domain.enums.CategoriaNotificacao.SISTEMA, null);
     }
 
     @Override
@@ -104,6 +124,18 @@ public class SolicitacaoAtualizacaoServiceImpl implements SolicitacaoAtualizacao
         }
         s.cancelar(idCancelador, tipoCancelador, motivoCancelamento);
         solicitacaoDAO.atualizar(s);
+
+        if (tipoCancelador != TipoCancelador.CLIENTE && s.getPaciente() != null) {
+            String motivoTxt = (motivoCancelamento != null && !motivoCancelamento.trim().isEmpty())
+                    ? " Motivo: " + motivoCancelamento : "";
+            if (emissor != null) emissor.emitir(
+                    br.com.hsg.domain.enums.TipoDestinatarioNotificacao.PACIENTE,
+                    s.getPaciente().getId(),
+                    "Solicitação de atualização cancelada",
+                    "Sua solicitação de atualização foi cancelada pela equipe." + motivoTxt,
+                    br.com.hsg.domain.enums.TipoNotificacao.ALERTA,
+                    br.com.hsg.domain.enums.CategoriaNotificacao.SISTEMA, null);
+        }
     }
 
     @Override

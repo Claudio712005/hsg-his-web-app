@@ -18,9 +18,40 @@ A documentação existe para:
 
 ---
 
+## 1.1 Módulos documentados
+
+- Agendamento de consultas:
+  - Visão do módulo: `modulos/agendamento.md`
+  - Regras de negócio: `regras/regras-negocio-agendamento.md`
+  - Modelo de dados: `dominio/modelo-agendamento.md`
+  - Telas: `telas/` (`admin-agenda-medica.md`, `paciente-agendar-consulta.md`, `paciente-minhas-consultas.md`)
+
+- Storage de arquivos (anexos e exames):
+  - Visão do módulo: `modulos/storage-arquivos.md`
+  - Modelo de dados: `dominio/modelo-arquivo.md`
+  - Configuração operacional: `operacao/storage-config.md`
+  - Antivírus + GC (stub): `operacao/storage-antivirus.md`
+  - ADRs: `adrs/ADR008-storage-buckets-separados.md`, `adrs/ADR009-path-logico-vs-url.md`
+
+- Receituário médico (prescrição simples):
+  - Visão do módulo: `modulos/receituario.md`
+  - Modelo de dados: `dominio/modelo-receita.md`
+  - Regras RC-* em `regras/regras-negocio-agendamento.md` §8.5
+
+- Prontuário do paciente (visão longitudinal):
+  - Visão do módulo: `modulos/prontuario.md`
+  - Regras PR-* em `regras/regras-negocio-agendamento.md` §8.6
+
+- ⚠ **Segurança DEV vs PRD** (leia antes de promover):
+  - `operacao/seguranca-dev-vs-prd.md` — explica que `init.sql` e `hsg-realm.json` são DEV-only, contêm secrets, **não usar em produção**
+
+- Brand assets (logo e identidade visual): `branding/brand-assets.md`
+
+---
+
 ## 2. Estrutura da Documentação
 
-### 📁 Requisitos
+### Requisitos
 
 Contém o escopo funcional do sistema organizado por MVPs.
 

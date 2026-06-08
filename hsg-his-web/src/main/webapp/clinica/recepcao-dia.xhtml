@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/templates/clinica/layout.xhtml">
+
+    <ui:define name="title">HSG - Recepção do Dia</ui:define>
+
+    <ui:define name="head">
+        <style>
+            .rec-filtros{display:flex;align-items:center;gap:8px;row-gap:6px;padding:6px 10px;
+                background:linear-gradient(#f8f8f8,#e4e4e4);border:1px solid #c8c8c8;
+                font-size:12px;color:#333;flex-wrap:wrap;}
+            .rec-filtros label{font-weight:bold;font-size:11.5px;margin-left:4px;}
+            .rec-filtros .ui-calendar{display:inline-flex;vertical-align:middle;}
+            .rec-filtros .ui-calendar input{width:120px !important;box-sizing:border-box;height:24px;}
+            .rec-filtros .ui-button{height:24px;}
+            .rec-filtros .ui-button .ui-button-text{padding:2px 8px;font-size:11px;line-height:1;}
+            .rec-filtros input[type=text]{height:24px;box-sizing:border-box;}
+            .rec-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));
+                gap:6px;margin:8px 0;}
+            .rec-kpi{border:1px solid #c8c8c8;background:#fff;padding:6px 8px;border-radius:2px;}
+            .rec-kpi .num{font-size:18px;font-weight:bold;color:#1f3a68;font-family:monospace;}
+            .rec-kpi .lbl{font-size:11px;color:#555;}
+            .rec-list{display:flex;flex-direction:column;gap:4px;}
+            .rec-item{display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;
+                padding:8px 10px;border:1px solid #c8c8c8;background:#fff;border-radius:2px;}
+            .rec-item.confirmada{border-left:3px solid #1e6b22;}
+            .rec-item.agendada{border-left:3px solid #1f3a68;}
+            .rec-item.faltou,.rec-item.cancelada{background:#fafafa;color:#777;}
+            .rec-item.realizada{background:#f6fff7;color:#555;}
+            .rec-hora{font-family:monospace;font-size:14px;font-weight:bold;color:#1f3a68;}
+            .rec-info{font-size:12px;color:#333;}
+            .rec-info .nm{font-weight:bold;font-size:13px;}
+            .rec-info .sub{font-size:11.5px;color:#555;margin-top:2px;}
+            .rec-acts{display:flex;gap:4px;flex-wrap:wrap;}
+            .rec-acts .btn{font-size:11px;padding:2px 8px;}
+        </style>
+    </ui:define>
+
+    <ui:define name="content">
+
+        <h:panelGroup layout="block" styleClass="panel"
+                      rendered="#{!recepcaoDiaBean.acessoPermitido}">
+            <h:panelGroup layout="block" styleClass="panel-title">
+                <i class="fa fa-ban panel-icon"/>
+                <h:outputText value="Acesso restrito"/>
+            </h:panelGroup>
+            <h:panelGroup layout="block" styleClass="panel-body">
+                <h:panelGroup layout="block" styleClass="note">
+                    A tela de recepção é exclusiva de enfermeiros e administradores.
+                    Médicos devem usar <b>Minha Agenda</b> para operar suas próprias consultas.
+                </h:panelGroup>
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <h:form id="formRecepcao" rendered="#{recepcaoDiaBean.acessoPermitido}">
+
+            <p:growl id="msgs" widgetVar="msgs" showDetail="true" life="5000"
+                     globalOnly="true" autoUpdate="true"/>
+
+            <h:panelGroup layout="block" styleClass="panel">
+                <h:panelGroup layout="block" styleClass="panel-title">
+                    <i class="fa fa-clipboard-list panel-icon"/>
+                    <h:outputText value="Recepção do dia"/>
+                </h:panelGroup>
+                <h:panelGroup layout="block" styleClass="panel-body">
+
+                    <div class="rec-filtros">
+                        <label>De:</label>
+                        <p:calendar value="#{recepcaoDiaBean.dataInicio}" pattern="dd/MM/yyyy"
+                                    mask="true" navigator="true" styleClass="input-field"
+                                    style="width:120px;">
+                            <p:ajax event="dateSelect" listener="#{recepcaoDiaBean.aoMudarFiltro}"
+                                    update="formRecepcao"/>
+                        </p:calendar>
+                        <label>Até:</label>
+                        <p:calendar value="#{recepcaoDiaBean.dataFim}" pattern="dd/MM/yyyy"
+                                    mask="true" navigator="true" styleClass="input-field"
+                                    style="width:120px;">
+                            <p:ajax event="dateSelect" listener="#{recepcaoDiaBean.aoMudarFiltro}"
+                                    update="formRecepcao"/>
+                        </p:calendar>
+
+                        <p:commandButton value="Hoje" styleClass="btn"
+                                         action="#{recepcaoDiaBean.aplicarHoje}"
+                                         update="formRecepcao" process="@this"/>
+                        <p:commandButton value="7 dias" styleClass="btn"
+                                         action="#{recepcaoDiaBean.aplicarProximos7Dias}"
+                                         update="formRecepcao" process="@this"/>
+
+                        <label>Médico:</label>
+                        <h:selectOneMenu value="#{recepcaoDiaBean.medicoFiltroId}"
+                                         converter="javax.faces.Long" styleClass="filter-select"
+                                         style="min-width:160px;">
+                            <f:selectItem itemLabel="Todos" itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{recepcaoDiaBean.medicos}" var="m"
+                                           itemValue="#{m.id}" itemLabel="Dr(a). #{m.nomeCompleto}"/>
+                            <p:ajax event="change" listener="#{recepcaoDiaBean.aoMudarFiltro}"
+                                    update="formRecepcao"/>
+                        </h:selectOneMenu>
+
+                        <label>Especialidade:</label>
+                        <h:selectOneMenu value="#{recepcaoDiaBean.especialidadeFiltroId}"
+                                         converter="javax.faces.Long" styleClass="filter-select"
+                                         style="min-width:140px;">
+                            <f:selectItem itemLabel="Todas" itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{recepcaoDiaBean.especialidades}" var="e"
+                                           itemValue="#{e.id}" itemLabel="#{e.nome}"/>
+                            <p:ajax event="change" listener="#{recepcaoDiaBean.aoMudarFiltro}"
+                                    update="formRecepcao"/>
+                        </h:selectOneMenu>
+
+                        <label>Status:</label>
+                        <h:selectOneMenu value="#{recepcaoDiaBean.statusFiltro}"
+                                         styleClass="filter-select" style="min-width:120px;">
+                            <f:selectItem itemValue="TODOS" itemLabel="Todos"/>
+                            <f:selectItems value="#{recepcaoDiaBean.statusValues}" var="s"
+                                           itemValue="#{s.name()}" itemLabel="#{s.name()}"/>
+                            <p:ajax event="change" listener="#{recepcaoDiaBean.aoMudarFiltro}"
+                                    update="formRecepcao"/>
+                        </h:selectOneMenu>
+
+                        <label>Paciente:</label>
+                        <p:inputText value="#{recepcaoDiaBean.termoPaciente}"
+                                     placeholder="Nome..." style="width:130px;">
+                            <p:ajax event="keyup" listener="#{recepcaoDiaBean.aoMudarFiltro}"
+                                    update="formRecepcao" delay="400"/>
+                        </p:inputText>
+
+                        <p:commandButton value="Limpar" icon="fa fa-times" styleClass="btn"
+                                         action="#{recepcaoDiaBean.limparFiltros}"
+                                         update="formRecepcao" process="@this"/>
+                    </div>
+
+                    <div class="rec-kpis">
+                        <div class="rec-kpi"><div class="num">#{recepcaoDiaBean.totalDia}</div>
+                            <div class="lbl">Total</div></div>
+                        <div class="rec-kpi"><div class="num">#{recepcaoDiaBean.totalAgendadas}</div>
+                            <div class="lbl">Aguardando</div></div>
+                        <div class="rec-kpi"><div class="num">#{recepcaoDiaBean.totalConfirmadas}</div>
+                            <div class="lbl">Confirmadas</div></div>
+                        <div class="rec-kpi"><div class="num">#{recepcaoDiaBean.totalRealizadas}</div>
+                            <div class="lbl">Realizadas</div></div>
+                        <div class="rec-kpi"><div class="num">#{recepcaoDiaBean.totalFaltas}</div>
+                            <div class="lbl">Faltas</div></div>
+                        <div class="rec-kpi"><div class="num">#{recepcaoDiaBean.totalCanceladas}</div>
+                            <div class="lbl">Canceladas</div></div>
+                    </div>
+
+                    <h:panelGroup rendered="#{empty recepcaoDiaBean.consultas}" layout="block"
+                                  styleClass="note">
+                        Nenhuma consulta para os filtros aplicados.
+                    </h:panelGroup>
+
+                    <div class="rec-list">
+                        <ui:repeat value="#{recepcaoDiaBean.consultas}" var="c">
+                            <div class="rec-item #{c.status.name().toLowerCase()}">
+                                <div class="rec-hora">#{recepcaoDiaBean.formatarDataHora(c.dataConsulta)}</div>
+                                <div class="rec-info">
+                                    <div class="nm">#{c.paciente.nomeCompleto}</div>
+                                    <div class="sub">
+                                        Dr(a). #{c.medico.nomeCompleto}
+                                        <h:outputText value=" — #{c.especialidade.nome}"
+                                                      rendered="#{c.especialidade != null}"/>
+                                        &#160;
+                                        <h:outputText styleClass="chip #{recepcaoDiaBean.chipStatus(c)}"
+                                                      value="#{c.status}"/>
+                                    </div>
+                                </div>
+                                <div class="rec-acts">
+                                    <p:commandButton value="Check-in" icon="fa fa-check"
+                                                     styleClass="btn primary"
+                                                     rendered="#{recepcaoDiaBean.podeConfirmar(c)}"
+                                                     action="#{recepcaoDiaBean.confirmarChegada(c.id)}"
+                                                     update="formRecepcao" process="@this"/>
+                                    <p:commandButton value="Falta" icon="fa fa-user-times"
+                                                     styleClass="btn"
+                                                     rendered="#{recepcaoDiaBean.podeMarcarFalta(c)}"
+                                                     action="#{recepcaoDiaBean.marcarFalta(c.id)}"
+                                                     update="formRecepcao" process="@this"/>
+                                    <p:commandButton value="Cancelar" icon="fa fa-ban"
+                                                     styleClass="btn"
+                                                     rendered="#{recepcaoDiaBean.podeCancelar(c)}"
+                                                     action="#{recepcaoDiaBean.prepararCancelamento(c.id)}"
+                                                     update="formRecepcao:dlgCancelar"
+                                                     oncomplete="PF('wDlgCancelar').show();"
+                                                     process="@this"/>
+                                    <p:commandButton value="Anotações" icon="fa fa-comment-medical"
+                                                     styleClass="btn"
+                                                     action="#{recepcaoDiaBean.abrirAnotacoes(c)}"
+                                                     update=":formAnotacoesRecepcao:dlgAnotacoes"
+                                                     oncomplete="PF('wDlgAnotacoes').show();"
+                                                     process="@this"/>
+                                </div>
+                            </div>
+                        </ui:repeat>
+                    </div>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <p:dialog id="dlgCancelar" widgetVar="wDlgCancelar" header="Cancelar consulta"
+                      modal="true" resizable="false" width="440" styleClass="hsg-dialog">
+                <h:panelGroup layout="block" style="padding:6px 4px;">
+                    <h:panelGroup layout="block" styleClass="note" style="margin-bottom:8px;">
+                        Informe o motivo do cancelamento. A consulta será cancelada e o slot liberado.
+                    </h:panelGroup>
+                    <h:inputTextarea value="#{recepcaoDiaBean.motivoCancelamento}"
+                                     rows="3" styleClass="input-field" style="width:100%;"
+                                     maxlength="500" placeholder="Motivo"/>
+                    <div style="display:flex;justify-content:flex-end;gap:6px;
+                                padding-top:8px;margin-top:8px;border-top:1px solid #c8c8c8;">
+                        <p:commandButton value="Voltar" type="button" icon="fa fa-arrow-left"
+                                         styleClass="btn" onclick="PF('wDlgCancelar').hide();"/>
+                        <p:commandButton value="Confirmar" icon="fa fa-check" styleClass="btn primary"
+                                         action="#{recepcaoDiaBean.cancelar}"
+                                         update="formRecepcao"
+                                         oncomplete="if(!args.validationFailed){PF('wDlgCancelar').hide();}"
+                                         process="formRecepcao:dlgCancelar"/>
+                    </div>
+                </h:panelGroup>
+            </p:dialog>
+
+        </h:form>
+
+        <h:form id="formAnotacoesRecepcao" enctype="multipart/form-data"
+                rendered="#{recepcaoDiaBean.acessoPermitido}">
+
+            <p:dialog id="dlgAnotacoes" widgetVar="wDlgAnotacoes"
+                      header="Anotações e histórico da consulta"
+                      modal="true" resizable="false" width="640" height="700"
+                      fitViewport="true" styleClass="hsg-dialog"
+                      contentStyle="max-height:75vh;overflow-y:auto;">
+                <h:panelGroup layout="block" rendered="#{recepcaoDiaBean.consultaAnotando != null}"
+                              style="padding:6px 4px;">
+
+                    <h:panelGroup layout="block" styleClass="note"
+                                  style="margin-bottom:8px;display:flex;justify-content:space-between;
+                                         align-items:center;flex-wrap:wrap;gap:6px;">
+                        <span><b>Paciente:</b> #{recepcaoDiaBean.consultaAnotando.paciente.nomeCompleto}
+                        &#160;|&#160;
+                        <b>Médico:</b> Dr(a). #{recepcaoDiaBean.consultaAnotando.medico.nomeCompleto}
+                        &#160;|&#160;
+                        <b>Data:</b> #{recepcaoDiaBean.formatarDataHora(recepcaoDiaBean.consultaAnotando.dataConsulta)}
+                        &#160;|&#160;
+                        <b>Status:</b> #{recepcaoDiaBean.consultaAnotando.status}</span>
+                        <a href="#{request.contextPath}/clinica/prontuario.xhtml?idPaciente=#{recepcaoDiaBean.consultaAnotando.paciente.id}"
+                           target="_blank" class="btn"
+                           style="font-size:11px;padding:3px 8px;text-decoration:none;">
+                            <i class="fa fa-folder-open"/> Ver prontuário
+                        </a>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="panel" style="margin-bottom:10px;">
+                        <h:panelGroup layout="block" styleClass="panel-title">
+                            <i class="fa fa-plus-square panel-icon"/>
+                            <h:outputText value="Nova anotação"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="panel-body">
+                            <div style="display:flex;flex-direction:column;gap:6px;">
+                                <label style="font-size:11.5px;font-weight:bold;color:#333;">Título *</label>
+                                <h:inputText value="#{recepcaoDiaBean.anotacaoTitulo}"
+                                             styleClass="input-field" maxlength="200"
+                                             style="width:100%;"/>
+                                <label style="font-size:11.5px;font-weight:bold;color:#333;">Descrição *</label>
+                                <h:inputTextarea value="#{recepcaoDiaBean.anotacaoDescricao}"
+                                                 rows="4" styleClass="input-field"
+                                                 style="width:100%;" maxlength="2000"/>
+                                <div style="display:flex;justify-content:flex-end;">
+                                    <p:commandButton value="Salvar anotação" icon="fa fa-save"
+                                                     styleClass="btn primary"
+                                                     action="#{recepcaoDiaBean.salvarAnotacao}"
+                                                     update=":formAnotacoesRecepcao:dlgAnotacoes"
+                                                     process=":formAnotacoesRecepcao:dlgAnotacoes"
+                                                     oncomplete="PF('wDlgAnotacoes').show();"/>
+                                </div>
+                            </div>
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="panel" style="margin-bottom:10px;">
+                        <h:panelGroup layout="block" styleClass="panel-title">
+                            <i class="fa fa-comments panel-icon"/>
+                            <h:outputText value="Anotações (#{recepcaoDiaBean.anotacoes.size()})"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="panel-body">
+                            <h:panelGroup rendered="#{empty recepcaoDiaBean.anotacoes}"
+                                          styleClass="note">
+                                Nenhuma anotação registrada para esta consulta.
+                            </h:panelGroup>
+                            <ui:repeat value="#{recepcaoDiaBean.anotacoes}" var="a">
+                                <div style="border:1px solid #c8c8c8;padding:6px 8px;
+                                            margin-bottom:4px;background:#fff;border-radius:2px;">
+                                    <div style="display:flex;justify-content:space-between;
+                                                font-size:11px;color:#555;margin-bottom:2px;">
+                                        <span><b>#{a.tipoResponsavel.descricao}</b></span>
+                                        <span style="font-family:monospace;">
+                                            #{recepcaoDiaBean.formatarDataHora(a.dataCriacao)}
+                                        </span>
+                                    </div>
+                                    <div style="font-size:12.5px;font-weight:bold;color:#333;">
+                                        #{a.titulo}
+                                    </div>
+                                    <div style="font-size:12px;color:#444;white-space:pre-wrap;
+                                                margin-top:2px;">#{a.descricao}</div>
+                                </div>
+                            </ui:repeat>
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="panel" style="margin-bottom:10px;">
+                        <h:panelGroup layout="block" styleClass="panel-title">
+                            <i class="fa fa-paperclip panel-icon"/>
+                            <h:outputText value="Anexos (#{recepcaoDiaBean.anexosConsulta.size()})"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="panel-body">
+                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                <p:fileUpload value="#{recepcaoDiaBean.uploadedAnexo}"
+                                              mode="simple" skinSimple="true"
+                                              allowTypes="/(\.|\/)(pdf|jpe?g|png|webp)$/"
+                                              sizeLimit="20971520"
+                                              label="Selecionar PDF/Imagem"
+                                              invalidFileMessage="Tipo não permitido."
+                                              invalidSizeMessage="Tamanho máximo: 20MB."/>
+                                <p:commandButton value="Enviar anexo" icon="fa fa-upload"
+                                                 styleClass="btn primary"
+                                                 action="#{recepcaoDiaBean.salvarUploadAnexo}"
+                                                 ajax="false"/>
+                            </div>
+                            <h:panelGroup rendered="#{empty recepcaoDiaBean.anexosConsulta}"
+                                          styleClass="note" style="margin-top:6px;">
+                                Nenhum anexo registrado para esta consulta.
+                            </h:panelGroup>
+                            <ui:repeat value="#{recepcaoDiaBean.anexosConsulta}" var="ax">
+                                <div style="display:flex;align-items:center;gap:8px;
+                                            border:1px solid #c8c8c8;padding:5px 8px;
+                                            margin-top:4px;background:#fff;border-radius:2px;">
+                                    <i class="fa fa-file" style="color:#1f3a68;"/>
+                                    <div style="flex:1;min-width:0;">
+                                        <div style="font-size:12px;font-weight:bold;color:#333;
+                                                    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                            #{ax.nomeOriginal}
+                                        </div>
+                                        <div style="font-size:11px;color:#666;">
+                                            #{ax.tipoResponsavel.descricao} —
+                                            #{recepcaoDiaBean.formatarDataHora(ax.dataUpload)} —
+                                            #{recepcaoDiaBean.formatarTamanho(ax.tamanhoBytes)}
+                                        </div>
+                                    </div>
+                                    <a href="#{request.contextPath}/download/arquivo?id=#{ax.id}"
+                                       target="_blank" class="btn"
+                                       style="font-size:11px;padding:3px 8px;text-decoration:none;">
+                                        <i class="fa fa-download"/> Baixar
+                                    </a>
+                                    <p:commandButton icon="fa fa-trash" styleClass="btn icon-btn"
+                                                     title="Remover anexo"
+                                                     action="#{recepcaoDiaBean.removerAnexo(ax.id)}"
+                                                     update=":formAnotacoesRecepcao:dlgAnotacoes"
+                                                     oncomplete="PF('wDlgAnotacoes').show();"
+                                                     process="@this"/>
+                                </div>
+                            </ui:repeat>
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="panel" style="margin-bottom:10px;">
+                        <h:panelGroup layout="block" styleClass="panel-title">
+                            <i class="fa fa-prescription panel-icon"/>
+                            <h:outputText value="Receituário"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="panel-body">
+                            <h:panelGroup styleClass="note" style="margin-bottom:8px;display:block;
+                                          background:#fff8e1;border-color:#e0c46c;color:#5a4500;">
+                                <i class="fa fa-info-circle" style="margin-right:4px;"/>
+                                Apenas receitas simples são geridas pelo sistema. Prescrições controladas/especiais
+                                são entregues fisicamente pelo médico.
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{recepcaoDiaBean.receitaAtual != null}">
+                                <div style="border:1px solid #c8c8c8;padding:8px 10px;
+                                            background:#f6f9fd;border-radius:2px;">
+                                    <div style="display:flex;justify-content:space-between;
+                                                font-size:11.5px;color:#1f3a68;margin-bottom:4px;">
+                                        <b>Receita #{recepcaoDiaBean.receitaAtual.id}</b>
+                                        <span style="font-family:monospace;">
+                                            Emitida em #{recepcaoDiaBean.formatarDataHora(recepcaoDiaBean.receitaAtual.dataEmissao)}
+                                        </span>
+                                    </div>
+                                    <ui:repeat value="#{recepcaoDiaBean.receitaAtual.itens}" var="ri">
+                                        <div style="font-size:12px;color:#333;border-top:1px dotted #ddd;
+                                                    padding:4px 0;">
+                                            <b>#{ri.medicamento}</b><br/>
+                                            <span style="color:#555;">Posologia: #{ri.posologia}</span>
+                                            <h:panelGroup rendered="#{not empty ri.observacao}">
+                                                <br/><span style="color:#666;font-style:italic;">
+                                                    Observação: #{ri.observacao}
+                                                </span>
+                                            </h:panelGroup>
+                                            <h:panelGroup rendered="#{not empty ri.cid10}">
+                                                <br/><span style="color:#666;">CID-10: #{ri.cid10}</span>
+                                            </h:panelGroup>
+                                        </div>
+                                    </ui:repeat>
+                                    <div style="margin-top:8px;text-align:right;">
+                                        <a href="#{request.contextPath}/receita/pdf?idConsulta=#{recepcaoDiaBean.consultaAnotando.id}"
+                                           target="_blank" class="btn primary"
+                                           style="text-decoration:none;font-size:11.5px;padding:4px 10px;">
+                                            <i class="fa fa-file-pdf"/> Baixar PDF
+                                        </a>
+                                    </div>
+                                </div>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{recepcaoDiaBean.receitaAtual == null}"
+                                          styleClass="note">
+                                Nenhuma receita emitida para essa consulta.
+                            </h:panelGroup>
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <h:panelGroup layout="block" styleClass="panel">
+                        <h:panelGroup layout="block" styleClass="panel-title">
+                            <i class="fa fa-history panel-icon"/>
+                            <h:outputText value="Histórico de status"/>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" styleClass="panel-body">
+                            <ui:repeat value="#{recepcaoDiaBean.historicoConsulta}" var="h">
+                                <div style="display:grid;grid-template-columns:120px 100px 1fr;
+                                            gap:8px;font-size:11.5px;padding:3px 6px;
+                                            border-bottom:1px dotted #ddd;">
+                                    <span style="font-family:monospace;color:#1f3a68;">
+                                        #{recepcaoDiaBean.formatarDataHora(h.dataAcao)}
+                                    </span>
+                                    <span><b>#{h.acao}</b></span>
+                                    <span>
+                                        <i>#{h.tipoResponsavel.descricao}</i>
+                                        <h:outputText value=" — #{h.observacao}"
+                                                      rendered="#{not empty h.observacao}"/>
+                                    </span>
+                                </div>
+                            </ui:repeat>
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <div style="display:flex;justify-content:flex-end;padding-top:8px;margin-top:8px;
+                                border-top:1px solid #c8c8c8;">
+                        <p:commandButton value="Fechar" type="button" icon="fa fa-times"
+                                         styleClass="btn" onclick="PF('wDlgAnotacoes').hide();"/>
+                    </div>
+                </h:panelGroup>
+            </p:dialog>
+
+        </h:form>
+    </ui:define>
+
+</ui:composition>

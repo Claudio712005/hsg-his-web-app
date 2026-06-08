@@ -71,12 +71,38 @@
                 </div>
             </h:panelGroup>
 
+            <h:panelGroup rendered="#{beanSessao.usuarioClinica.tipo ne 'MEDICO'}">
+                <a class="item" href="#{request.contextPath}/clinica/recepcao-dia.xhtml">
+                    <i class="fa fa-clipboard-list"/>
+                    <h:outputText value=" Recepção"/>
+                </a>
+            </h:panelGroup>
+
+            <h:panelGroup rendered="#{beanSessao.usuarioClinica.tipo eq 'MEDICO'}">
+                <a class="item" href="#{request.contextPath}/clinica/minha-agenda.xhtml">
+                    <i class="fa fa-stethoscope"/>
+                    <h:outputText value=" Minha Agenda"/>
+                </a>
+            </h:panelGroup>
+
+            <a class="item" href="#{request.contextPath}/clinica/prontuario.xhtml">
+                <i class="fa fa-folder-open"/>
+                <h:outputText value=" Prontuário"/>
+            </a>
+
+            <a class="item" href="#{request.contextPath}/clinica/notificacoes.xhtml">
+                <i class="fa fa-bell"/>
+                <h:outputText value=" Notificações"/>
+            </a>
+
             <div class="item">
                 <i class="fa fa-question-circle"/>
                 <h:outputText value=" Ajuda"/>
             </div>
 
         </nav>
+
+        <ui:include src="/WEB-INF/templates/fragments/sino-notificacoes.xhtml"/>
 
         <div class="user">
             <div class="avatar">

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                template="/WEB-INF/templates/paciente/layout.xhtml">
+
+    <ui:define name="title">HSG - Meu prontuário</ui:define>
+
+    <ui:define name="content">
+
+        <h:form id="formMeuProntuario">
+
+            <h:panelGroup layout="block" styleClass="note"
+                          style="margin-bottom:10px;background:#fff8e1;border:1px solid #e0c46c;
+                                 color:#5a4500;padding:8px 12px;border-radius:2px;">
+                <i class="fa fa-info-circle" style="margin-right:6px;"/>
+                Este é o seu <b>prontuário consolidado</b>. Apenas leitura. Para registrar
+                novas informações, agende uma consulta com seu médico.
+            </h:panelGroup>
+
+            <ui:include src="/WEB-INF/templates/fragments/prontuario-corpo.xhtml">
+                <ui:param name="bean" value="#{meuProntuarioBean}"/>
+                <ui:param name="contexto" value="PACIENTE"/>
+            </ui:include>
+
+        </h:form>
+
+    </ui:define>
+
+</ui:composition>

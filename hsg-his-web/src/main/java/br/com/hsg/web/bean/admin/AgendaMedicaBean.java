@@ -8,8 +8,10 @@ import br.com.hsg.domain.entity.MedicoEspecialidade;
 import br.com.hsg.domain.enums.DiaSemana;
 import br.com.hsg.domain.enums.TipoExcecaoAgenda;
 import br.com.hsg.service.facade.admin.AgendaMedicaServiceFacade;
+import org.primefaces.event.SelectEvent;
 import org.primefaces.model.DefaultScheduleEvent;
 import org.primefaces.model.DefaultScheduleModel;
+import org.primefaces.model.ScheduleEvent;
 import org.primefaces.model.ScheduleModel;
 
 import javax.annotation.PostConstruct;
@@ -51,7 +53,11 @@ public class AgendaMedicaBean implements Serializable {
     private List<AgendaMedicaSlot> slots = Collections.emptyList();
     private List<MedicoEspecialidade> especialidadesMedico = Collections.emptyList();
     private long slotsLivresFuturos;
-    private ScheduleModel scheduleModel = new DefaultScheduleModel();
+
+    private ScheduleModel scheduleModelGeral = new DefaultScheduleModel();
+    private ScheduleModel scheduleModelMulti = new DefaultScheduleModel();
+    private List<Long> idsMedicosCalendario = new ArrayList<>();
+    private int diasVisaoCalendario = 14;
 
     private int diasGerar = 30;
     private int diasVisaoSlots = 14;
@@ -59,11 +65,23 @@ public class AgendaMedicaBean implements Serializable {
     private List<Long> idsBulkSelecionados = new ArrayList<>();
     private int diasGerarBulk = 30;
 
+    private String detalheTipo;
+    private String detalheTitulo;
+    private String detalheMedicoNome;
+    private String detalheStatus;
+    private String detalheInicio;
+    private String detalheFim;
+    private String detalheMotivo;
+    private String detalheEspecialidade;
+    private String detalheCorClasse;
+    private String detalheIcone;
+
     private Long    formGradeId;
     private String  formGradeDiaSemana;
     private Date    formGradeHoraInicio;
     private Date    formGradeHoraFim;
     private Integer formGradeDuracaoMin = 30;
+    private String  accordionFormIndex = "-1";
 
     private Date    formExcInicio;
     private Date    formExcFim;
@@ -75,14 +93,45 @@ public class AgendaMedicaBean implements Serializable {
         this.medicos = agendaService.listarMedicosAtivos();
         if (!medicos.isEmpty()) {
             this.medicoSelecionadoId = medicos.get(0).getId();
+            this.idsMedicosCalendario = new ArrayList<>();
+            this.idsMedicosCalendario.add(this.medicoSelecionadoId);
             carregarDadosDoMedico();
         }
         novaGrade();
         novaExcecao();
+        carregarCalendarioGeral();
+        carregarCalendarioMulti();
     }
 
     public void aoMudarMedico() {
         carregarDadosDoMedico();
+        if (medicoSelecionadoId != null && !idsMedicosCalendario.contains(medicoSelecionadoId)) {
+            idsMedicosCalendario.add(medicoSelecionadoId);
+            carregarCalendarioMulti();
+        }
+    }
+
+    public void aoMudarMedicosCalendario() {
+        carregarCalendarioMulti();
+    }
+
+    public void selecionarTodosCalendarioMulti() {
+        this.idsMedicosCalendario = new ArrayList<>();
+        if (medicos != null) {
+            for (Medico m : medicos) {
+                this.idsMedicosCalendario.add(m.getId());
+            }
+        }
+        carregarCalendarioMulti();
+    }
+
+    public void limparCalendarioMulti() {
+        this.idsMedicosCalendario = new ArrayList<>();
+        carregarCalendarioMulti();
+    }
+
+    public void recarregarCalendarioGeral() {
+        carregarCalendarioGeral();
     }
 
     private void carregarDadosDoMedico() {
@@ -104,38 +153,114 @@ public class AgendaMedicaBean implements Serializable {
     private void carregarSlots() {
         if (medicoSelecionadoId == null) {
             slots = Collections.emptyList();
-            scheduleModel = new DefaultScheduleModel();
             return;
         }
         LocalDateTime ini = LocalDate.now().atStartOfDay();
         LocalDateTime fim = ini.plusDays(diasVisaoSlots);
         this.slots = agendaService.listarSlotsPorMedicoPeriodo(medicoSelecionadoId, ini, fim);
-        montarSchedule();
     }
 
-    private void montarSchedule() {
+    private void carregarCalendarioGeral() {
+        List<Long> ids = new ArrayList<>();
+        if (medicos != null) {
+            for (Medico m : medicos) ids.add(m.getId());
+        }
+        this.scheduleModelGeral = construirSchedule(ids);
+    }
+
+    private void carregarCalendarioMulti() {
+        this.scheduleModelMulti = construirSchedule(idsMedicosCalendario);
+    }
+
+    private ScheduleModel construirSchedule(List<Long> idsMedicosBuscar) {
         ScheduleModel novo = new DefaultScheduleModel();
-        for (AgendaMedicaSlot s : slots) {
+        if (idsMedicosBuscar == null || idsMedicosBuscar.isEmpty()) {
+            return novo;
+        }
+        LocalDateTime ini = LocalDate.now().atStartOfDay();
+        LocalDateTime fim = ini.plusDays(diasVisaoCalendario);
+        List<AgendaMedicaSlot> slotsBusca =
+                agendaService.listarSlotsPorMedicosPeriodo(idsMedicosBuscar, ini, fim);
+        List<AgendaMedicaExcecao> excecoesBusca =
+                agendaService.listarExcecoesPorMedicosVigentes(idsMedicosBuscar, ini, fim);
+
+        for (AgendaMedicaSlot s : slotsBusca) {
             DefaultScheduleEvent ev = new DefaultScheduleEvent();
-            ev.setTitle(s.getStatus().getDescricao() + " · " + formatarHora(s.getDataInicio().toLocalTime()));
+            String nomeMedico = abreviarNome(s.getMedico() != null ? s.getMedico().getNomeCompleto() : "");
+            String medicoCompleto = s.getMedico() != null ? s.getMedico().getNomeCompleto() : "—";
+            String esp = (s.getMedico() != null && s.getMedico().getEspecialidade() != null)
+                    ? s.getMedico().getEspecialidade().getNome() : "";
+            ev.setTitle(nomeMedico + " · " + s.getStatus().getDescricao()
+                    + " · " + formatarHora(s.getDataInicio().toLocalTime()));
             ev.setStartDate(toDate(s.getDataInicio()));
             ev.setEndDate(toDate(s.getDataFim()));
-            ev.setStyleClass(cssClasseStatus(s));
+            ev.setStyleClass(cssClasseStatus(s) + " " + cssClasseMedico(s.getMedico() != null ? s.getMedico().getId() : null));
             ev.setEditable(false);
+            ev.setDescription("SLOT|" + medicoCompleto + "|" + s.getStatus().getDescricao()
+                    + "|" + formatarData(s.getDataInicio()) + "|" + formatarData(s.getDataFim())
+                    + "|" + esp + "|" + cssClasseStatus(s));
             novo.addEvent(ev);
         }
-        for (AgendaMedicaExcecao e : excecoes) {
-            if (e.getDataFim().isBefore(LocalDateTime.now())) continue;
+        for (AgendaMedicaExcecao e : excecoesBusca) {
             DefaultScheduleEvent ev = new DefaultScheduleEvent();
-            ev.setTitle(e.getTipo().getDescricao()
+            String nomeMedico = abreviarNome(e.getMedico() != null ? e.getMedico().getNomeCompleto() : "");
+            String medicoCompleto = e.getMedico() != null ? e.getMedico().getNomeCompleto() : "—";
+            ev.setTitle(nomeMedico + " · " + e.getTipo().getDescricao()
                     + (e.getMotivo() != null ? " — " + e.getMotivo() : ""));
             ev.setStartDate(toDate(e.getDataInicio()));
             ev.setEndDate(toDate(e.getDataFim()));
-            ev.setStyleClass("evt-excecao");
+            ev.setStyleClass("evt-excecao " + cssClasseMedico(e.getMedico() != null ? e.getMedico().getId() : null));
             ev.setEditable(false);
+            ev.setDescription("EXCECAO|" + medicoCompleto + "|" + e.getTipo().getDescricao()
+                    + "|" + formatarData(e.getDataInicio()) + "|" + formatarData(e.getDataFim())
+                    + "|" + (e.getMotivo() != null ? e.getMotivo() : "") + "|evt-excecao");
             novo.addEvent(ev);
         }
-        this.scheduleModel = novo;
+        return novo;
+    }
+
+    public void onEventSelect(SelectEvent event) {
+        Object obj = event.getObject();
+        if (!(obj instanceof ScheduleEvent)) return;
+        ScheduleEvent ev = (ScheduleEvent) obj;
+        String desc = ev.getDescription();
+        if (desc == null || desc.isEmpty()) return;
+        String[] partes = desc.split("\\|", -1);
+        if (partes.length < 7) return;
+
+        this.detalheTipo          = partes[0];
+        this.detalheMedicoNome    = partes[1];
+        this.detalheStatus        = partes[2];
+        this.detalheInicio        = partes[3];
+        this.detalheFim           = partes[4];
+        this.detalheMotivo        = "EXCECAO".equals(partes[0]) ? partes[5] : null;
+        this.detalheEspecialidade = "SLOT".equals(partes[0])    ? partes[5] : null;
+        this.detalheCorClasse     = partes[6];
+
+        if ("EXCECAO".equals(partes[0])) {
+            this.detalheTitulo = "Exceção da agenda";
+            this.detalheIcone  = "fa-calendar-xmark";
+        } else {
+            this.detalheTitulo = "Horário (slot)";
+            this.detalheIcone  = "fa-clock";
+        }
+    }
+
+    private String cssClasseMedico(Long idMedico) {
+        if (idMedico == null || medicos == null) return "";
+        int idx = -1;
+        for (int i = 0; i < medicos.size(); i++) {
+            if (idMedico.equals(medicos.get(i).getId())) { idx = i; break; }
+        }
+        if (idx < 0) return "";
+        return "med-c" + ((idx % 8) + 1);
+    }
+
+    private String abreviarNome(String nomeCompleto) {
+        if (nomeCompleto == null || nomeCompleto.isEmpty()) return "";
+        String[] partes = nomeCompleto.trim().split("\\s+");
+        if (partes.length == 1) return partes[0];
+        return partes[0] + " " + partes[partes.length - 1].substring(0, 1) + ".";
     }
 
     private String cssClasseStatus(AgendaMedicaSlot s) {
@@ -155,6 +280,7 @@ public class AgendaMedicaBean implements Serializable {
         this.formGradeHoraInicio  = toDate(LocalTime.of(8, 0));
         this.formGradeHoraFim     = toDate(LocalTime.of(12, 0));
         this.formGradeDuracaoMin  = 30;
+        this.accordionFormIndex   = "-1";
     }
 
     public void prepararEdicaoGrade(AgendaMedica g) {
@@ -163,10 +289,31 @@ public class AgendaMedicaBean implements Serializable {
         this.formGradeHoraInicio = toDate(g.getHoraInicio());
         this.formGradeHoraFim    = toDate(g.getHoraFim());
         this.formGradeDuracaoMin = g.getDuracaoMinutos();
+        this.accordionFormIndex  = "0";
+    }
+
+    public void abrirAccordionForm() {
+        this.accordionFormIndex = "0";
     }
 
     public void salvarGrade() {
         try {
+            if (medicoSelecionadoId == null) {
+                msg(FacesMessage.SEVERITY_WARN, "Selecione um médico antes de cadastrar uma faixa.");
+                return;
+            }
+            if (formGradeHoraInicio == null || formGradeHoraFim == null) {
+                msg(FacesMessage.SEVERITY_WARN, "Informe os horários de início e fim.");
+                return;
+            }
+            if (formGradeDuracaoMin == null || formGradeDuracaoMin <= 0) {
+                msg(FacesMessage.SEVERITY_WARN, "Informe uma duração de slot válida.");
+                return;
+            }
+            if (formGradeId == null && (formGradeDiaSemana == null || formGradeDiaSemana.isEmpty())) {
+                msg(FacesMessage.SEVERITY_WARN, "Selecione o dia da semana.");
+                return;
+            }
             LocalTime hi = toLocalTime(formGradeHoraInicio);
             LocalTime hf = toLocalTime(formGradeHoraFim);
             if (formGradeId == null) {
@@ -179,11 +326,10 @@ public class AgendaMedicaBean implements Serializable {
             }
             carregarDadosDoMedico();
             novaGrade();
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            msg(FacesMessage.SEVERITY_ERROR, ex.getMessage());
         } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "[AgendaMedicaBean] Erro ao salvar grade", ex);
-            msg(FacesMessage.SEVERITY_ERROR, "Erro inesperado ao salvar grade.");
+            LOG.log(Level.WARNING, "[AgendaMedicaBean] Falha ao salvar grade", ex);
+            msg(FacesMessage.SEVERITY_ERROR,
+                extrairMensagem(ex, "Erro inesperado ao salvar grade."));
         }
     }
 
@@ -192,8 +338,10 @@ public class AgendaMedicaBean implements Serializable {
             agendaService.inativarGrade(id);
             msg(FacesMessage.SEVERITY_INFO, "Grade inativada.");
             carregarDadosDoMedico();
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            msg(FacesMessage.SEVERITY_ERROR, ex.getMessage());
+        } catch (Exception ex) {
+            LOG.log(Level.WARNING, "[AgendaMedicaBean] Falha ao inativar grade", ex);
+            msg(FacesMessage.SEVERITY_ERROR,
+                extrairMensagem(ex, "Erro ao inativar grade."));
         }
     }
 
@@ -202,8 +350,10 @@ public class AgendaMedicaBean implements Serializable {
             agendaService.ativarGrade(id);
             msg(FacesMessage.SEVERITY_INFO, "Grade ativada.");
             carregarDadosDoMedico();
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            msg(FacesMessage.SEVERITY_ERROR, ex.getMessage());
+        } catch (Exception ex) {
+            LOG.log(Level.WARNING, "[AgendaMedicaBean] Falha ao ativar grade", ex);
+            msg(FacesMessage.SEVERITY_ERROR,
+                extrairMensagem(ex, "Erro ao ativar grade."));
         }
     }
 
@@ -216,19 +366,30 @@ public class AgendaMedicaBean implements Serializable {
 
     public void salvarExcecao() {
         try {
-            TipoExcecaoAgenda tipo = formExcTipo != null
-                    ? TipoExcecaoAgenda.fromValor(formExcTipo) : TipoExcecaoAgenda.BLOQUEIO;
+            if (medicoSelecionadoId == null) {
+                msg(FacesMessage.SEVERITY_WARN, "Selecione um médico antes de cadastrar uma exceção.");
+                return;
+            }
+            if (formExcInicio == null || formExcFim == null) {
+                msg(FacesMessage.SEVERITY_WARN, "Informe as datas de início e fim.");
+                return;
+            }
             LocalDateTime ini = toLocalDateTime(formExcInicio);
             LocalDateTime fim = toLocalDateTime(formExcFim);
+            if (!fim.isAfter(ini)) {
+                msg(FacesMessage.SEVERITY_WARN, "A data de fim deve ser posterior à data de início.");
+                return;
+            }
+            TipoExcecaoAgenda tipo = formExcTipo != null
+                    ? TipoExcecaoAgenda.fromValor(formExcTipo) : TipoExcecaoAgenda.BLOQUEIO;
             agendaService.criarExcecao(medicoSelecionadoId, ini, fim, tipo, formExcMotivo);
             msg(FacesMessage.SEVERITY_INFO, "Exceção cadastrada.");
             carregarDadosDoMedico();
             novaExcecao();
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            msg(FacesMessage.SEVERITY_ERROR, ex.getMessage());
         } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "[AgendaMedicaBean] Erro ao salvar exceção", ex);
-            msg(FacesMessage.SEVERITY_ERROR, "Erro inesperado ao salvar exceção.");
+            LOG.log(Level.WARNING, "[AgendaMedicaBean] Falha ao salvar exceção", ex);
+            msg(FacesMessage.SEVERITY_ERROR,
+                extrairMensagem(ex, "Erro inesperado ao salvar exceção."));
         }
     }
 
@@ -238,21 +399,31 @@ public class AgendaMedicaBean implements Serializable {
             msg(FacesMessage.SEVERITY_INFO, "Exceção removida.");
             carregarDadosDoMedico();
         } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "[AgendaMedicaBean] Erro ao remover exceção", ex);
-            msg(FacesMessage.SEVERITY_ERROR, "Erro inesperado.");
+            LOG.log(Level.WARNING, "[AgendaMedicaBean] Falha ao remover exceção", ex);
+            msg(FacesMessage.SEVERITY_ERROR,
+                extrairMensagem(ex, "Erro ao remover exceção."));
         }
     }
 
     public void gerarSlots() {
         try {
+            if (medicoSelecionadoId == null) {
+                msg(FacesMessage.SEVERITY_WARN, "Selecione um médico para gerar slots.");
+                return;
+            }
+            if (diasGerar < 1 || diasGerar > 180) {
+                msg(FacesMessage.SEVERITY_WARN, "Informe um período entre 1 e 180 dias.");
+                return;
+            }
             int n = agendaService.gerarSlots(medicoSelecionadoId, diasGerar);
             msg(FacesMessage.SEVERITY_INFO, n + " slot(s) gerado(s) para os próximos " + diasGerar + " dias.");
             carregarDadosDoMedico();
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            msg(FacesMessage.SEVERITY_WARN, ex.getMessage());
+            carregarCalendarioGeral();
+            carregarCalendarioMulti();
         } catch (Exception ex) {
-            LOG.log(Level.SEVERE, "[AgendaMedicaBean] Erro ao gerar slots", ex);
-            msg(FacesMessage.SEVERITY_ERROR, "Erro inesperado ao gerar slots.");
+            LOG.log(Level.WARNING, "[AgendaMedicaBean] Falha ao gerar slots", ex);
+            msg(FacesMessage.SEVERITY_ERROR,
+                extrairMensagem(ex, "Erro inesperado ao gerar slots."));
         }
     }
 
@@ -279,6 +450,10 @@ public class AgendaMedicaBean implements Serializable {
             msg(FacesMessage.SEVERITY_WARN, "Selecione ao menos um médico.");
             return;
         }
+        if (diasGerarBulk < 1 || diasGerarBulk > 180) {
+            msg(FacesMessage.SEVERITY_WARN, "Informe um período entre 1 e 180 dias.");
+            return;
+        }
         int totalSlots = 0;
         int totalMedicos = 0;
         int falhas = 0;
@@ -302,6 +477,8 @@ public class AgendaMedicaBean implements Serializable {
             msg(FacesMessage.SEVERITY_INFO, sb.toString());
         }
         carregarDadosDoMedico();
+        carregarCalendarioGeral();
+        carregarCalendarioMulti();
     }
 
     public String labelMedicoDropdown(Medico m) {
@@ -364,6 +541,23 @@ public class AgendaMedicaBean implements Serializable {
         FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(severity, mensagem, null));
     }
 
+    private String extrairMensagem(Throwable t, String fallback) {
+        Throwable cur = t;
+        int guard = 0;
+        while (cur != null && guard < 10) {
+            if ((cur instanceof IllegalArgumentException || cur instanceof IllegalStateException)
+                    && cur.getMessage() != null && !cur.getMessage().isEmpty()) {
+                return cur.getMessage();
+            }
+            cur = cur.getCause();
+            guard++;
+        }
+        if (t != null && t.getMessage() != null && !t.getMessage().isEmpty()) {
+            return t.getMessage();
+        }
+        return fallback;
+    }
+
     public List<Medico> getMedicos()                          { return medicos; }
     public Long getMedicoSelecionadoId()                      { return medicoSelecionadoId; }
     public void setMedicoSelecionadoId(Long v)                { this.medicoSelecionadoId = v; }
@@ -373,7 +567,12 @@ public class AgendaMedicaBean implements Serializable {
     public List<AgendaMedicaSlot> getSlots()                  { return slots; }
     public List<MedicoEspecialidade> getEspecialidadesMedico(){ return especialidadesMedico; }
     public long getSlotsLivresFuturos()                       { return slotsLivresFuturos; }
-    public ScheduleModel getScheduleModel()                   { return scheduleModel; }
+    public ScheduleModel getScheduleModelGeral()              { return scheduleModelGeral; }
+    public ScheduleModel getScheduleModelMulti()              { return scheduleModelMulti; }
+    public List<Long> getIdsMedicosCalendario()               { return idsMedicosCalendario; }
+    public void setIdsMedicosCalendario(List<Long> v)         { this.idsMedicosCalendario = v; }
+    public int getDiasVisaoCalendario()                       { return diasVisaoCalendario; }
+    public void setDiasVisaoCalendario(int v)                 { this.diasVisaoCalendario = v; carregarCalendarioGeral(); carregarCalendarioMulti(); }
 
     public int getDiasGerar()             { return diasGerar; }
     public void setDiasGerar(int v)       { this.diasGerar = v; }
@@ -390,6 +589,19 @@ public class AgendaMedicaBean implements Serializable {
     public void setFormGradeHoraFim(Date v)               { this.formGradeHoraFim = v; }
     public Integer getFormGradeDuracaoMin()               { return formGradeDuracaoMin; }
     public void setFormGradeDuracaoMin(Integer v)         { this.formGradeDuracaoMin = v; }
+    public String getAccordionFormIndex()                 { return accordionFormIndex; }
+    public void setAccordionFormIndex(String v)           { this.accordionFormIndex = v; }
+
+    public String getDetalheTipo()           { return detalheTipo; }
+    public String getDetalheTitulo()         { return detalheTitulo; }
+    public String getDetalheMedicoNome()     { return detalheMedicoNome; }
+    public String getDetalheStatus()         { return detalheStatus; }
+    public String getDetalheInicio()         { return detalheInicio; }
+    public String getDetalheFim()            { return detalheFim; }
+    public String getDetalheMotivo()         { return detalheMotivo; }
+    public String getDetalheEspecialidade()  { return detalheEspecialidade; }
+    public String getDetalheCorClasse()      { return detalheCorClasse; }
+    public String getDetalheIcone()          { return detalheIcone; }
 
     public List<Long> getIdsBulkSelecionados()           { return idsBulkSelecionados; }
     public void setIdsBulkSelecionados(List<Long> v)     { this.idsBulkSelecionados = v; }

@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <ui:param name="bean" value="#{empty bean ? prontuarioBean : bean}"/>
+    <ui:param name="contexto" value="#{empty contexto ? 'CLINICO' : contexto}"/>
+
+    <style>
+        .pront-card{border:1px solid #c8c8c8;background:#fff;border-radius:2px;
+                    padding:8px 10px;margin-bottom:6px;}
+        .pront-card .head{display:flex;justify-content:space-between;
+                          font-size:11.5px;color:#1f3a68;margin-bottom:4px;
+                          font-family:monospace;}
+        .pront-card .meta{font-size:11px;color:#666;margin-bottom:4px;}
+        .pront-section-title{font-size:12px;font-weight:bold;color:#1f3a68;
+                             border-bottom:1px solid #c8c8c8;margin-bottom:6px;
+                             padding-bottom:2px;}
+        .pront-line{font-size:12px;color:#333;padding:2px 0;}
+        .pront-tag{display:inline-block;padding:1px 6px;border-radius:2px;
+                   font-size:10.5px;font-weight:bold;border:1px solid #ccc;
+                   margin-right:4px;color:#444;background:#eee;}
+        .pront-tag.danger{background:#fde0e0;border-color:#b94a48;color:#7a1b14;}
+        .pront-tag.warn{background:#fff3cd;border-color:#e0c46c;color:#5a4500;}
+        .pront-tag.info{background:#e7eef9;border-color:#9bb4d8;color:#1f3a68;}
+        .pront-tag.ok{background:#e3f4e3;border-color:#7ec47e;color:#1e6b22;}
+    </style>
+
+    <h:panelGroup rendered="#{bean.prontuario != null}">
+
+        <h:panelGroup layout="block" styleClass="panel" style="margin-bottom:10px;">
+            <h:panelGroup layout="block" styleClass="panel-title">
+                <i class="fa fa-user-circle panel-icon"/>
+                <h:outputText value="Paciente"/>
+            </h:panelGroup>
+            <h:panelGroup layout="block" styleClass="panel-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:12.5px;">
+                    <div><b>Nome:</b> #{bean.prontuario.paciente.nomeCompleto}</div>
+                    <div><b>CPF:</b> #{bean.prontuario.paciente.cpfMascarado}</div>
+                    <div><b>Nascimento:</b> #{bean.formatarData(bean.prontuario.paciente.dataNascimento)}
+                        <h:panelGroup rendered="#{bean.prontuario.paciente.idade != null}">
+                            (#{bean.prontuario.paciente.idade} anos)
+                        </h:panelGroup>
+                    </div>
+                    <div><b>E-mail:</b>
+                        <h:outputText value="#{bean.prontuario.paciente.email}"/>
+                        <h:outputText value="—" rendered="#{empty bean.prontuario.paciente.email}"/>
+                    </div>
+                    <div><b>Telefone:</b>
+                        <h:outputText value="#{bean.prontuario.paciente.telefone}"/>
+                        <h:outputText value="—" rendered="#{empty bean.prontuario.paciente.telefone}"/>
+                    </div>
+                    <div><b>ID:</b> #{bean.prontuario.paciente.id}</div>
+                </div>
+                <div style="margin-top:8px;">
+                    <a href="#{request.contextPath}/prontuario/pdf?idPaciente=#{bean.prontuario.paciente.id}"
+                       target="_blank" class="btn primary"
+                       style="text-decoration:none;font-size:11.5px;padding:4px 10px;">
+                        <i class="fa fa-file-pdf"/> Baixar prontuário em PDF
+                    </a>
+                </div>
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <h:panelGroup layout="block" styleClass="panel" style="margin-bottom:10px;">
+            <h:panelGroup layout="block" styleClass="panel-title">
+                <i class="fa fa-allergies panel-icon"/>
+                <h:outputText value="Alergias (#{bean.prontuario.totalAlergias})"/>
+            </h:panelGroup>
+            <h:panelGroup layout="block" styleClass="panel-body">
+                <h:panelGroup rendered="#{empty bean.prontuario.alergias}" styleClass="note">
+                    Sem alergias registradas.
+                </h:panelGroup>
+                <ui:repeat value="#{bean.prontuario.alergias}" var="a">
+                    <div class="pront-card">
+                        <div style="font-size:13px;font-weight:bold;color:#333;">
+                            #{a.nome}
+                            <span class="pront-tag info">#{a.tipo}</span>
+                            <span class="pront-tag #{a.gravidade == 'A' ? 'danger' : 'warn'}">
+                                Gravidade: #{a.gravidade}
+                            </span>
+                            <span class="pront-tag ok">#{a.status}</span>
+                        </div>
+                        <h:panelGroup rendered="#{not empty a.reacao}">
+                            <div class="meta"><i>Reação:</i> #{a.reacao}</div>
+                        </h:panelGroup>
+                    </div>
+                </ui:repeat>
+            </h:panelGroup>
+        </h:panelGroup>
+
+        <h:panelGroup layout="block" styleClass="panel">
+            <h:panelGroup layout="block" styleClass="panel-title">
+                <i class="fa fa-history panel-icon"/>
+                <h:outputText value="Linha do tempo de consultas (#{bean.prontuario.totalConsultas})"/>
+            </h:panelGroup>
+            <h:panelGroup layout="block" styleClass="panel-body">
+                <h:panelGroup rendered="#{empty bean.prontuario.consultas}" styleClass="note">
+                    Sem consultas registradas.
+                </h:panelGroup>
+
+                <p:accordionPanel value="#{bean.prontuario.consultas}" var="c"
+                                  multiple="true" activeIndex="">
+                    <p:tab>
+                        <f:facet name="title">
+                            <span>
+                                <b>#{bean.formatarDataHora(c.dataConsulta)}</b>
+                                &#160;|&#160; #{c.medicoNome != null ? c.medicoNome : '—'}
+                                <h:outputText value=" (#{c.especialidade})"
+                                              rendered="#{not empty c.especialidade}"/>
+                                &#160;
+                                <span class="chip #{bean.chipStatusConsulta(c.status)}">#{c.status}</span>
+                            </span>
+                        </f:facet>
+
+                        <div style="padding:6px 4px;">
+                            <h:panelGroup rendered="#{not empty c.observacaoClinica}">
+                                <div class="pront-section-title">Observação clínica</div>
+                                <div class="pront-line" style="white-space:pre-wrap;">#{c.observacaoClinica}</div>
+                                <div style="height:8px;"/>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{not empty c.motivoCancelamento}">
+                                <div class="pront-section-title">Motivo do cancelamento</div>
+                                <div class="pront-line">#{c.motivoCancelamento}</div>
+                                <div style="height:8px;"/>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{not empty c.anotacoes}">
+                                <div class="pront-section-title">Anotações (#{c.anotacoes.size()})</div>
+                                <ui:repeat value="#{c.anotacoes}" var="an">
+                                    <div class="pront-card">
+                                        <div class="head">
+                                            <b>#{an.titulo}</b>
+                                            <span>#{an.responsavelTipo} — #{bean.formatarDataHora(an.dataCriacao)}</span>
+                                        </div>
+                                        <div class="pront-line" style="white-space:pre-wrap;">#{an.descricao}</div>
+                                    </div>
+                                </ui:repeat>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{not empty c.anexos}">
+                                <div class="pront-section-title">Anexos (#{c.anexos.size()})</div>
+                                <ui:repeat value="#{c.anexos}" var="ax">
+                                    <div class="pront-card" style="display:flex;align-items:center;gap:8px;">
+                                        <i class="fa fa-file" style="color:#1f3a68;"/>
+                                        <div style="flex:1;min-width:0;">
+                                            <div style="font-size:12.5px;font-weight:bold;color:#333;">
+                                                #{ax.nomeOriginal}
+                                            </div>
+                                            <div class="meta">
+                                                #{ax.dominio} — #{ax.responsavelTipo} —
+                                                #{bean.formatarDataHora(ax.dataUpload)}
+                                            </div>
+                                        </div>
+                                        <a href="#{request.contextPath}/download/arquivo?id=#{ax.id}"
+                                           target="_blank" class="btn"
+                                           style="font-size:11px;padding:3px 8px;text-decoration:none;">
+                                            <i class="fa fa-download"/> Baixar
+                                        </a>
+                                    </div>
+                                </ui:repeat>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{c.receitaAtiva != null}">
+                                <div class="pront-section-title">
+                                    Receituário ativo — Receita nº #{c.receitaAtiva.id}
+                                    <a href="#{request.contextPath}/receita/pdf?idConsulta=#{c.id}"
+                                       target="_blank" class="btn"
+                                       style="float:right;font-size:11px;padding:2px 8px;text-decoration:none;">
+                                        <i class="fa fa-file-pdf"/> PDF
+                                    </a>
+                                </div>
+                                <ui:repeat value="#{c.receitaAtiva.itens}" var="ri">
+                                    <div class="pront-line">
+                                        <b>#{ri.medicamento}</b> — #{ri.posologia}
+                                        <h:panelGroup rendered="#{not empty ri.cid10}">
+                                            <span class="pront-tag info">CID #{ri.cid10}</span>
+                                        </h:panelGroup>
+                                        <h:panelGroup rendered="#{not empty ri.observacao}">
+                                            <div style="color:#666;font-style:italic;font-size:11px;">#{ri.observacao}</div>
+                                        </h:panelGroup>
+                                    </div>
+                                </ui:repeat>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{not empty c.receitasInativas}">
+                                <div class="pront-section-title" style="margin-top:8px;">
+                                    Receitas anteriores (#{c.receitasInativas.size()})
+                                </div>
+                                <p:accordionPanel value="#{c.receitasInativas}" var="ri"
+                                                  multiple="true" activeIndex="">
+                                    <p:tab>
+                                        <f:facet name="title">
+                                            <span>
+                                                Receita nº #{ri.id} —
+                                                #{bean.formatarDataHora(ri.dataEmissao)}
+                                                <span class="pront-tag warn">Inativa</span>
+                                            </span>
+                                        </f:facet>
+                                        <ui:repeat value="#{ri.itens}" var="rii">
+                                            <div class="pront-line">
+                                                <b>#{rii.medicamento}</b> — #{rii.posologia}
+                                            </div>
+                                        </ui:repeat>
+                                    </p:tab>
+                                </p:accordionPanel>
+                            </h:panelGroup>
+                        </div>
+                    </p:tab>
+                </p:accordionPanel>
+            </h:panelGroup>
+        </h:panelGroup>
+
+    </h:panelGroup>
+
+    <h:panelGroup rendered="#{bean.prontuario == null and contexto == 'PACIENTE'}"
+                  styleClass="note">
+        Não foi possível carregar seu prontuário no momento.
+    </h:panelGroup>
+
+</ui:composition>

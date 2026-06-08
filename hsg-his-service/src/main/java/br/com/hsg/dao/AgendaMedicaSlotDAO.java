@@ -5,6 +5,7 @@ import br.com.hsg.domain.enums.StatusSlotAgenda;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import java.time.LocalDateTime;
@@ -20,6 +21,39 @@ public class AgendaMedicaSlotDAO {
         return em.find(AgendaMedicaSlot.class, id);
     }
 
+    public AgendaMedicaSlot buscarComLock(Long id) {
+        return em.find(AgendaMedicaSlot.class, id, LockModeType.PESSIMISTIC_WRITE);
+    }
+
+    public List<AgendaMedicaSlot> listarLivresPorEspecialidadeData(Long idEspecialidade,
+                                                                    LocalDateTime inicio,
+                                                                    LocalDateTime fim,
+                                                                    Long idMedicoOpcional) {
+        StringBuilder jpql = new StringBuilder(
+                "SELECT s FROM AgendaMedicaSlot s " +
+                "LEFT JOIN FETCH s.medico m " +
+                "LEFT JOIN FETCH m.especialidade " +
+                "WHERE s.status = :st " +
+                "AND s.dataInicio >= :ini AND s.dataInicio < :fim " +
+                "AND s.medico.id IN (SELECT me.medico.id FROM MedicoEspecialidade me " +
+                "                    WHERE me.especialidade.id = :ide)");
+        if (idMedicoOpcional != null) {
+            jpql.append(" AND s.medico.id = :idm");
+        }
+        jpql.append(" ORDER BY s.dataInicio ASC");
+
+        javax.persistence.TypedQuery<AgendaMedicaSlot> q =
+                em.createQuery(jpql.toString(), AgendaMedicaSlot.class)
+                .setParameter("st", StatusSlotAgenda.LIVRE)
+                .setParameter("ini", inicio)
+                .setParameter("fim", fim)
+                .setParameter("ide", idEspecialidade);
+        if (idMedicoOpcional != null) {
+            q.setParameter("idm", idMedicoOpcional);
+        }
+        return q.getResultList();
+    }
+
     public List<AgendaMedicaSlot> listarPorMedicoPeriodo(Long idMedico,
                                                           LocalDateTime inicio,
                                                           LocalDateTime fim) {
@@ -29,6 +63,25 @@ public class AgendaMedicaSlotDAO {
                 "ORDER BY s.dataInicio ASC",
                 AgendaMedicaSlot.class)
                 .setParameter("idm", idMedico)
+                .setParameter("ini", inicio)
+                .setParameter("fim", fim)
+                .getResultList();
+    }
+
+    public List<AgendaMedicaSlot> listarPorMedicosPeriodo(List<Long> idsMedicos,
+                                                           LocalDateTime inicio,
+                                                           LocalDateTime fim) {
+        if (idsMedicos == null || idsMedicos.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        return em.createQuery(
+                "SELECT s FROM AgendaMedicaSlot s " +
+                "LEFT JOIN FETCH s.medico m " +
+                "LEFT JOIN FETCH m.especialidade " +
+                "WHERE s.medico.id IN :ids AND s.dataInicio >= :ini AND s.dataInicio < :fim " +
+                "ORDER BY s.dataInicio ASC",
+                AgendaMedicaSlot.class)
+                .setParameter("ids", idsMedicos)
                 .setParameter("ini", inicio)
                 .setParameter("fim", fim)
                 .getResultList();
