@@ -7,16 +7,16 @@ services:
     container_name: hsg-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER:     postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB:       postgres
+      POSTGRES_USER:     ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB:       ${POSTGRES_DB:-postgres}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/db/init/init-dbs.sql:/docker-entrypoint-initdb.d/01-init-dbs.sql:ro
     networks:
       - hsg-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,11 +26,11 @@ services:
     image: flyway/flyway:9-alpine
     container_name: hsg-flyway
     environment:
-      FLYWAY_URL: jdbc:postgresql://postgres:5432/hsg
-      FLYWAY_USER: postgres
-      FLYWAY_PASSWORD: postgres
-      FLYWAY_SCHEMAS: hsg
-      FLYWAY_DEFAULT_SCHEMA: hsg
+      FLYWAY_URL:            jdbc:postgresql://postgres:5432/${APP_DB_NAME:-hsg}
+      FLYWAY_USER:           ${POSTGRES_USER:-postgres}
+      FLYWAY_PASSWORD:       ${POSTGRES_PASSWORD:-postgres}
+      FLYWAY_SCHEMAS:        ${FLYWAY_SCHEMAS:-hsg}
+      FLYWAY_DEFAULT_SCHEMA: ${FLYWAY_DEFAULT_SCHEMA:-hsg}
     volumes:
       - ./infra/db/migrations:/flyway/sql:ro
     depends_on:
@@ -44,15 +44,17 @@ services:
     image: postgres:15-alpine
     container_name: hsg-seed
     environment:
-      PGPASSWORD: postgres
-      APP_ENV: DEV
+      PGPASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      APP_ENV:    ${APP_ENV:-DEV}
+      DB_USER:    ${POSTGRES_USER:-postgres}
+      DB_NAME:    ${APP_DB_NAME:-hsg}
     volumes:
       - ./infra/db/seed/init.sql:/init.sql:ro
     command: >
       sh -c '
         if [ "$$APP_ENV" = "DEV" ]; then
           echo "[seed] APP_ENV=DEV — carregando dados de desenvolvimento...";
-          psql -h postgres -U postgres -d hsg -f /init.sql && echo "[seed] Concluído.";
+          psql -h postgres -U $$DB_USER -d $$DB_NAME -f /init.sql && echo "[seed] Concluído.";
         else
           echo "[seed] APP_ENV=$$APP_ENV — seed ignorado.";
         fi
@@ -68,8 +70,8 @@ services:
     container_name: hsg-mailhog
     restart: unless-stopped
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
     networks:
       - hsg-network
 
@@ -81,8 +83,8 @@ services:
       MINIO_ROOT_USER:     ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - minio_data:/data
     networks:
@@ -103,10 +105,14 @@ services:
         condition: service_healthy
     environment:
       MC_HOST_local: http://${MINIO_ROOT_USER:-minioadmin}:${MINIO_ROOT_PASSWORD:-minioadmin}@minio:9000
+      B1: ${APP_STORAGE_BUCKET_ANEXO_CLIENTE:-hsg-anexos-cliente}
+      B2: ${APP_STORAGE_BUCKET_ANEXO_CONSULTA:-hsg-anexos-consulta}
+      B3: ${APP_STORAGE_BUCKET_ANEXO_ANOTACAO:-hsg-anexos-anotacao}
+      B4: ${APP_STORAGE_BUCKET_EXAME_CONSULTA:-hsg-exames-consulta}
     entrypoint: >
       sh -c '
         set -e;
-        for B in hsg-anexos-cliente hsg-anexos-consulta hsg-anexos-anotacao hsg-exames-consulta; do
+        for B in $$B1 $$B2 $$B3 $$B4; do
           echo "[minio-init] criando bucket $$B (idempotente)";
           mc mb --ignore-existing local/$$B;
           mc anonymous set none local/$$B;
@@ -126,21 +132,21 @@ services:
     restart: unless-stopped
     environment:
       KC_DB:                    postgres
-      KC_DB_URL:                jdbc:postgresql://postgres:5432/keycloak
-      KC_DB_USERNAME:           postgres
-      KC_DB_PASSWORD:           postgres
+      KC_DB_URL:                jdbc:postgresql://postgres:5432/${KC_DB_NAME:-keycloak}
+      KC_DB_USERNAME:           ${POSTGRES_USER:-postgres}
+      KC_DB_PASSWORD:           ${POSTGRES_PASSWORD:-postgres}
 
-      KC_HOSTNAME:              localhost
-      KC_HOSTNAME_PORT:         "8080"
-      KC_HOSTNAME_STRICT:       "false"
-      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HOSTNAME:              ${KC_HOSTNAME:-localhost}
+      KC_HOSTNAME_PORT:         "${KC_HOSTNAME_PORT:-8080}"
+      KC_HOSTNAME_STRICT:       "${KC_HOSTNAME_STRICT:-false}"
+      KC_HOSTNAME_STRICT_HTTPS: "${KC_HOSTNAME_STRICT_HTTPS:-false}"
 
-      KEYCLOAK_ADMIN:           admin
-      KEYCLOAK_ADMIN_PASSWORD:  Admin@HSG2026
+      KEYCLOAK_ADMIN:           ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD:  ${KEYCLOAK_ADMIN_PASSWORD:-Admin@HSG2026}
 
-      KC_LOG_LEVEL:             INFO
+      KC_LOG_LEVEL:             ${KC_LOG_LEVEL:-INFO}
     ports:
-      - "8080:8080"
+      - "${KC_PORT:-8080}:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -162,35 +168,35 @@ services:
     container_name: hsg-app
     restart: unless-stopped
     environment:
-      APP_DB_HOST:     postgres
-      APP_DB_PORT:     "5432"
-      APP_DB_NAME:     hsg
-      APP_DB_USER:     postgres
-      APP_DB_PASSWORD: postgres
+      APP_DB_HOST:     ${APP_DB_HOST:-postgres}
+      APP_DB_PORT:     "${APP_DB_PORT:-5432}"
+      APP_DB_NAME:     ${APP_DB_NAME:-hsg}
+      APP_DB_USER:     ${POSTGRES_USER:-postgres}
+      APP_DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
 
-      APP_ENV: DEV
+      APP_ENV: ${APP_ENV:-DEV}
 
-      KC_AUTH_URL:    "http://localhost:8080/realms/hsg-his/protocol/openid-connect/auth"
-      KC_TOKEN_URL:   "http://keycloak:8080/realms/hsg-his/protocol/openid-connect/token"
-      KC_CLIENT_ID:   "hsg-his-web"
-      KC_REDIRECT_URI: "http://localhost:8180/hsg-his/callback"
+      KC_AUTH_URL:     ${KC_AUTH_URL:-http://localhost:8080/realms/hsg-his/protocol/openid-connect/auth}
+      KC_TOKEN_URL:    ${KC_TOKEN_URL:-http://keycloak:8080/realms/hsg-his/protocol/openid-connect/token}
+      KC_CLIENT_ID:    ${KC_CLIENT_ID:-hsg-his-web}
+      KC_REDIRECT_URI: ${KC_REDIRECT_URI:-http://localhost:8180/hsg-his/callback}
 
-      MAIL_SMTP_HOST:     mailhog
-      MAIL_SMTP_PORT:     "1025"
-      MAIL_SMTP_AUTH:     "false"
-      MAIL_SMTP_STARTTLS: "false"
-      MAIL_SMTP_FROM:     "noreply@hsg-his.com.br"
+      MAIL_SMTP_HOST:     ${MAIL_SMTP_HOST:-mailhog}
+      MAIL_SMTP_PORT:     "${MAIL_SMTP_PORT:-1025}"
+      MAIL_SMTP_AUTH:     "${MAIL_SMTP_AUTH:-false}"
+      MAIL_SMTP_STARTTLS: "${MAIL_SMTP_STARTTLS:-false}"
+      MAIL_SMTP_FROM:     ${MAIL_SMTP_FROM:-noreply@hsg-his.com.br}
 
-      HSG_BASE_URL:       "http://localhost:8180/hsg-his"
-      HSG_EMAIL_DOMINIO:  "hsg.com.br"
+      HSG_BASE_URL:      ${HSG_BASE_URL:-http://localhost:8180/hsg-his}
+      HSG_EMAIL_DOMINIO: ${HSG_EMAIL_DOMINIO:-hsg.com.br}
 
-      KC_ADMIN_BASE_URL:  "http://keycloak:8080"
-      KC_REALM:           "hsg-his"
-      KC_ADMIN_USER:      "admin"
-      KC_ADMIN_PASS:      "Admin@HSG2026"
+      KC_ADMIN_BASE_URL: ${KC_ADMIN_BASE_URL:-http://keycloak:8080}
+      KC_REALM:          ${KC_REALM:-hsg-his}
+      KC_ADMIN_USER:     ${KEYCLOAK_ADMIN:-admin}
+      KC_ADMIN_PASS:     ${KEYCLOAK_ADMIN_PASSWORD:-Admin@HSG2026}
 
-      CPF_ENCRYPTION_KEY: "HSG_DEV_ONLY_PLACEHOLDER_32CHAR_"
-      CARTEIRINHA_ENCRYPTION_KEY: "HSG_DEV_CART_PLACEHOLDER_32CHARS_"
+      CPF_ENCRYPTION_KEY:         ${CPF_ENCRYPTION_KEY:-HSG_DEV_ONLY_PLACEHOLDER_32CHAR_}
+      CARTEIRINHA_ENCRYPTION_KEY: ${CARTEIRINHA_ENCRYPTION_KEY:-HSG_DEV_CART_PLACEHOLDER_32CHARS_}
 
       APP_STORAGE_ENDPOINT:               ${APP_STORAGE_ENDPOINT:-http://minio:9000}
       APP_STORAGE_REGION:                 ${APP_STORAGE_REGION:-us-east-1}
@@ -204,7 +210,7 @@ services:
       APP_STORAGE_BUCKET_ANEXO_ANOTACAO:  ${APP_STORAGE_BUCKET_ANEXO_ANOTACAO:-hsg-anexos-anotacao}
       APP_STORAGE_BUCKET_EXAME_CONSULTA:  ${APP_STORAGE_BUCKET_EXAME_CONSULTA:-hsg-exames-consulta}
     ports:
-      - "8180:8080"
+      - "${APP_PORT:-8180}:8080"
     depends_on:
       seed:
         condition: service_completed_successfully

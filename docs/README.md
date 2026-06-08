@@ -42,6 +42,9 @@ A documentação existe para:
   - Visão do módulo: `modulos/prontuario.md`
   - Regras PR-* em `regras/regras-negocio-agendamento.md` §8.6
 
+- ⚠ **Segurança DEV vs PRD** (leia antes de promover):
+  - `operacao/seguranca-dev-vs-prd.md` — explica que `init.sql` e `hsg-realm.json` são DEV-only, contêm secrets, **não usar em produção**
+
 - Brand assets (logo e identidade visual): `branding/brand-assets.md`
 
 ---

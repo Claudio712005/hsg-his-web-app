@@ -2,6 +2,8 @@
 
 Infraestrutura de Identity & Access Management para o HSG HIS usando **Keycloak 26**.
 
+> ⚠ **`realm/hsg-realm.json` é DEV-only** — contém senhas em texto plano, client secret e IDs de usuário fixos. **NÃO usar em HML/PRD.** Procedimento de promoção em [`docs/operacao/seguranca-dev-vs-prd.md`](../../docs/operacao/seguranca-dev-vs-prd.md).
+
 ## Pré-requisitos
 
 - Docker Engine 24+
