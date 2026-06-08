@@ -23,9 +23,9 @@
                 </h:panelGroup>
                 <h:panelGroup layout="block" styleClass="panel-body">
                     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                        <p:autoComplete value="#{prontuarioBean.pacienteSelecionado}"
+                        <p:autoComplete value="#{prontuarioBean.idPacienteSelecionado}"
                                         completeMethod="#{prontuarioBean.autocompletarPaciente}"
-                                        var="p" itemLabel="#{p.nomeCompleto}" itemValue="#{p}"
+                                        var="p" itemLabel="#{p.nomeCompleto}" itemValue="#{p.id}"
                                         forceSelection="true" minQueryLength="2" queryDelay="350"
                                         placeholder="Digite ao menos 2 letras do nome..."
                                         style="width:380px;">
