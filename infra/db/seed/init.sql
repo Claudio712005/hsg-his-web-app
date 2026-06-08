@@ -1,3 +1,16 @@
+-- ═════════════════════════════════════════════════════════════════════
+-- ⚠ ATENÇÃO — SEED DEV-ONLY
+-- ═════════════════════════════════════════════════════════════════════
+-- Este arquivo carrega MASSA DE TESTE com usuários demo, hashes
+-- determinísticos de CPF/RG, IDs Keycloak fixos e dados ilustrativos.
+--
+-- NÃO USAR EM HML/PRD. Contém credenciais e dados sensíveis em texto
+-- plano. Em ambientes não-DEV, mantenha APP_ENV != 'DEV' no .env para
+-- o serviço de seed do docker-compose ignorar este arquivo.
+--
+-- Procedimento de promoção: docs/operacao/seguranca-dev-vs-prd.md
+-- ═════════════════════════════════════════════════════════════════════
+
 -- ── Administradores ──────────────────────────────────────────────────
 INSERT INTO hsg.tb_conta_usu (id_conta_usu, id_kcl_usu, nm_usu)
 VALUES (nextval('hsg.seq_conta_usu'), 'ad000000-0000-0000-0000-000000000001', 'admin.hsg');

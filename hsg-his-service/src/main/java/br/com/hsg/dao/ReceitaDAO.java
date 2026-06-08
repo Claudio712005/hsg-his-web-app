@@ -43,6 +43,18 @@ public class ReceitaDAO {
         }
     }
 
+    public java.util.List<Receita> listarTodasPorConsulta(Long idConsulta) {
+        if (idConsulta == null) return java.util.Collections.emptyList();
+        return em.createQuery(
+                "SELECT DISTINCT r FROM Receita r " +
+                "LEFT JOIN FETCH r.itens " +
+                "WHERE r.consulta.id = :idc " +
+                "ORDER BY r.dataEmissao DESC",
+                Receita.class)
+                .setParameter("idc", idConsulta)
+                .getResultList();
+    }
+
     public Receita buscarPorId(Long id) {
         if (id == null) return null;
         return em.find(Receita.class, id);
