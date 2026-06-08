@@ -237,14 +237,21 @@
                 <h:panelGroup layout="block" rendered="#{recepcaoDiaBean.consultaAnotando != null}"
                               style="padding:6px 4px;">
 
-                    <h:panelGroup layout="block" styleClass="note" style="margin-bottom:8px;">
-                        <b>Paciente:</b> #{recepcaoDiaBean.consultaAnotando.paciente.nomeCompleto}
+                    <h:panelGroup layout="block" styleClass="note"
+                                  style="margin-bottom:8px;display:flex;justify-content:space-between;
+                                         align-items:center;flex-wrap:wrap;gap:6px;">
+                        <span><b>Paciente:</b> #{recepcaoDiaBean.consultaAnotando.paciente.nomeCompleto}
                         &#160;|&#160;
                         <b>Médico:</b> Dr(a). #{recepcaoDiaBean.consultaAnotando.medico.nomeCompleto}
                         &#160;|&#160;
                         <b>Data:</b> #{recepcaoDiaBean.formatarDataHora(recepcaoDiaBean.consultaAnotando.dataConsulta)}
                         &#160;|&#160;
-                        <b>Status:</b> #{recepcaoDiaBean.consultaAnotando.status}
+                        <b>Status:</b> #{recepcaoDiaBean.consultaAnotando.status}</span>
+                        <a href="#{request.contextPath}/clinica/prontuario.xhtml?idPaciente=#{recepcaoDiaBean.consultaAnotando.paciente.id}"
+                           target="_blank" class="btn"
+                           style="font-size:11px;padding:3px 8px;text-decoration:none;">
+                            <i class="fa fa-folder-open"/> Ver prontuário
+                        </a>
                     </h:panelGroup>
 
                     <h:panelGroup layout="block" styleClass="panel" style="margin-bottom:10px;">

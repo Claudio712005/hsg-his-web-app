@@ -129,6 +129,23 @@ Reserva exige LIVRE. Bloqueio não é permitido em slot RESERVADO (cancelar a co
 
 Documentação completa em `docs/modulos/agendamento-schedules.md`.
 
+## 8.6 Prontuário do paciente (visão longitudinal)
+
+| ID | Regra | Onde |
+|----|-------|------|
+| PR-01 | Apenas PACIENTE (próprio), MEDICO, ENFERMEIRO ou ADMIN acessam o prontuário. | `ProntuarioServiceImpl.autorizar` |
+| PR-02 | Qualquer médico ativo pode visualizar qualquer paciente (sem filtro "já atendeu"). | Idem |
+| PR-03 | Receitas inativas listadas em accordion separado com badge "Inativa". | `prontuario-corpo.xhtml` |
+| PR-04 | Anexos com `st_arquivo='I'` não aparecem no prontuário. | `ProntuarioServiceImpl.montarAnexos` |
+| PR-05 | CPF sempre mascarado (`***.***.***-**`). Carteirinha de convênio mascarada quando incluída. | `ProntuarioServiceImpl.montarResumoPaciente` |
+| PR-06 | Busca de paciente vetada para PACIENTE e SISTEMA. | `ProntuarioServiceImpl.buscarPacientes` |
+
+Prontuário é **read-only**. Edições passam pelos fluxos existentes (anotação na consulta, alergia no módulo dedicado, etc).
+
+Exportação PDF on-demand pelo servlet `/prontuario/pdf?idPaciente=N`. Servlet aplica PR-01..02 antes de servir o arquivo.
+
+Documentação completa em [`docs/modulos/prontuario.md`](../modulos/prontuario.md).
+
 ## 8.5 Receituário (módulo prescrição simples)
 
 | ID | Regra | Onde |

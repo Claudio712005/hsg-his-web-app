@@ -38,6 +38,10 @@ A documentação existe para:
   - Modelo de dados: `dominio/modelo-receita.md`
   - Regras RC-* em `regras/regras-negocio-agendamento.md` §8.5
 
+- Prontuário do paciente (visão longitudinal):
+  - Visão do módulo: `modulos/prontuario.md`
+  - Regras PR-* em `regras/regras-negocio-agendamento.md` §8.6
+
 - Brand assets (logo e identidade visual): `branding/brand-assets.md`
 
 ---
