@@ -45,6 +45,10 @@ A documentação existe para:
 - ⚠ **Segurança DEV vs PRD** (leia antes de promover):
   - `operacao/seguranca-dev-vs-prd.md` — explica que `init.sql` e `hsg-realm.json` são DEV-only, contêm secrets, **não usar em produção**
 
+- Diagramas (Mermaid):
+  - `diagramas/arquitetura.mmd` — visão geral containers/componentes
+  - `diagramas/fluxo-upload-anexo.mmd` — sequência completa de upload
+
 - Brand assets (logo e identidade visual): `branding/brand-assets.md`
 
 ---
