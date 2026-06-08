@@ -1,0 +1,88 @@
+%% HSG HIS — Diagrama de arquitetura (container/component)
+%% Renderizar: https://mermaid.live  |  CLI: mmdc -i arquitetura.mmd -o arquitetura.svg
+
+flowchart TB
+
+    %% ───────────────── Usuários ─────────────────
+    subgraph USUARIOS["Usuários"]
+        PAC["Paciente<br/>(portal)"]
+        MED["Médico<br/>(clínica)"]
+        ENF["Enfermeiro<br/>(recepção)"]
+        ADM["Admin<br/>(gestão)"]
+    end
+
+    %% ───────────────── Edge / Auth ─────────────────
+    BROWSER["Navegador<br/>HTTPS"]
+    KC["Keycloak 26<br/>OIDC Provider<br/>realm: hsg-his"]
+
+    %% ───────────────── EAR HSG-HIS ─────────────────
+    subgraph EAR["WildFly 26 — EAR hsg-his"]
+
+        subgraph WEB["hsg-his-web (WAR)"]
+            JSF["JSF 2.3 + PrimeFaces 6.2<br/>Beans @ViewScoped / @Named"]
+            SERVLETS["Servlets dedicados<br/>• /download/arquivo<br/>• /receita/pdf<br/>• /prontuario/pdf"]
+        end
+
+        subgraph SERVICE["hsg-his-service (EJB JAR)"]
+            FACADES["Facades @Local<br/>(Consulta, Receituário,<br/>Prontuário, Arquivo,<br/>Notificação, ...)"]
+            IMPLS["@Stateless Impl<br/>(regras de negócio<br/>AG/AC/CA/AF/AN/AX/RC/PR)"]
+            PDF["PDF Builders<br/>(OpenPDF 1.3)<br/>• Receituário<br/>• Prontuário"]
+            STORAGE["StoragePathResolver<br/>+ S3ObjectStorageService<br/>(AWS SDK v2)"]
+            SCHED["Schedulers<br/>@Singleton @Schedule<br/>• Auto-falta diária"]
+            EMISSOR["NotificacaoEmissor<br/>(in-app + e-mail)"]
+            DAO["DAOs @Stateless<br/>(Consulta, Paciente,<br/>Receita, Arquivo, ...)"]
+        end
+
+        subgraph DOMAIN["hsg-his-domain (JAR)"]
+            ENT["Entidades JPA<br/>+ VOs + Enums<br/>+ Factories"]
+        end
+    end
+
+    %% ───────────────── Infra ─────────────────
+    subgraph INFRA["Infra externa"]
+        PG[("PostgreSQL 15<br/>schema: hsg<br/>33 migrations Flyway")]
+        MINIO[("MinIO local /<br/>AWS S3 prod<br/>4 buckets versionados")]
+        MAIL["MailHog (DEV) /<br/>SMTP corporativo (PRD)"]
+    end
+
+    %% ───────────────── Fluxos ─────────────────
+    PAC --> BROWSER
+    MED --> BROWSER
+    ENF --> BROWSER
+    ADM --> BROWSER
+
+    BROWSER -->|OIDC redirect| KC
+    KC -. token .-> BROWSER
+    BROWSER -->|HTTPS| WEB
+
+    JSF --> FACADES
+    SERVLETS --> FACADES
+
+    FACADES --> IMPLS
+    IMPLS --> DAO
+    IMPLS --> PDF
+    IMPLS --> STORAGE
+    IMPLS --> EMISSOR
+    SCHED --> IMPLS
+
+    DAO -->|JPA / Hibernate| PG
+    IMPLS -. usa .-> ENT
+    DAO -. usa .-> ENT
+    PDF -. usa .-> ENT
+
+    STORAGE -->|S3 API<br/>endpointOverride| MINIO
+    EMISSOR -->|SMTP| MAIL
+    EMISSOR -->|persist| DAO
+
+    KC -->|JDBC| PG
+
+    %% ───────────────── Estilos ─────────────────
+    classDef user fill:#e7eef9,stroke:#1f3a68,color:#1f3a68
+    classDef edge fill:#fff8e1,stroke:#8a4b00,color:#5a4500
+    classDef ear fill:#f6f9fd,stroke:#1f3a68,color:#1f3a68,stroke-width:2px
+    classDef infra fill:#e3f4e3,stroke:#1e6b22,color:#1e6b22
+
+    class PAC,MED,ENF,ADM user
+    class BROWSER,KC edge
+    class JSF,SERVLETS,FACADES,IMPLS,PDF,STORAGE,SCHED,EMISSOR,DAO,ENT ear
+    class PG,MINIO,MAIL infra

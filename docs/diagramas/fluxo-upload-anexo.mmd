@@ -1,0 +1,35 @@
+sequenceDiagram
+    autonumber
+    actor U as Médico / Enfermeiro
+    participant B as Browser
+    participant W as JSF Bean<br/>(MinhaAgendaBean)
+    participant S as ArquivoService<br/>(EJB)
+    participant G as StorageGuard
+    participant R as StoragePathResolver
+    participant O as S3ObjectStorage<br/>(AWS SDK v2)
+    participant M as MinIO / S3
+    participant D as ArquivoDAO
+    participant P as PostgreSQL
+
+    U->>B: Seleciona PDF + "Enviar anexo"
+    B->>W: POST multipart/form-data
+    W->>S: anexarEmConsulta(idConsulta, bytes, ct, filename, ...)
+    S->>G: validar(filename, ct, size, head)
+    Note over G: AX-01 MIME whitelist<br/>AX-02 tamanho<br/>AX-06 sanitize filename<br/>magic bytes batem com ct
+    G-->>S: ok
+    S->>R: buildLogicalPath(ANEXO_CONSULTA, idConsulta, filename)
+    R-->>S: /anexos/consulta/{id}/yyyy/MM/{uuid}.pdf
+    S->>O: put(pathLogico, stream, size, ct)
+    O->>R: resolve(pathLogico)
+    R-->>O: BucketBinding(bucket, key)
+    O->>M: PutObject(bucket, key, body)
+    M-->>O: 200 OK + etag
+    O-->>S: StoragePutResult(path, size, ct, etag)
+    S->>S: SHA-256 do payload
+    S->>D: salvar(Arquivo)
+    D->>P: INSERT INTO tb_arquivo
+    P-->>D: id
+    D-->>S: Arquivo persistido
+    S-->>W: Arquivo
+    W-->>B: ajax update + growl "Anexo enviado"
+    B-->>U: lista atualizada com novo arquivo
