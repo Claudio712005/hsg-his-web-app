@@ -35,7 +35,7 @@ public class ProntuarioBean implements Serializable {
     @EJB    private ProntuarioServiceFacade prontuarioService;
 
     private Long idPacienteAlvo;
-    private PacienteBuscaDTO pacienteSelecionado;
+    private Long idPacienteSelecionado;
     private ProntuarioDTO prontuario;
 
     @PostConstruct
@@ -63,11 +63,11 @@ public class ProntuarioBean implements Serializable {
     }
 
     public void abrirPaciente() {
-        if (pacienteSelecionado == null) {
+        if (idPacienteSelecionado == null) {
             msg(FacesMessage.SEVERITY_WARN, "Selecione um paciente.");
             return;
         }
-        this.idPacienteAlvo = pacienteSelecionado.id;
+        this.idPacienteAlvo = idPacienteSelecionado;
         carregar();
     }
 
@@ -132,7 +132,7 @@ public class ProntuarioBean implements Serializable {
 
     public Long getIdPacienteAlvo()                  { return idPacienteAlvo; }
     public void setIdPacienteAlvo(Long v)            { this.idPacienteAlvo = v; }
-    public PacienteBuscaDTO getPacienteSelecionado() { return pacienteSelecionado; }
-    public void setPacienteSelecionado(PacienteBuscaDTO v) { this.pacienteSelecionado = v; }
+    public Long getIdPacienteSelecionado()           { return idPacienteSelecionado; }
+    public void setIdPacienteSelecionado(Long v)     { this.idPacienteSelecionado = v; }
     public ProntuarioDTO getProntuario()             { return prontuario; }
 }
